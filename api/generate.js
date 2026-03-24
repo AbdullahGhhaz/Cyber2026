@@ -22,30 +22,36 @@ export default async function handler(req, res) {
       images = images.slice(0, 5);
     }
 
-    const parts = [];
+    // Byg Anthropic content array
+    const content = [];
     if (images && images.length > 0) {
       for (const img of images) {
-        parts.push({ inlineData: { mimeType: img.mediaType, data: img.b64 } });
+        content.push({
+          type: 'image',
+          source: { type: 'base64', media_type: img.mediaType, data: img.b64 }
+        });
       }
     }
-    parts.push({ text: prompt });
+    content.push({ type: 'text', text: prompt });
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts }],
-          generationConfig: { maxOutputTokens: 2048, temperature: 0.7 }
-        })
-      }
-    );
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2048,
+        messages: [{ role: 'user', content }]
+      })
+    });
 
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
 
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Ingen respons.';
+    const text = data.content?.map(b => b.text || '').join('') || 'Ingen respons.';
     return res.status(200).json({ text });
 
   } catch (err) {
