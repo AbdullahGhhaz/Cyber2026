@@ -1,17 +1,28 @@
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+export const config = {
+  api: { bodyParser: { sizeLimit: '20mb' } }
+};
 
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { prompt, images } = req.body;
+    let { prompt, images } = req.body;
 
-    // Build Gemini parts: images first, then text
+    // Begræns tekst til 15.000 tegn
+    if (prompt && prompt.length > 15000) {
+      prompt = prompt.slice(0, 15000) + '\n\n[Tekst afkortet]';
+    }
+
+    // Begræns til max 5 billeder
+    if (images && images.length > 5) {
+      images = images.slice(0, 5);
+    }
+
     const parts = [];
-
     if (images && images.length > 0) {
       for (const img of images) {
         parts.push({ inlineData: { mimeType: img.mediaType, data: img.b64 } });
