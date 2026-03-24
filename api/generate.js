@@ -10,42 +10,10 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    let { prompt, images } = req.body;
+    let { prompt } = req.body;
 
-    // Begræns tekst til 15.000 tegn
-    if (prompt && prompt.length > 15000) {
-      prompt = prompt.slice(0, 15000) + '\n\n[Tekst afkortet]';
-    }
-
-    // Begræns til max 5 billeder
-    if (images && images.length > 5) {
-      images = images.slice(0, 5);
-    }
-
-    // Byg content array
-    const content = [];
-
-    // Tilføj billeder — kun jpeg og png virker med Anthropic
-    if (images && images.length > 0) {
-      for (const img of images) {
-        // Normaliser media type — Anthropic accepterer kun jpeg og png
-        let mediaType = img.mediaType || 'image/jpeg';
-        if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(mediaType)) {
-          mediaType = 'image/jpeg';
-        }
-        // Sørg for at b64 data er ren (ingen data URL prefix)
-        let b64 = img.b64 || '';
-        if (b64.includes(',')) b64 = b64.split(',')[1];
-        if (!b64 || b64.length < 100) continue; // Spring over tomme/ugyldige billeder
-
-        content.push({
-          type: 'image',
-          source: { type: 'base64', media_type: mediaType, data: b64 }
-        });
-      }
-    }
-
-    content.push({ type: 'text', text: prompt });
+    if (!prompt) throw new Error('Ingen prompt modtaget');
+    if (prompt.length > 15000) prompt = prompt.slice(0, 15000) + '\n\n[Afkortet]';
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -57,7 +25,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 2048,
-        messages: [{ role: 'user', content }]
+        messages: [{ role: 'user', content: prompt }]
       })
     });
 
