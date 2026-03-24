@@ -352,7 +352,7 @@ function updateStats() {
 
 function buildPayload() {
   const done = uploadedFiles.filter(f=>f.status==='done');
-  const MAX_TEXT=24000, MAX_IMGS=15;
+  const MAX_TEXT=24000, MAX_IMGS=0;
   let used=0, textParts='', allImages=[];
   for (const f of done) {
     if (used<MAX_TEXT){const c=f.text.slice(0,MAX_TEXT-used);if(c.trim()){textParts+=`\n\n--- ${f.name} ---\n${c}`;used+=c.length;}}
