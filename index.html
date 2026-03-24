@@ -368,7 +368,7 @@ function buildPayload() {
   let instruction='';
   if (currentMode==='quiz') {
     const fmt={multiple:`Lav ${n} multiplechoice spørgsmål. Format:\nQ1: [spørgsmål]\nA) ...\nB) ...\nC) ...\nD) ...\nSvar: [bogstav] — [forklaring]`,open:`Lav ${n} åbne spørgsmål. Format:\nQ1: [spørgsmål]\nSvar: [svar]`,truefalse:`Lav ${n} sandt/falsk påstande. Format:\nQ1: [påstand]\nSvar: Sandt/Falsk — [forklaring]`};
-    instruction=`Du er eksamensforbereder for "${currentSubject}". ${fmt[qType]}\nInkluder spørgsmål om diagrammer og modeller du kan se. Skriv på dansk.`;
+    instruction=`Du er en eksamensforbereder. Lav KUN ${n} ${qType === 'multiple' ? 'multiplechoice spørgsmål' : qType === 'open' ? 'åbne spørgsmål' : 'sandt/falsk påstande'} baseret på materialet. Ingen introduktion, ingen forklaring — KUN spørgsmålene i dette format:\n${fmt[qType]}\nSkriv på dansk.`;
   } else if (currentMode==='summary') {
     instruction=`Lav en struktureret eksamensopsummering af materialet fra "${currentSubject}" inkl. diagrammer og modeller. Skriv på dansk.`;
   } else {
