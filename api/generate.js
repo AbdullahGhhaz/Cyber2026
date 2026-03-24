@@ -22,16 +22,29 @@ export default async function handler(req, res) {
       images = images.slice(0, 5);
     }
 
-    // Byg Anthropic content array
+    // Byg content array
     const content = [];
+
+    // Tilføj billeder — kun jpeg og png virker med Anthropic
     if (images && images.length > 0) {
       for (const img of images) {
+        // Normaliser media type — Anthropic accepterer kun jpeg og png
+        let mediaType = img.mediaType || 'image/jpeg';
+        if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(mediaType)) {
+          mediaType = 'image/jpeg';
+        }
+        // Sørg for at b64 data er ren (ingen data URL prefix)
+        let b64 = img.b64 || '';
+        if (b64.includes(',')) b64 = b64.split(',')[1];
+        if (!b64 || b64.length < 100) continue; // Spring over tomme/ugyldige billeder
+
         content.push({
           type: 'image',
-          source: { type: 'base64', media_type: img.mediaType, data: img.b64 }
+          source: { type: 'base64', media_type: mediaType, data: b64 }
         });
       }
     }
+
     content.push({ type: 'text', text: prompt });
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
