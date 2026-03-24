@@ -374,7 +374,7 @@ function buildPayload() {
   } else {
     instruction=`Forklar dette grundigt: "${topic||'de vigtigste begreber i '+currentSubject}" i kontekst af "${currentSubject}". Brug eksempler. Skriv på dansk.`;
   }
-  return { prompt: context+instruction, images: allImages };
+  return { prompt: context+instruction, images: [] };
 }
 
 async function generate() {
