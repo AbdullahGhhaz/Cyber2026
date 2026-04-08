@@ -10,22 +10,38 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    let { prompt, mode } = req.body;
+    let { prompt, mode, n } = req.body;
     if (!prompt) throw new Error('Ingen prompt modtaget');
-
-    // Hvis prompt er for lang, lav en smart sammenfatning af materialet
-    const MAX_CHARS = 80000;
-    if (prompt.length > MAX_CHARS) {
-      prompt = prompt.slice(0, MAX_CHARS) + '\n\n[Materiale afkortet — fokuser på det vigtigste fra det læste]';
-    }
+    if (prompt.length > 80000) prompt = prompt.slice(0, 80000) + '\n\n[Afkortet]';
 
     let system = '';
     if (mode === 'quiz') {
-      system = 'Du er en eksamensforbereder. Du svarer KUN med quiz spørgsmål i det præcise format der beskrives. Ingen introduktion, ingen forklaring, ingen ekstra tekst overhovedet. Start direkte med Q1. Følg formatet 100% nøjagtigt.';
+      system = `Du er en eksamensforbereder. Du skal lave multiplechoice quiz spørgsmål.
+
+KRITISKE REGLER - FØLG 100%:
+1. Start DIREKTE med Q1 - ingen indledning
+2. HVERT eneste spørgsmål SKAL have en "Svar:" linje
+3. Brug ALTID dette eksakte format for ALLE spørgsmål:
+
+Q1: [spørgsmål]
+A) [svar]
+B) [svar]
+C) [svar]
+D) [svar]
+Svar: A — [forklaring]
+
+Q2: [spørgsmål]
+A) [svar]
+B) [svar]
+C) [svar]
+D) [svar]
+Svar: C — [forklaring]
+
+INGEN af spørgsmålene må mangle Svar-linjen. Det er et absolut krav.`;
     } else if (mode === 'summary') {
-      system = 'Du er en eksamensforbereder. Lav en velstruktureret og fyldestgørende opsummering af ALT det vigtigste fra materialet. Brug markdown formatering: # for hovedoverskrifter, ## for underoverskrifter, **fed** for nøglebegreber, - for punktlister. Vær grundig men præcis.';
+      system = 'Du er en eksamensforbereder. Lav en grundig struktureret opsummering. Brug markdown: # overskrifter, ## underoverskrifter, **fed** for nøglebegreber, - for punktlister.';
     } else {
-      system = 'Du er en pædagogisk underviser. Forklar emnet grundigt og klart med konkrete eksempler. Brug markdown: # for overskrifter, ## for underoverskrifter, **fed** for nøglebegreber, - for punktlister, ``` for kodeeksempler. Vær pædagogisk og tydelig.';
+      system = 'Du er en pædagogisk underviser. Forklar emnet grundigt med eksempler. Brug markdown: # overskrifter, ## underoverskrifter, **fed** for nøglebegreber, - for punktlister, ``` for kode.';
     }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
