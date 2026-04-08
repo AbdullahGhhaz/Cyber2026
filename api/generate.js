@@ -52,7 +52,7 @@ INGEN af spørgsmålene må mangle Svar-linjen. Det er et absolut krav.`;
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 4096,
         system,
         messages: [{ role: 'user', content: prompt }]
