@@ -1,5 +1,5 @@
 export const config = {
-  api: { bodyParser: { sizeLimit: '20mb' } }
+  api: { bodyParser: { sizeLimit: '50mb' } }
 };
 
 export default async function handler(req, res) {
@@ -12,16 +12,20 @@ export default async function handler(req, res) {
   try {
     let { prompt, mode } = req.body;
     if (!prompt) throw new Error('Ingen prompt modtaget');
-    if (prompt.length > 60000) prompt = prompt.slice(0, 60000) + '\n\n[Afkortet]';
 
-    // System prompt der tvinger korrekt output format
+    // Hvis prompt er for lang, lav en smart sammenfatning af materialet
+    const MAX_CHARS = 80000;
+    if (prompt.length > MAX_CHARS) {
+      prompt = prompt.slice(0, MAX_CHARS) + '\n\n[Materiale afkortet — fokuser på det vigtigste fra det læste]';
+    }
+
     let system = '';
     if (mode === 'quiz') {
-      system = 'Du er en eksamensforbereder. Du svarer KUN med quiz spørgsmål i det præcise format der beskrives. Ingen introduktion, ingen forklaring, ingen ekstra tekst. Start direkte med Q1.';
+      system = 'Du er en eksamensforbereder. Du svarer KUN med quiz spørgsmål i det præcise format der beskrives. Ingen introduktion, ingen forklaring, ingen ekstra tekst overhovedet. Start direkte med Q1. Følg formatet 100% nøjagtigt.';
     } else if (mode === 'summary') {
-      system = 'Du er en eksamensforbereder. Du svarer med en velstruktureret opsummering. Brug markdown: # for overskrifter, ## for underoverskrifter, **fed** for nøglebegreber, - for punktlister.';
+      system = 'Du er en eksamensforbereder. Lav en velstruktureret og fyldestgørende opsummering af ALT det vigtigste fra materialet. Brug markdown formatering: # for hovedoverskrifter, ## for underoverskrifter, **fed** for nøglebegreber, - for punktlister. Vær grundig men præcis.';
     } else {
-      system = 'Du er en pædagogisk underviser. Du forklarer emner grundigt med eksempler. Brug markdown: # for overskrifter, ## for underoverskrifter, **fed** for nøglebegreber, - for punktlister.';
+      system = 'Du er en pædagogisk underviser. Forklar emnet grundigt og klart med konkrete eksempler. Brug markdown: # for overskrifter, ## for underoverskrifter, **fed** for nøglebegreber, - for punktlister, ``` for kodeeksempler. Vær pædagogisk og tydelig.';
     }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -33,8 +37,8 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2048,
-        system: system,
+        max_tokens: 4096,
+        system,
         messages: [{ role: 'user', content: prompt }]
       })
     });
