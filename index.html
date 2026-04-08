@@ -835,7 +835,7 @@ async function generate() {
     const r = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: buildPrompt() })
+      body: JSON.stringify({ prompt: buildPrompt(), mode: currentMode })
     });
     const data = await r.json();
     if (data.error) throw new Error(data.error);
