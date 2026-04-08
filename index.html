@@ -904,7 +904,7 @@ function handleAns(el, letter, ans) {
   const correct = m ? m[1] : null;
   card.querySelectorAll('.quiz-opt').forEach(o => {
     const l = o.textContent.trim()[0];
-    if (l === letter) o.classList.add(letter === correct ? 'correct' : 'wrong');
+    if (l === letter && letter !== correct) o.classList.add('wrong');
     if (correct && l === correct) o.classList.add('correct');
   });
   card.querySelector('.quiz-reveal')?.classList.add('visible');
