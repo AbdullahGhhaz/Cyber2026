@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EKSAMEN PREP</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root {
+  --bg: #080b14;
+  --bg2: #0d1220;
+  --surface: #111827;
+  --surface2: #1a2235;
+  --border: #1e2d47;
+  --border2: #253652;
+  --accent: #3b82f6;
+  --accent2: #60a5fa;
+  --accent-glow: rgba(59,130,246,0.15);
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --muted: #4b6080;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warn: #f59e0b;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Outfit', sans-serif;
+}
+[data-theme="light"] {
+  --bg: #f0f4ff;
+  --bg2: #e8edf8;
+  --surface: #ffffff;
+  --surface2: #f1f5fb;
+  --border: #dce3f0;
+  --border2: #c8d3e8;
+  --accent: #2563eb;
+  --accent2: #3b82f6;
+  --accent-glow: rgba(37,99,235,0.1);
+  --text: #0f172a;
+  --text2: #475569;
+  --muted: #94a3b8;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  transition: background .3s, color .3s;
+  background-image: radial-gradient(ellipse at 20% 0%, rgba(59,130,246,0.05) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 100%, rgba(16,185,129,0.03) 0%, transparent 60%);
+}
+
+/* HEADER */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 60px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(8,11,20,0.85);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+[data-theme="light"] header { background: rgba(240,244,255,0.85); }
+.logo {
+  font-family: var(--mono);
+  font-size: .95rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  color: var(--accent2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-dot {
+  width: 8px; height: 8px;
+  background: var(--success);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--success);
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+.header-actions { display: flex; align-items: center; gap: 10px; }
+.hbtn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: .72rem;
+  letter-spacing: .05em;
+  transition: all .2s;
+}
+.hbtn:hover { border-color: var(--accent); color: var(--accent2); }
+
+/* MAIN LAYOUT */
+.app {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  grid-template-rows: auto 1fr;
+  height: calc(100vh - 60px);
+}
+
+/* SIDEBAR */
+.sidebar {
+  grid-row: 1 / 3;
+  border-right: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sidebar-top {
+  padding: 20px 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-label {
+  font-family: var(--mono);
+  font-size: .65rem;
+  letter-spacing: .2em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.subject-list { display: flex; flex-direction: column; gap: 4px; }
+.sub-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text2);
+  font-family: var(--sans);
+  font-size: .88rem;
+  font-weight: 500;
+  transition: all .2s;
+  width: 100%;
+  text-align: left;
+}
+.sub-btn:hover { background: var(--surface); color: var(--text); border-color: var(--border); }
+.sub-btn.active {
+  background: var(--accent-glow);
+  color: var(--accent2);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(59,130,246,0.2);
+}
+.sub-btn .sub-icon { font-size: 1rem; }
+.sub-btn .sub-count {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: .68rem;
+  color: var(--muted);
+  background: var(--surface2);
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+.sub-btn.active .sub-count { background: rgba(59,130,246,0.2); color: var(--accent2); }
+
+/* DOC LIST IN SIDEBAR */
+.sidebar-docs {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+}
+.sidebar-docs::-webkit-scrollbar { width: 4px; }
+.sidebar-docs::-webkit-scrollbar-track { background: transparent; }
+.sidebar-docs::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+.upload-zone {
+  border: 1.5px dashed var(--border2);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  transition: all .2s;
+  margin-bottom: 12px;
+}
+.upload-zone:hover { border-color: var(--accent); background: var(--accent-glow); }
+.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.upload-zone-icon { font-size: 1.3rem; margin-bottom: 4px; }
+.upload-zone-text { font-size: .78rem; color: var(--text2); }
+.upload-zone-text strong { color: var(--accent2); }
+.doc-items { display: flex; flex-direction: column; gap: 6px; }
+.doc-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: all .2s;
+}
+.doc-card:hover { border-color: var(--border2); }
+.doc-icon { font-size: .95rem; flex-shrink: 0; }
+.doc-info { flex: 1; min-width: 0; }
+.doc-name { font-size: .78rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.doc-meta { font-family: var(--mono); font-size: .62rem; color: var(--muted); margin-top: 1px; }
+.doc-del { background: none; border: none; color: var(--muted); cursor: pointer; padding: 3px 5px; border-radius: 4px; font-size: .8rem; transition: all .15s; flex-shrink: 0; }
+.doc-del:hover { color: var(--danger); background: rgba(239,68,68,.1); }
+.empty-docs { text-align: center; padding: 24px 12px; color: var(--muted); font-size: .8rem; }
+
+/* SAVED SECTION IN SIDEBAR */
+.sidebar-saved { padding: 0 16px 16px; }
+.saved-section-label {
+  font-family: var(--mono);
+  font-size: .65rem;
+  letter-spacing: .2em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.saved-cards { display: flex; flex-direction: column; gap: 5px; }
+.saved-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.saved-card:hover { border-color: var(--accent); background: var(--accent-glow); }
+.saved-card-icon { font-size: .9rem; }
+.saved-card-info { flex: 1; min-width: 0; }
+.saved-card-type { font-size: .75rem; font-weight: 600; color: var(--text2); }
+.saved-card-date { font-family: var(--mono); font-size: .62rem; color: var(--muted); }
+.saved-card-del { background: none; border: none; color: var(--muted); cursor: pointer; padding: 2px 5px; border-radius: 4px; font-size: .75rem; }
+.saved-card-del:hover { color: var(--danger); }
+
+/* MAIN CONTENT */
+.main-top {
+  padding: 20px 28px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.stats-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--text2);
+}
+.stats-pill .pill {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 20px;
+  color: var(--success);
+  font-size: .68rem;
+}
+.mode-switcher {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 3px;
+  gap: 3px;
+}
+.mode-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text2);
+  padding: 7px 16px;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: .82rem;
+  font-weight: 500;
+  border-radius: 7px;
+  transition: all .2s;
+  white-space: nowrap;
+}
+.mode-btn:hover { color: var(--text); background: var(--surface2); }
+.mode-btn.active { background: var(--accent); color: #fff; box-shadow: 0 2px 12px rgba(59,130,246,0.4); }
+
+/* GENERATE AREA */
+.main-body {
+  padding: 24px 28px;
+  overflow-y: auto;
+}
+.main-body::-webkit-scrollbar { width: 6px; }
+.main-body::-webkit-scrollbar-track { background: transparent; }
+.main-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 6px; }
+
+.gen-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.ctrl-group { display: flex; align-items: center; gap: 8px; }
+.ctrl-label { font-size: .8rem; color: var(--text2); }
+.ctrl-select, .ctrl-input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: .82rem;
+  transition: border .2s;
+}
+.ctrl-select:focus, .ctrl-input:focus { outline: none; border-color: var(--accent); }
+.ctrl-input { width: 64px; }
+.explain-input {
+  flex: 1;
+  min-width: 200px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: .85rem;
+}
+.explain-input:focus { outline: none; border-color: var(--accent); }
+.gen-btn {
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  padding: 9px 28px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  transition: all .2s;
+  box-shadow: 0 4px 20px rgba(59,130,246,0.3);
+  margin-left: auto;
+}
+.gen-btn:hover { background: #2563eb; box-shadow: 0 4px 28px rgba(59,130,246,0.5); transform: translateY(-1px); }
+.gen-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* LOADING */
+.loading-bar {
+  display: none;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+.loading-bar.visible { display: flex; }
+.spinner { width: 20px; height: 20px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-family: var(--mono); font-size: .75rem; color: var(--text2); }
+
+/* OUTPUT */
+.output-wrap { display: none; }
+.output-wrap.visible { display: block; }
+.output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.output-label { font-family: var(--mono); font-size: .72rem; letter-spacing: .15em; color: var(--accent2); text-transform: uppercase; }
+.output-btns { display: flex; gap: 8px; }
+.obtn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 5px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: .78rem;
+  font-family: var(--sans);
+  transition: all .2s;
+}
+.obtn:hover { border-color: var(--accent); color: var(--accent2); }
+.obtn.save-btn { border-color: var(--success); color: var(--success); }
+.obtn.save-btn:hover { background: rgba(16,185,129,0.1); }
+
+/* QUIZ CARDS */
+.quiz-grid { display: flex; flex-direction: column; gap: 16px; }
+.quiz-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px;
+  animation: slideUp .3s ease;
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.quiz-num { font-family: var(--mono); font-size: .65rem; color: var(--accent2); margin-bottom: 8px; letter-spacing: .12em; text-transform: uppercase; }
+.quiz-q { font-weight: 600; font-size: .95rem; line-height: 1.55; margin-bottom: 14px; color: var(--text); }
+.quiz-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media(max-width:900px){ .quiz-opts { grid-template-columns: 1fr; } }
+.quiz-opt {
+  padding: 10px 14px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: .85rem;
+  transition: all .15s;
+  background: var(--surface2);
+  color: var(--text);
+  text-align: left;
+}
+.quiz-opt:hover { border-color: var(--accent); color: var(--accent2); background: var(--accent-glow); }
+.quiz-opt.correct { border-color: var(--success); background: rgba(16,185,129,.1); color: var(--success); }
+.quiz-opt.wrong { border-color: var(--danger); background: rgba(239,68,68,.1); color: var(--danger); }
+.quiz-reveal { margin-top: 12px; padding: 10px 14px; background: var(--bg2); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; font-size: .82rem; color: var(--text2); display: none; line-height: 1.5; }
+.quiz-reveal.visible { display: block; }
+
+/* MARKDOWN OUTPUT */
+.md-output {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 32px;
+  font-size: .92rem;
+  line-height: 1.8;
+  color: var(--text);
+}
+.md-output h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 16px; color: var(--accent2); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+.md-output h2 { font-size: 1.1rem; font-weight: 600; margin: 24px 0 10px; color: var(--text); }
+.md-output h3 { font-size: .95rem; font-weight: 600; margin: 18px 0 8px; color: var(--text2); }
+.md-output p { margin-bottom: 12px; }
+.md-output ul, .md-output ol { padding-left: 20px; margin-bottom: 12px; }
+.md-output li { margin-bottom: 5px; }
+.md-output strong { color: var(--accent2); font-weight: 600; }
+.md-output em { color: var(--text2); font-style: italic; }
+.md-output code { background: var(--surface2); border: 1px solid var(--border); padding: 2px 7px; border-radius: 5px; font-family: var(--mono); font-size: .82rem; color: var(--warn); }
+.md-output pre { background: var(--bg2); border: 1px solid var(--border); padding: 16px; border-radius: 10px; overflow-x: auto; margin-bottom: 14px; }
+.md-output pre code { background: none; border: none; padding: 0; color: var(--text2); }
+.md-output blockquote { border-left: 3px solid var(--accent); padding: 10px 16px; background: var(--accent-glow); border-radius: 0 8px 8px 0; margin-bottom: 12px; color: var(--text2); }
+.md-output hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+.md-output table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+.md-output th { background: var(--surface2); padding: 8px 12px; text-align: left; font-weight: 600; border: 1px solid var(--border); font-size: .82rem; }
+.md-output td { padding: 7px 12px; border: 1px solid var(--border); font-size: .85rem; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 12px 20px; border-radius: 10px; font-size: .82rem; opacity: 0; transition: opacity .3s; z-index: 999; box-shadow: 0 8px 32px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 8px; }
+.toast.visible { opacity: 1; }
+.toast.success { border-color: var(--success); }
+.toast.error { border-color: var(--danger); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    EXAM.PREP
+  </div>
+  <div class="header-actions">
+    <button class="hbtn" onclick="toggleTheme()" id="themeBtn">☀ LYS</button>
+  </div>
+</header>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-label">// fag</div>
+      <div class="subject-list" id="subjectList">
+        <button class="sub-btn active" onclick="selectSubject(this,'Programmering')">
+          <span class="sub-icon">💻</span> Programmering
+          <span class="sub-count" id="cnt-Prog">0</span>
+        </button>
+        <button class="sub-btn" onclick="selectSubject(this,'Forretningsforståelse')">
+          <span class="sub-icon">📊</span> Forretningsforståelse
+          <span class="sub-count" id="cnt-Forretning">0</span>
+        </button>
+        <button class="sub-btn" onclick="selectSubject(this,'Computerarkitektur')">
+          <span class="sub-icon">🖥</span> Computerarkitektur
+          <span class="sub-count" id="cnt-Computer">0</span>
+        </button>
+        <!-- NYT FAG: tilføj ny sub-btn her -->
+      </div>
+    </div>
+
+    <div class="sidebar-docs" id="sidebarDocs">
+      <div class="upload-zone" id="uploadZone"
+        ondragover="event.preventDefault();this.classList.add('dragover')"
+        ondragleave="this.classList.remove('dragover')"
+        ondrop="handleDrop(event)">
+        <input type="file" id="fileInput" multiple accept=".pdf,.pptx,.ppt,.docx,.doc,.txt,.md" onchange="handleFiles(this.files)">
+        <div class="upload-zone-icon">📂</div>
+        <div class="upload-zone-text">Træk filer hertil eller <strong>klik</strong></div>
+      </div>
+      <div class="doc-items" id="docItems">
+        <div class="empty-docs">Ingen dokumenter endnu</div>
+      </div>
+    </div>
+
+    <div class="sidebar-saved">
+      <div class="saved-section-label">// gemte resultater</div>
+      <div class="saved-cards" id="savedCards">
+        <div class="empty-docs" style="padding:12px 0;">Ingen gemte resultater</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN TOP BAR -->
+  <div class="main-top">
+    <div class="stats-pill" id="statsPill">
+      <span class="pill" id="statsText">0 dokumenter</span>
+    </div>
+    <div class="mode-switcher">
+      <button class="mode-btn active" onclick="selectMode(this,'quiz')">🎯 Quiz</button>
+      <button class="mode-btn" onclick="selectMode(this,'summary')">📋 Opsummering</button>
+      <button class="mode-btn" onclick="selectMode(this,'explain')">💡 Forklaring</button>
+    </div>
+  </div>
+
+  <!-- MAIN BODY -->
+  <div class="main-body">
+    <div class="gen-controls" id="genControls">
+      <div class="ctrl-group" id="quizCtrls">
+        <span class="ctrl-label">Antal:</span>
+        <input type="number" class="ctrl-input" id="numQ" value="5" min="1" max="20">
+        <span class="ctrl-label">Type:</span>
+        <select class="ctrl-select" id="qType">
+          <option value="multiple">Multiplechoice</option>
+          <option value="open">Åbne spørgsmål</option>
+          <option value="truefalse">Sandt/Falsk</option>
+        </select>
+      </div>
+      <input type="text" class="explain-input" id="explainTopic" placeholder="Skriv emne at forklare (fx 'OSI-modellen')..." style="display:none;">
+      <button class="gen-btn" id="genBtn" onclick="generate()">⚡ GENERÉR</button>
+    </div>
+
+    <div class="loading-bar" id="loading">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loadingText">GENERERER INDHOLD...</div>
+    </div>
+
+    <div class="output-wrap" id="outputWrap">
+      <div class="output-header">
+        <div class="output-label" id="outputLabel">// resultat</div>
+        <div class="output-btns">
+          <button class="obtn save-btn" onclick="saveResult()">💾 Gem resultat</button>
+          <button class="obtn" onclick="copyOutput()">📋 Kopiér</button>
+        </div>
+      </div>
+      <div id="outputContent"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const SUPABASE_URL = 'https://ojpmrfhtepdvdinoixvs.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qcG1yZmh0ZXBkdmRpbm9peHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Nzc2OTEsImV4cCI6MjA5MTI1MzY5MX0.f0bRsu4fddPnOgBRsEtwO3MgSMOvQ6ypxEjtUoWHeGg';
+
+let theme = 'dark';
+let currentSubject = 'Programmering';
+let currentMode = 'quiz';
+let currentOutput = '';
+let allDocs = {};
+let allSaved = {};
+
+// ── INIT ───────────────────────────────────────────────────
+window.addEventListener('load', () => loadData());
+
+// ── THEME ──────────────────────────────────────────────────
+function toggleTheme() {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : '');
+  document.getElementById('themeBtn').textContent = theme === 'dark' ? '☀ LYS' : '🌙 MØRK';
+}
+
+// ── SUBJECT ────────────────────────────────────────────────
+function selectSubject(btn, name) {
+  document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentSubject = name;
+  document.getElementById('outputWrap').classList.remove('visible');
+  renderDocs();
+  renderSaved();
+  updateStats();
+}
+
+// ── MODE ───────────────────────────────────────────────────
+function selectMode(btn, mode) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentMode = mode;
+  document.getElementById('quizCtrls').style.display = mode === 'quiz' ? 'flex' : 'none';
+  document.getElementById('explainTopic').style.display = mode === 'explain' ? 'block' : 'none';
+  document.getElementById('outputWrap').classList.remove('visible');
+}
+
+// ── SUPABASE ───────────────────────────────────────────────
+async function sb(path, opts = {}) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...opts,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+      ...opts.headers
+    }
+  });
+  if (!r.ok) throw new Error(await r.text());
+  const t = await r.text();
+  return t ? JSON.parse(t) : [];
+}
+
+// ── LOAD ───────────────────────────────────────────────────
+async function loadData() {
+  try {
+    const subjects = ['Programmering','Forretningsforståelse','Computerarkitektur'];
+    for (const s of subjects) {
+      const docs = await sb(`documents?subject=eq.${encodeURIComponent(s)}&order=created_at.asc`);
+      allDocs[s] = docs;
+      const saved = await sb(`generated_content?subject=eq.${encodeURIComponent(s)}&order=created_at.desc`);
+      allSaved[s] = saved;
+      const cntId = {'Programmering':'cnt-Prog','Forretningsforståelse':'cnt-Forretning','Computerarkitektur':'cnt-Computer'}[s];
+      const cnt = document.getElementById(cntId);
+      if (cnt) cnt.textContent = docs.length;
+    }
+    renderDocs();
+    renderSaved();
+    updateStats();
+  } catch(e) { showToast('Fejl ved indlæsning: ' + e.message, 'error'); }
+}
+
+// ── FILES ──────────────────────────────────────────────────
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+}
+
+async function handleFiles(files) {
+  for (const file of files) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    let text = '';
+    try {
+      if (ext === 'pdf') text = await readPDF(file);
+      else if (['docx','doc'].includes(ext)) text = await readDOCX(file);
+      else if (['pptx','ppt'].includes(ext)) text = await readPPTX(file);
+      else if (['txt','md'].includes(ext)) text = await readTxt(file);
+      else { showToast('Ukendt type: ' + file.name, 'error'); continue; }
+      if (!text || text.length < 10) { showToast('Ingen tekst: ' + file.name, 'error'); continue; }
+
+      const res = await sb('documents', {
+        method: 'POST',
+        body: JSON.stringify({ subject: currentSubject, filename: file.name, content: text.slice(0, 100000) })
+      });
+      if (!allDocs[currentSubject]) allDocs[currentSubject] = [];
+      allDocs[currentSubject].push(res[0]);
+      const cnt = document.getElementById("cnt-" + currentSubject.slice(0,7));
+      if (cnt) cnt.textContent = allDocs[currentSubject].length;
+      renderDocs();
+      updateStats();
+      showToast('✓ Gemt: ' + file.name, 'success');
+    } catch(e) { showToast('Fejl: ' + e.message, 'error'); }
+  }
+}
+
+async function readPDF(file) {
+  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+  let t = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const p = await pdf.getPage(i);
+    const c = await p.getTextContent();
+    t += c.items.map(x => x.str).join(' ') + '\n';
+  }
+  return t.trim();
+}
+async function readDOCX(file) {
+  return (await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value.trim();
+}
+async function readPPTX(file) {
+  const zip = await JSZip.loadAsync(await file.arrayBuffer());
+  const slides = Object.keys(zip.files).filter(n => n.match(/^ppt\/slides\/slide\d+\.xml$/)).sort((a,b) => parseInt(a.match(/\d+/)?.[0]||0) - parseInt(b.match(/\d+/)?.[0]||0));
+  let t = '';
+  for (const s of slides) {
+    const xml = await zip.files[s].async('text');
+    const st = (xml.match(/<a:t[^>]*>([^<]+)<\/a:t>/g)||[]).map(m=>m.replace(/<[^>]+>/g,'')).join(' ').trim();
+    if (st) t += st + '\n';
+  }
+  return t.trim();
+}
+async function readTxt(file) {
+  return new Promise((res,rej) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = rej; r.readAsText(file); });
+}
+
+// ── DELETE DOC ─────────────────────────────────────────────
+async function deleteDoc(id) {
+  try {
+    await sb(`documents?id=eq.${id}`, { method: 'DELETE' });
+    allDocs[currentSubject] = allDocs[currentSubject].filter(d => d.id !== id);
+    const cnt = document.getElementById("cnt-" + currentSubject.slice(0,7));
+    if (cnt) cnt.textContent = allDocs[currentSubject].length;
+    renderDocs();
+    updateStats();
+    showToast('Dokument slettet');
+  } catch(e) { showToast('Fejl: ' + e.message, 'error'); }
+}
+
+// ── DELETE SAVED ───────────────────────────────────────────
+async function deleteSaved(id) {
+  try {
+    await sb(`generated_content?id=eq.${id}`, { method: 'DELETE' });
+    allSaved[currentSubject] = allSaved[currentSubject].filter(s => s.id !== id);
+    renderSaved();
+    showToast('Slettet');
+  } catch(e) { showToast('Fejl: ' + e.message, 'error'); }
+}
+
+// ── RENDER DOCS ────────────────────────────────────────────
+function renderDocs() {
+  const docs = allDocs[currentSubject] || [];
+  const el = document.getElementById('docItems');
+  if (!docs.length) { el.innerHTML = '<div class="empty-docs">Ingen dokumenter endnu</div>'; return; }
+  const icons = {pdf:'📄',pptx:'📊',ppt:'📊',docx:'📝',doc:'📝',txt:'📃',md:'📃'};
+  el.innerHTML = docs.map(d => {
+    const ext = d.filename.split('.').pop().toLowerCase();
+    const size = ((d.content?.length||0)/1000).toFixed(1) + 'k tegn';
+    const date = new Date(d.created_at).toLocaleDateString('da-DK',{day:'numeric',month:'short'});
+    return `<div class="doc-card">
+      <span class="doc-icon">${icons[ext]||'📁'}</span>
+      <div class="doc-info">
+        <div class="doc-name" title="${d.filename}">${d.filename}</div>
+        <div class="doc-meta">${size} · ${date}</div>
+      </div>
+      <button class="doc-del" onclick="deleteDoc('${d.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ── RENDER SAVED ───────────────────────────────────────────
+function renderSaved() {
+  const saved = allSaved[currentSubject] || [];
+  const el = document.getElementById('savedCards');
+  if (!saved.length) { el.innerHTML = '<div class="empty-docs" style="padding:12px 0;">Ingen gemte resultater</div>'; return; }
+  const icons = {quiz:'🎯',summary:'📋',explain:'💡'};
+  const labels = {quiz:'Quiz',summary:'Opsummering',explain:'Forklaring'};
+  el.innerHTML = saved.map(s => {
+    const date = new Date(s.created_at).toLocaleDateString('da-DK',{day:'numeric',month:'short'});
+    return `<div class="saved-card" onclick="showSaved('${s.id}')">
+      <span class="saved-card-icon">${icons[s.type]||'📄'}</span>
+      <div class="saved-card-info">
+        <div class="saved-card-type">${labels[s.type]||s.type}</div>
+        <div class="saved-card-date">${date}</div>
+      </div>
+      <button class="saved-card-del" onclick="event.stopPropagation();deleteSaved('${s.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ── SHOW SAVED ─────────────────────────────────────────────
+function showSaved(id) {
+  const s = (allSaved[currentSubject]||[]).find(x => x.id === id);
+  if (!s) return;
+  currentOutput = s.content;
+  currentMode = s.type;
+  const labels = {quiz:'// quiz spørgsmål',summary:'// opsummering',explain:'// forklaring'};
+  document.getElementById('outputLabel').textContent = labels[s.type] || '// resultat';
+  renderOutput(s.content);
+  document.getElementById('outputWrap').classList.add('visible');
+}
+
+// ── STATS ──────────────────────────────────────────────────
+function updateStats() {
+  const docs = allDocs[currentSubject] || [];
+  const total = docs.reduce((s,d) => s + (d.content?.length||0), 0);
+  const el = document.getElementById('statsText');
+  el.textContent = docs.length ? `${docs.length} dok · ${(total/1000).toFixed(0)}k tegn` : '0 dokumenter';
+}
+
+// ── PROMPT ─────────────────────────────────────────────────
+function buildPrompt() {
+  const docs = allDocs[currentSubject] || [];
+  const MAX = 60000;
+  let used = 0, parts = '';
+  for (const d of docs) {
+    if (used >= MAX) break;
+    const chunk = (d.content||'').slice(0, MAX - used);
+    if (chunk.trim()) { parts += `\n\n--- ${d.filename} ---\n${chunk}`; used += chunk.length; }
+  }
+  const mat = parts ? `Her er alt undervisningsmateriale for "${currentSubject}":\n${parts}` : `Brug din viden om "${currentSubject}".`;
+  const n = document.getElementById('numQ').value || 5;
+  const qt = document.getElementById('qType').value || 'multiple';
+  const topic = document.getElementById('explainTopic').value || '';
+
+  if (currentMode === 'quiz') {
+    if (qt === 'multiple') return `${mat}\n\n---\nOPGAVE: Lav præcis ${n} multiplechoice spørgsmål på dansk. Start direkte med Q1:\n\nQ1: [spørgsmål]\nA) [svar]\nB) [svar]\nC) [svar]\nD) [svar]\nSvar: A — [forklaring]\n\nFortsæt til Q${n}.`;
+    if (qt === 'open') return `${mat}\n\n---\nOPGAVE: Lav præcis ${n} åbne eksamensspørgsmål på dansk. Start direkte med Q1:\n\nQ1: [spørgsmål]\nSvar: [svar]\n\nFortsæt til Q${n}.`;
+    return `${mat}\n\n---\nOPGAVE: Lav præcis ${n} sandt/falsk påstande på dansk. Start direkte med Q1:\n\nQ1: [påstand]\nSvar: Sandt — [forklaring]\n\nFortsæt til Q${n}.`;
+  }
+  if (currentMode === 'summary') return `${mat}\n\n---\nOPGAVE: Lav en struktureret eksamensopsummering på dansk af alt materialet. Brug overskrifter, punktlister og nøglebegreber. Kun opsummering.`;
+  return `${mat}\n\n---\nOPGAVE: Forklar følgende emne grundigt og pædagogisk på dansk: "${topic||'de vigtigste begreber i '+currentSubject}". Brug eksempler og tydelige forklaringer. Ingen quiz.`;
+}
+
+// ── GENERATE ───────────────────────────────────────────────
+async function generate() {
+  const docs = allDocs[currentSubject] || [];
+  if (!docs.length) { showToast('Upload mindst ét dokument først!', 'error'); return; }
+  const btn = document.getElementById('genBtn');
+  const loading = document.getElementById('loading');
+  btn.disabled = true;
+  loading.classList.add('visible');
+  document.getElementById('outputWrap').classList.remove('visible');
+
+  try {
+    const r = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: buildPrompt() })
+    });
+    const data = await r.json();
+    if (data.error) throw new Error(data.error);
+    currentOutput = data.text;
+    const labels = {quiz:'// quiz spørgsmål',summary:'// opsummering',explain:'// forklaring'};
+    document.getElementById('outputLabel').textContent = labels[currentMode] || '// resultat';
+    renderOutput(data.text);
+    document.getElementById('outputWrap').classList.add('visible');
+    document.getElementById('outputWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch(e) {
+    document.getElementById('outputContent').innerHTML = `<div class="md-output" style="color:var(--danger)">Fejl: ${e.message}</div>`;
+    document.getElementById('outputWrap').classList.add('visible');
+  }
+  btn.disabled = false;
+  loading.classList.remove('visible');
+}
+
+// ── SAVE ───────────────────────────────────────────────────
+async function saveResult() {
+  if (!currentOutput) return;
+  try {
+    const res = await sb('generated_content', {
+      method: 'POST',
+      body: JSON.stringify({ subject: currentSubject, type: currentMode, content: currentOutput })
+    });
+    if (!allSaved[currentSubject]) allSaved[currentSubject] = [];
+    allSaved[currentSubject].unshift(res[0]);
+    renderSaved();
+    showToast('✓ Gemt!', 'success');
+  } catch(e) { showToast('Fejl: ' + e.message, 'error'); }
+}
+
+// ── RENDER OUTPUT ──────────────────────────────────────────
+function renderOutput(text) {
+  const el = document.getElementById('outputContent');
+  if (currentMode === 'quiz') {
+    el.innerHTML = renderQuiz(text);
+  } else {
+    el.innerHTML = `<div class="md-output">${renderMarkdown(text)}</div>`;
+  }
+}
+
+function renderQuiz(text) {
+  const blocks = text.split(/\n(?=Q\d+:)/);
+  if (blocks.length <= 1) return `<div class="md-output">${renderMarkdown(text)}</div>`;
+  return '<div class="quiz-grid">' + blocks.filter(b=>b.trim()).map((block,i) => {
+    const lines = block.trim().split('\n');
+    const q = lines[0].replace(/^Q\d+:\s*/,'');
+    const opts = lines.filter(l => /^[A-D]\)/.test(l.trim()));
+    const ans = lines.find(l => /^Svar:/.test(l.trim())) || '';
+    let html = `<div class="quiz-card"><div class="quiz-num">SPØRGSMÅL ${i+1}</div><div class="quiz-q">${esc(q)}</div>`;
+    if (opts.length > 0) {
+      html += '<div class="quiz-opts">' + opts.map(o => `<button class="quiz-opt" onclick="handleAns(this,'${o[0]}',\`${escA(ans)}\`)">${esc(o)}</button>`).join('') + '</div>';
+      html += `<div class="quiz-reveal">${esc(ans)}</div>`;
+    } else {
+      html += `<div class="quiz-reveal visible">${esc(lines.slice(1).join('\n'))}</div>`;
+    }
+    return html + '</div>';
+  }).join('') + '</div>';
+}
+
+function handleAns(el, letter, ans) {
+  const card = el.closest('.quiz-card');
+  if (card.querySelector('.correct,.wrong')) return;
+  const m = ans.match(/Svar:\s*([A-D])/);
+  const correct = m ? m[1] : null;
+  card.querySelectorAll('.quiz-opt').forEach(o => {
+    const l = o.textContent.trim()[0];
+    if (l === letter) o.classList.add(letter === correct ? 'correct' : 'wrong');
+    if (correct && l === correct) o.classList.add('correct');
+  });
+  card.querySelector('.quiz-reveal')?.classList.add('visible');
+}
+
+// Simple markdown renderer
+function renderMarkdown(text) {
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/^---$/gm, '<hr>')
+    .replace(/^\* (.+)$/gm, '<li>$1</li>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`)
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/^(?!<[hul]|<li|<hr)(.+)$/gm, '$1')
+    .replace(/^<\/p><p>$/gm, '')
+    .replace(/\n/g, '<br>');
+}
+
+function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escA(t){return String(t).replace(/`/g,'\\`').replace(/\$/g,'\\$');}
+
+function copyOutput() {
+  navigator.clipboard.writeText(document.getElementById('outputContent').innerText).then(() => showToast('✓ Kopieret!', 'success'));
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast visible' + (type ? ' ' + type : '');
+  setTimeout(() => t.classList.remove('visible'), 2800);
+}
+</script>
+</body>
+</html>
