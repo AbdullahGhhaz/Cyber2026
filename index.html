@@ -641,7 +641,11 @@ async function generate(forceNew = false) {
       <button class="obtn" onclick="copyOutput()">📋 Kopiér</button>`;
     document.getElementById('outputWrap').classList.add('visible');
     document.getElementById('outputWrap').scrollIntoView({ behavior:'smooth', block:'start' });
-    await autoSave();
+    if (validateQuiz(data.text)) {
+      await autoSave();
+    } else {
+      showToast('⚠️ Nogle spørgsmål mangler svar — ikke gemt', 'error');
+    }
   } catch(e) {
     document.getElementById('outputContent').innerHTML = `<div class="md-out" style="color:var(--danger)">Fejl: ${e.message}</div>`;
     document.getElementById('outputWrap').classList.add('visible');
@@ -657,7 +661,7 @@ function validateQuiz(text) {
   const missing = blocks.filter(b => b.trim() && !/Svar:\s*[A-D]/.test(b));
   return missing.length === 0;
 }
-  async function autoSave() {
+async function autoSave() {
   if (!currentOutput) return;
   try {
     const key = getCacheKey();
