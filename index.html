@@ -651,7 +651,13 @@ async function generate(forceNew = false) {
 }
 
 // ── AUTO SAVE ──────────────────────────────────────────────
-async function autoSave() {
+function validateQuiz(text) {
+  if (currentMode !== 'quiz') return true;
+  const blocks = text.split(/\n(?=Q\d+:)/);
+  const missing = blocks.filter(b => b.trim() && !/Svar:\s*[A-D]/.test(b));
+  return missing.length === 0;
+}
+  async function autoSave() {
   if (!currentOutput) return;
   try {
     const key = getCacheKey();
