@@ -568,7 +568,7 @@ function buildPrompt() {
   const topic = document.getElementById('topicInput').value || '';
 
   if (currentMode === 'quiz') {
-    if (qt === 'multiple') return `${mat}\n\n---\nOPGAVE: Lav præcis ${n} multiplechoice spørgsmål på dansk baseret på materialet. Start direkte med Q1:\n\nQ1: [spørgsmål]\nA) [svar]\nB) [svar]\nC) [svar]\nD) [svar]\nSvar: A — [forklaring]\n\nQ2: [spørgsmål]\nA) [svar]\nB) [svar]\nC) [svar]\nD) [svar]\nSvar: B — [forklaring]\n\nFortsæt præcis sådan til Q${n}.`;
+    if (qt === 'multiple') return `${mat}\n\n---\nOPGAVE: Lav præcis ${n} multiplechoice spørgsmål på dansk baseret på materialet. HVERT spørgsmål SKAL have en Svar-linje. Start direkte med Q1:\n\nQ1: [spørgsmål]\nA) [svar]\nB) [svar]\nC) [svar]\nD) [svar]\nSvar: A — [forklaring på hvorfor dette er korrekt]\n\nQ2: [spørgsmål]\nA) [svar]\nB) [svar]\nC) [svar]\nD) [svar]\nSvar: C — [forklaring på hvorfor dette er korrekt]\n\nALLE ${n} spørgsmål skal følge præcis dette format med Svar-linjen.`;
     if (qt === 'open') return `${mat}\n\n---\nOPGAVE: Lav præcis ${n} åbne eksamensspørgsmål på dansk. Start direkte med Q1:\n\nQ1: [spørgsmål]\nSvar: [detaljeret svar]\n\nFortsæt til Q${n}.`;
     return `${mat}\n\n---\nOPGAVE: Lav præcis ${n} sandt/falsk påstande på dansk. Start direkte med Q1:\n\nQ1: [påstand]\nSvar: Sandt — [forklaring]\n\nFortsæt til Q${n}.`;
   }
