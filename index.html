@@ -276,7 +276,7 @@ function toggleTheme() {
   document.getElementById('themeBtn').textContent = theme === 'dark' ? '☀ LYS' : '🌙 MØRK';
 }
 
-function selectSubject(btn, name) {
+async function selectSubject(btn, name) {
   document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   currentSubject = name;
@@ -289,7 +289,7 @@ function selectSubject(btn, name) {
   renderSaved();
   updateStats();
   // FIX: hent quiz-spørgsmål for det nye fag
-  loadQuizQuestions();
+  await loadQuizQuestions();
 }
 
 function selectScope(btn, scope) {
@@ -357,7 +357,7 @@ async function loadData() {
       } catch(e) { /* ignorer stille */ }
     }
     renderDocs(); renderSaved(); updateStats();
-    loadQuizQuestions();
+    await loadQuizQuestions();
   } catch(e) { showToast('Fejl ved indlæsning: ' + e.message, 'error'); }
 }
 
