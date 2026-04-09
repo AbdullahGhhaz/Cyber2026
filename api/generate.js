@@ -22,6 +22,23 @@ async function callClaude(system, prompt, maxTokens = 2048) {
   return data.content?.map(b => b.text || '').join('') || '';
 }
 
+function parseQuestions(text) {
+  try {
+    const clean = text.replace(/```json|```/g, '').trim();
+    return JSON.parse(clean);
+  } catch(e) {
+    const match = text.match(/\[[\s\S]*\]/);
+    if (match) { try { return JSON.parse(match[0]); } catch(e2) { return []; } }
+    return [];
+  }
+}
+
+function validateQuestion(q) {
+  return q && q.question && q.a && q.b && q.c && q.d &&
+    q.correct && ['a','b','c','d'].includes(String(q.correct).toLowerCase()) &&
+    q.explanation;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -35,57 +52,48 @@ export default async function handler(req, res) {
     if (prompt.length > 80000) prompt = prompt.slice(0, 80000) + '\n\n[Afkortet]';
 
     if (mode === 'quiz') {
-      // Byg kontekst fra eksisterende spørgsmål så AI undgår dubletter
       const existingContext = existingQuestions.length > 0
-        ? `\n\nUNDGÅ disse emner da der allerede er spørgsmål om dem:\n${existingQuestions.map(q => `- ${q.question}`).join('\n')}`
+        ? `\n\nUNDGÅ disse emner - der er allerede spørgsmål om dem:\n${existingQuestions.map(q => `- ${q.question}`).join('\n')}`
         : '';
 
-      const system = `Du laver præcis 5 multiplechoice quiz spørgsmål. Svar KUN med JSON array - ingen anden tekst.
+      const system = `Du laver multiplechoice quiz spørgsmål. Svar KUN med et JSON array - ingen anden tekst.
 
-Format:
+Output format:
 [
   {
-    "question": "Spørgsmålet her?",
-    "a": "Første svarmulighed",
-    "b": "Anden svarmulighed", 
-    "c": "Tredje svarmulighed",
-    "d": "Fjerde svarmulighed",
+    "question": "Spørgsmål?",
+    "a": "Svar A",
+    "b": "Svar B",
+    "c": "Svar C",
+    "d": "Svar D",
     "correct": "b",
-    "explanation": "Forklaring på hvorfor b er korrekt"
+    "explanation": "Forklaring"
   }
 ]
 
-REGLER:
-- Præcis 5 spørgsmål
-- "correct" er altid et af: a, b, c eller d (lille bogstav)
-- Alle felter skal udfyldes
-- Kun JSON - ingen tekst før eller efter`;
+Alle 7 felter er obligatoriske i hvert objekt.`;
 
-      const text = await callClaude(system, `${prompt}${existingContext}\n\nLav 5 nye spørgsmål på dansk.`);
+      // Kald 1: 3 spørgsmål
+      const text1 = await callClaude(system, `${prompt}${existingContext}\n\nLav præcis 3 spørgsmål på dansk. Kun JSON.`);
+      const q1 = parseQuestions(text1).filter(validateQuestion);
 
-      // Parse JSON
-      let questions = [];
-      try {
-        const clean = text.replace(/```json|```/g, '').trim();
-        questions = JSON.parse(clean);
-      } catch(e) {
-        // Prøv at finde JSON array i teksten
-        const match = text.match(/\[[\s\S]*\]/);
-        if (match) questions = JSON.parse(match[0]);
-        else throw new Error('Kunne ikke parse quiz spørgsmål');
+      // Kald 2: 2 spørgsmål — undgå emner fra kald 1
+      const avoid = q1.map(q => `- ${q.question}`).join('\n');
+      const avoidCtx = avoid ? `\n\nUNDGÅ også:\n${avoid}` : '';
+      const text2 = await callClaude(system, `${prompt}${existingContext}${avoidCtx}\n\nLav præcis 2 spørgsmål på dansk. Kun JSON.`);
+      const q2 = parseQuestions(text2).filter(validateQuestion);
+
+      let questions = [...q1, ...q2].slice(0, 5);
+
+      // Retry hvis for få
+      if (questions.length < 3) {
+        const text3 = await callClaude(system, `${prompt}\n\nLav præcis 5 spørgsmål på dansk. Kun JSON.`);
+        questions = parseQuestions(text3).filter(validateQuestion).slice(0, 5);
       }
-
-      // Validér alle spørgsmål
-      questions = questions.filter(q =>
-        q.question && q.a && q.b && q.c && q.d &&
-        q.correct && ['a','b','c','d'].includes(q.correct.toLowerCase()) &&
-        q.explanation
-      );
 
       return res.status(200).json({ questions });
     }
 
-    // Summary og explain
     const system = mode === 'summary'
       ? 'Du laver eksamensopsummeringer. Brug markdown: # overskrifter, ## underoverskrifter, **fed** for nøglebegreber, - for punktlister.'
       : 'Du er pædagogisk underviser. Forklar grundigt med eksempler. Brug markdown: # overskrifter, **fed**, - for punktlister, ``` for kode.';
