@@ -488,16 +488,19 @@ function renderQuizFromDB(questions) {
   }).join('') + '</div>';
 }
 
-function handleDBAnswer(el, letter, correct, explanation) {
+function handleDBAnswer(el, letter, correct, explanation, correctText) {
   const card = el.closest('.quiz-card');
   if (card.querySelector('.correct,.wrong')) return;
   card.querySelectorAll('.quiz-opt').forEach(o => {
-    const l = o.getAttribute('onclick').match(/'([a-d])'/)?.[1];
+    const m = o.getAttribute('onclick')?.match(/,'([a-d])'/);
+    const l = m ? m[1] : null;
+    if (!l) return;
     if (l === letter && letter !== correct) o.classList.add('wrong');
     if (l === correct) o.classList.add('correct');
     o.disabled = true;
   });
-  card.querySelector('.quiz-reveal').classList.add('visible');
+  const reveal = card.querySelector('.quiz-reveal');
+  if (reveal) { reveal.classList.add('visible'); }
 }
 
 // ── RENDER DOCS ────────────────────────────────────────────
