@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EKSAMEN PREP</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- FIX: marked.js erstatter hjemmelavet renderMD() -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<style>
+:root{--bg:#080b14;--bg2:#0d1220;--surface:#111827;--surface2:#1a2235;--border:#1e2d47;--border2:#253652;--accent:#3b82f6;--accent2:#60a5fa;--glow:rgba(59,130,246,0.15);--text:#e2e8f0;--text2:#94a3b8;--muted:#4b6080;--success:#10b981;--danger:#ef4444;--warn:#f59e0b;--mono:'JetBrains Mono',monospace;--sans:'Outfit',sans-serif;}
+[data-theme="light"]{--bg:#f0f4ff;--bg2:#e8edf8;--surface:#fff;--surface2:#f1f5fb;--border:#dce3f0;--border2:#c8d3e8;--accent:#2563eb;--accent2:#3b82f6;--glow:rgba(37,99,235,0.1);--text:#0f172a;--text2:#475569;--muted:#94a3b8;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;transition:background .3s,color .3s;}
+header{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;border-bottom:1px solid var(--border);background:rgba(8,11,20,0.9);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;}
+[data-theme="light"] header{background:rgba(240,244,255,0.9);}
+.logo{font-family:var(--mono);font-size:.9rem;font-weight:700;color:var(--accent2);display:flex;align-items:center;gap:8px;}
+.logo-dot{width:7px;height:7px;background:var(--success);border-radius:50%;box-shadow:0 0 8px var(--success);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hbtn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:5px 12px;border-radius:7px;cursor:pointer;font-family:var(--mono);font-size:.7rem;transition:all .2s;}
+.hbtn:hover{border-color:var(--accent);color:var(--accent2);}
+.app{display:grid;grid-template-columns:280px 1fr;height:calc(100vh - 56px);}
+.sidebar{border-right:1px solid var(--border);background:var(--bg2);display:flex;flex-direction:column;overflow:hidden;}
+.sidebar-section{padding:14px 14px 10px;border-bottom:1px solid var(--border);}
+.slabel{font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+.sub-list{display:flex;flex-direction:column;gap:3px;}
+.sub-btn{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;cursor:pointer;border:1px solid transparent;background:transparent;color:var(--text2);font-family:var(--sans);font-size:.85rem;font-weight:500;transition:all .2s;width:100%;text-align:left;}
+.sub-btn:hover{background:var(--surface);color:var(--text);border-color:var(--border);}
+.sub-btn.active{background:var(--glow);color:var(--accent2);border-color:var(--accent);}
+.sub-icon{font-size:.95rem;}
+.sub-count{margin-left:auto;font-family:var(--mono);font-size:.65rem;color:var(--muted);background:var(--surface2);padding:1px 6px;border-radius:8px;}
+.sub-btn.active .sub-count{background:rgba(59,130,246,.2);color:var(--accent2);}
+.sidebar-docs{flex:1;overflow-y:auto;padding:12px 14px;}
+.sidebar-docs::-webkit-scrollbar{width:3px;}
+.sidebar-docs::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+.upload-zone{border:1.5px dashed var(--border2);border-radius:9px;padding:14px;text-align:center;cursor:pointer;position:relative;transition:all .2s;margin-bottom:10px;}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--accent);background:var(--glow);}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.uz-icon{font-size:1.2rem;margin-bottom:3px;}
+.uz-text{font-size:.75rem;color:var(--text2);}
+.uz-text strong{color:var(--accent2);}
+.doc-items{display:flex;flex-direction:column;gap:5px;}
+.doc-card{display:flex;align-items:center;gap:7px;padding:7px 9px;background:var(--surface);border:1px solid var(--border);border-radius:7px;transition:all .2s;}
+.doc-card:hover{border-color:var(--border2);}
+.doc-card.selected{border-color:var(--accent);background:var(--glow);}
+.doc-icon{font-size:.9rem;flex-shrink:0;}
+.doc-info{flex:1;min-width:0;}
+.doc-name{font-size:.75rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+.doc-meta{font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:1px;}
+.doc-del{background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 4px;border-radius:3px;font-size:.75rem;transition:all .15s;flex-shrink:0;}
+.doc-del:hover{color:var(--danger);background:rgba(239,68,68,.1);}
+.empty-docs{text-align:center;padding:20px 10px;color:var(--muted);font-size:.78rem;}
+.sidebar-saved{padding:10px 14px 14px;border-top:1px solid var(--border);}
+.saved-list{display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto;}
+.saved-card{display:flex;align-items:center;gap:7px;padding:6px 9px;background:var(--surface);border:1px solid var(--border);border-radius:7px;cursor:pointer;transition:all .2s;}
+.saved-card:hover{border-color:var(--accent);background:var(--glow);}
+.saved-card-icon{font-size:.85rem;}
+.saved-card-info{flex:1;min-width:0;}
+.saved-card-type{font-size:.73rem;font-weight:600;color:var(--text2);}
+.saved-card-sub{font-family:var(--mono);font-size:.6rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.saved-del{background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 4px;border-radius:3px;font-size:.72rem;}
+.saved-del:hover{color:var(--danger);}
+.main{display:flex;flex-direction:column;overflow:hidden;}
+.main-topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid var(--border);background:var(--bg2);gap:12px;flex-wrap:wrap;}
+.scope-tabs{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;padding:3px;gap:3px;}
+.scope-btn{padding:5px 14px;border:none;background:transparent;color:var(--text2);font-family:var(--sans);font-size:.8rem;font-weight:500;border-radius:5px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.scope-btn:hover{color:var(--text);background:var(--surface2);}
+.scope-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 10px rgba(59,130,246,.35);}
+.stats-pill{font-family:var(--mono);font-size:.68rem;color:var(--text2);background:var(--surface);border:1px solid var(--border);padding:4px 10px;border-radius:20px;}
+.stats-pill span{color:var(--success);}
+.mode-tabs{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;padding:3px;gap:3px;}
+.mode-btn{flex:1;padding:6px 12px;border:none;background:transparent;color:var(--text2);font-family:var(--sans);font-size:.8rem;font-weight:500;border-radius:5px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.mode-btn:hover{color:var(--text);background:var(--surface2);}
+.mode-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 10px rgba(59,130,246,.35);}
+.main-body{flex:1;overflow-y:auto;padding:20px 24px;}
+.main-body::-webkit-scrollbar{width:5px;}
+.main-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:5px;}
+.controls-row{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+.ctrl-group{display:flex;align-items:center;gap:7px;}
+.ctrl-label{font-size:.78rem;color:var(--text2);}
+.ctrl-select{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:7px;font-family:var(--sans);font-size:.8rem;}
+.topic-input{flex:1;min-width:180px;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:7px;font-family:var(--sans);font-size:.82rem;}
+.topic-input:focus{outline:none;border-color:var(--accent);}
+.scope-info{font-family:var(--mono);font-size:.7rem;color:var(--accent2);background:var(--glow);border:1px solid var(--accent);padding:5px 12px;border-radius:6px;}
+.gen-btn{background:var(--accent);border:none;color:#fff;padding:8px 24px;border-radius:8px;cursor:pointer;font-family:var(--mono);font-size:.75rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;transition:all .2s;box-shadow:0 3px 16px rgba(59,130,246,.3);margin-left:auto;}
+.gen-btn:hover{background:#2563eb;transform:translateY(-1px);}
+.gen-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;}
+.quiz-stats-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+.quiz-stats-bar .qs-left{display:flex;align-items:center;gap:12px;}
+.quiz-stats-bar .qs-count{font-family:var(--mono);font-size:.78rem;color:var(--success);}
+/* FIX: Score display */
+.score-display{font-family:var(--mono);font-size:.78rem;color:var(--accent2);background:rgba(59,130,246,.1);border:1px solid var(--accent);padding:3px 10px;border-radius:6px;display:none;}
+.score-display.visible{display:inline-block;}
+.quiz-stats-bar .qs-actions{display:flex;gap:8px;}
+.qsbtn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:.76rem;transition:all .2s;}
+.qsbtn:hover{border-color:var(--accent);color:var(--accent2);}
+.qsbtn.add{border-color:var(--success);color:var(--success);}
+.qsbtn.add:hover{background:rgba(16,185,129,.1);}
+.loading-bar{display:none;align-items:center;gap:12px;padding:16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:16px;}
+.loading-bar.visible{display:flex;}
+.spinner{width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-family:var(--mono);font-size:.72rem;color:var(--text2);}
+.output-wrap{display:none;}
+.output-wrap.visible{display:block;}
+.output-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.output-label{font-family:var(--mono);font-size:.7rem;letter-spacing:.15em;color:var(--accent2);text-transform:uppercase;}
+.output-btns{display:flex;gap:7px;}
+.obtn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:.76rem;transition:all .2s;}
+.obtn:hover{border-color:var(--accent);color:var(--accent2);}
+.quiz-grid{display:flex;flex-direction:column;gap:14px;}
+.quiz-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;animation:up .3s ease;}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.quiz-num{font-family:var(--mono);font-size:.62rem;color:var(--accent2);margin-bottom:6px;letter-spacing:.12em;text-transform:uppercase;}
+.quiz-q{font-weight:600;font-size:.93rem;line-height:1.55;margin-bottom:12px;}
+.quiz-opts{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+@media(max-width:860px){.quiz-opts{grid-template-columns:1fr;}}
+.quiz-opt{padding:9px 13px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:.83rem;background:var(--surface2);color:var(--text);text-align:left;transition:all .15s;line-height:1.4;}
+.quiz-opt:hover:not(:disabled){border-color:var(--accent);color:var(--accent2);background:var(--glow);}
+.quiz-opt.correct{border-color:var(--success)!important;background:rgba(16,185,129,.12)!important;color:var(--success)!important;}
+.quiz-opt.wrong{border-color:var(--danger)!important;background:rgba(239,68,68,.1)!important;color:var(--danger)!important;}
+.quiz-opt:disabled{cursor:default;}
+.quiz-reveal{margin-top:10px;padding:10px 14px;background:var(--bg2);border-left:3px solid var(--accent);border-radius:0 7px 7px 0;font-size:.8rem;color:var(--text2);display:none;line-height:1.55;}
+.quiz-reveal.visible{display:block;}
+/* FIX: marked.js styling for md output */
+.md-out{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:26px 30px;font-size:.9rem;line-height:1.8;color:var(--text);}
+.md-out h1{font-size:1.3rem;font-weight:700;margin-bottom:14px;color:var(--accent2);border-bottom:1px solid var(--border);padding-bottom:8px;}
+.md-out h2{font-size:1.05rem;font-weight:600;margin:20px 0 8px;color:var(--text);}
+.md-out h3{font-size:.93rem;font-weight:600;margin:14px 0 6px;color:var(--text2);}
+.md-out p{margin-bottom:10px;}
+.md-out ul,.md-out ol{padding-left:18px;margin-bottom:10px;}
+.md-out li{margin-bottom:4px;}
+.md-out strong{color:var(--accent2);font-weight:600;}
+.md-out em{color:var(--text2);font-style:italic;}
+.md-out code{background:var(--surface2);border:1px solid var(--border);padding:1px 6px;border-radius:4px;font-family:var(--mono);font-size:.8rem;color:var(--warn);}
+.md-out pre{background:var(--bg2);border:1px solid var(--border);padding:14px;border-radius:8px;overflow-x:auto;margin-bottom:12px;}
+.md-out pre code{background:none;border:none;padding:0;color:var(--text2);}
+.md-out hr{border:none;border-top:1px solid var(--border);margin:16px 0;}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:9px;font-size:.8rem;opacity:0;transition:opacity .3s;z-index:999;box-shadow:0 6px 24px rgba(0,0,0,.3);}
+.toast.visible{opacity:1;}
+.toast.success{border-color:var(--success);}
+.toast.error{border-color:var(--danger);}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><div class="logo-dot"></div>EXAM.PREP</div>
+  <button class="hbtn" onclick="toggleTheme()" id="themeBtn">☀ LYS</button>
+</header>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="slabel">// fag</div>
+      <div class="sub-list">
+        <button class="sub-btn active" onclick="selectSubject(this,'Programmering')"><span class="sub-icon">💻</span>Programmering<span class="sub-count" id="cnt-0">0</span></button>
+        <button class="sub-btn" onclick="selectSubject(this,'Forretningsforståelse')"><span class="sub-icon">📊</span>Forretningsforståelse<span class="sub-count" id="cnt-1">0</span></button>
+        <button class="sub-btn" onclick="selectSubject(this,'Computerarkitektur')"><span class="sub-icon">🖥</span>Computerarkitektur<span class="sub-count" id="cnt-2">0</span></button>
+      </div>
+    </div>
+    <div class="sidebar-docs" id="sidebarDocs">
+      <div class="upload-zone" id="uploadZone"
+        ondragover="event.preventDefault();this.classList.add('dragover')"
+        ondragleave="this.classList.remove('dragover')"
+        ondrop="handleDrop(event)">
+        <input type="file" id="fileInput" multiple accept=".pdf,.pptx,.ppt,.docx,.doc,.txt,.md" onchange="handleFiles(this.files)">
+        <div class="uz-icon">📂</div>
+        <div class="uz-text">Træk filer hertil eller <strong>klik</strong></div>
+      </div>
+      <div class="doc-items" id="docItems"><div class="empty-docs">Ingen dokumenter endnu</div></div>
+    </div>
+    <div class="sidebar-saved">
+      <div class="slabel" style="margin-bottom:8px;">// gemte resultater</div>
+      <div class="saved-list" id="savedList"><div class="empty-docs" style="padding:8px 0;">Ingen gemte resultater</div></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="main-topbar">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div class="scope-tabs">
+          <button class="scope-btn active" onclick="selectScope(this,'all')">📚 Alle filer</button>
+          <button class="scope-btn" onclick="selectScope(this,'single')">📄 Enkelt fil</button>
+        </div>
+        <div class="stats-pill" id="statsPill"><span>0</span> dokumenter</div>
+      </div>
+      <div class="mode-tabs">
+        <button class="mode-btn active" onclick="selectMode(this,'quiz')">🎯 Quiz</button>
+        <button class="mode-btn" onclick="selectMode(this,'summary')">📋 Opsummering</button>
+        <button class="mode-btn" onclick="selectMode(this,'explain')">💡 Forklaring</button>
+      </div>
+    </div>
+
+    <div class="main-body">
+      <div class="controls-row" id="controlsRow">
+        <div class="ctrl-group" id="quizCtrls">
+          <span class="ctrl-label">Type:</span>
+          <select class="ctrl-select" id="qType">
+            <option value="multiple">Multiplechoice</option>
+            <option value="open">Åbne spørgsmål</option>
+            <option value="truefalse">Sandt/Falsk</option>
+          </select>
+        </div>
+        <input type="text" class="topic-input" id="topicInput" placeholder="Skriv emne at forklare (fx 'OOP', 'Loops', 'OSI-modellen')..." style="display:none;">
+        <div class="scope-info" id="scopeInfo" style="display:none;">📄 Enkelt fil valgt</div>
+        <button class="gen-btn" id="genBtn" onclick="generate()">⚡ GENERÉR</button>
+      </div>
+
+      <!-- Quiz spørgsmål bank -->
+      <div id="quizBank" style="display:none;">
+        <div class="quiz-stats-bar">
+          <div class="qs-left">
+            <span class="qs-count" id="qsCount">0 spørgsmål gemt</span>
+            <!-- FIX: Score tracker -->
+            <span class="score-display" id="scoreDisplay"></span>
+          </div>
+          <div class="qs-actions">
+            <button class="qsbtn add" onclick="generate()">➕ Tilføj 5 nye</button>
+            <button class="qsbtn" onclick="startQuiz()">🎯 Tag quiz</button>
+            <button class="qsbtn" onclick="clearQuestions()" style="border-color:var(--danger);color:var(--danger);">🗑 Slet alle</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="loading-bar" id="loading">
+        <div class="spinner"></div>
+        <div class="loading-txt" id="loadingTxt">GENERERER...</div>
+      </div>
+
+      <div class="output-wrap" id="outputWrap">
+        <div class="output-header">
+          <div class="output-label" id="outputLabel">// resultat</div>
+          <div class="output-btns" id="outputBtns">
+            <button class="obtn" onclick="copyOutput()">📋 Kopiér</button>
+          </div>
+        </div>
+        <div id="outputContent"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// FIX: marked.js konfigureret én gang
+marked.setOptions({ breaks: true, gfm: true });
+
+const SUPABASE_URL = 'https://ojpmrfhtepdvdinoixvs.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qcG1yZmh0ZXBkdmRpbm9peHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Nzc2OTEsImV4cCI6MjA5MTI1MzY5MX0.f0bRsu4fddPnOgBRsEtwO3MgSMOvQ6ypxEjtUoWHeGg';
+
+const SUBJECTS = ['Programmering','Forretningsforståelse','Computerarkitektur'];
+let theme = 'dark';
+let currentSubject = 'Programmering';
+let currentMode = 'quiz';
+let currentScope = 'all';
+let selectedDocId = null;
+let currentOutput = '';
+let allDocs = {};
+let allSaved = {};
+let quizQuestions = [];
+
+// FIX: Score tracker state
+let quizScore = 0;
+let quizAnswered = 0;
+let quizTotal = 0;
+
+window.addEventListener('load', loadData);
+
+function toggleTheme() {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : '');
+  document.getElementById('themeBtn').textContent = theme === 'dark' ? '☀ LYS' : '🌙 MØRK';
+}
+
+function selectSubject(btn, name) {
+  document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentSubject = name;
+  selectedDocId = null;
+  quizQuestions = [];
+  document.getElementById('outputWrap').classList.remove('visible');
+  document.getElementById('quizBank').style.display = 'none';
+  document.getElementById('scoreDisplay').classList.remove('visible');
+  renderDocs();
+  renderSaved();
+  updateStats();
+  // FIX: hent quiz-spørgsmål for det nye fag
+  loadQuizQuestions();
+}
+
+function selectScope(btn, scope) {
+  document.querySelectorAll('.scope-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentScope = scope;
+  selectedDocId = null;
+  quizQuestions = [];
+  document.getElementById('outputWrap').classList.remove('visible');
+  document.getElementById('quizBank').style.display = 'none';
+  document.getElementById('scopeInfo').style.display = 'none';
+  document.getElementById('scoreDisplay').classList.remove('visible');
+  renderDocs();
+  // FIX: reload spørgsmål for nyt scope
+  if (scope === 'all') loadQuizQuestions();
+}
+
+function selectMode(btn, mode) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentMode = mode;
+  document.getElementById('quizCtrls').style.display = mode === 'quiz' ? 'flex' : 'none';
+  document.getElementById('topicInput').style.display = mode === 'explain' ? 'block' : 'none';
+  document.getElementById('outputWrap').classList.remove('visible');
+  document.getElementById('quizBank').style.display = mode === 'quiz' && quizQuestions.length > 0 ? 'block' : 'none';
+  if (mode === 'quiz' && quizQuestions.length > 0) updateQuizStats();
+}
+
+// ── SUPABASE ───────────────────────────────────────────────
+async function sb(path, opts = {}) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...opts,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+      ...opts.headers
+    }
+  });
+  if (!r.ok) {
+    const errText = await r.text();
+    // FIX: Bedre fejlbesked hvis tabel mangler
+    if (errText.includes('relation') || errText.includes('does not exist')) {
+      throw new Error('Supabase-tabel mangler — tjek at alle tabeller er oprettet i dit dashboard');
+    }
+    throw new Error(errText);
+  }
+  const t = await r.text();
+  return t ? JSON.parse(t) : [];
+}
+
+// ── LOAD — FIX: lazy loading, kun aktivt fag ved start ─────
+async function loadData() {
+  try {
+    await loadSubject(currentSubject);
+    // Hent doc-tæller for de andre fag (kun antal, ikke indhold)
+    for (let i = 0; i < SUBJECTS.length; i++) {
+      const s = SUBJECTS[i];
+      if (s === currentSubject) continue;
+      try {
+        const docs = await sb(`documents?subject=eq.${encodeURIComponent(s)}&select=id`);
+        allDocs[s] = allDocs[s] || docs; // gem kun ids til tæller
+        document.getElementById(`cnt-${i}`).textContent = docs.length;
+      } catch(e) { /* ignorer stille */ }
+    }
+    renderDocs(); renderSaved(); updateStats();
+    loadQuizQuestions();
+  } catch(e) { showToast('Fejl ved indlæsning: ' + e.message, 'error'); }
+}
+
+async function loadSubject(s) {
+  const i = SUBJECTS.indexOf(s);
+  allDocs[s] = await sb(`documents?subject=eq.${encodeURIComponent(s)}&order=created_at.asc`);
+  allSaved[s] = await sb(`generated_content?subject=eq.${encodeURIComponent(s)}&order=created_at.desc`);
+  if (i >= 0) document.getElementById(`cnt-${i}`).textContent = allDocs[s].length;
+}
+
+// ── FILE HANDLING ──────────────────────────────────────────
+function handleDrop(e) { e.preventDefault(); document.getElementById('uploadZone').classList.remove('dragover'); handleFiles(e.dataTransfer.files); }
+
+async function handleFiles(files) {
+  for (const file of files) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    let text = '';
+    try {
+      if (ext === 'pdf') text = await readPDF(file);
+      else if (['docx','doc'].includes(ext)) text = await readDOCX(file);
+      else if (['pptx','ppt'].includes(ext)) text = await readPPTX(file);
+      else if (['txt','md'].includes(ext)) text = await readTxt(file);
+      else { showToast('Ukendt type: ' + file.name, 'error'); continue; }
+      if (!text || text.length < 10) { showToast('Ingen tekst: ' + file.name, 'error'); continue; }
+      // FIX: Trim dokumentindhold til 20.000 tegn pr. fil for at spare tokens
+      if (text.length > 20000) {
+        text = text.slice(0, 20000) + '\n\n[Afkortet — upload kortere uddrag for bedre resultater]';
+      }
+      const res = await sb('documents', { method: 'POST', body: JSON.stringify({ subject: currentSubject, filename: file.name, content: text }) });
+      if (!allDocs[currentSubject]) allDocs[currentSubject] = [];
+      allDocs[currentSubject].push(res[0]);
+      document.getElementById(`cnt-${SUBJECTS.indexOf(currentSubject)}`).textContent = allDocs[currentSubject].length;
+      renderDocs(); updateStats();
+      showToast('✓ ' + file.name, 'success');
+    } catch(e) { showToast('Fejl: ' + e.message, 'error'); }
+  }
+}
+
+async function readPDF(file) {
+  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+  let t = '';
+  for (let i = 1; i <= pdf.numPages; i++) { const p = await pdf.getPage(i); const c = await p.getTextContent(); t += c.items.map(x=>x.str).join(' ') + '\n'; }
+  return t.trim();
+}
+async function readDOCX(file) { return (await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value.trim(); }
+async function readPPTX(file) {
+  const zip = await JSZip.loadAsync(await file.arrayBuffer());
+  const slides = Object.keys(zip.files).filter(n=>n.match(/^ppt\/slides\/slide\d+\.xml$/)).sort((a,b)=>parseInt(a.match(/\d+/)?.[0]||0)-parseInt(b.match(/\d+/)?.[0]||0));
+  let t = '';
+  for (const s of slides) { const xml = await zip.files[s].async('text'); const st = (xml.match(/<a:t[^>]*>([^<]+)<\/a:t>/g)||[]).map(m=>m.replace(/<[^>]+>/g,'')).join(' ').trim(); if (st) t += st + '\n'; }
+  return t.trim();
+}
+async function readTxt(file) { return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=rej; r.readAsText(file); }); }
+
+async function deleteDoc(id) {
+  try {
+    await sb(`documents?id=eq.${id}`, { method: 'DELETE' });
+    allDocs[currentSubject] = allDocs[currentSubject].filter(d=>d.id!==id);
+    document.getElementById(`cnt-${SUBJECTS.indexOf(currentSubject)}`).textContent = allDocs[currentSubject].length;
+    if (selectedDocId === id) { selectedDocId = null; document.getElementById('scopeInfo').style.display = 'none'; }
+    renderDocs(); updateStats();
+    showToast('Dokument slettet');
+  } catch(e) { showToast('Fejl: ' + e.message, 'error'); }
+}
+
+async function deleteSaved(id) {
+  try {
+    await sb(`generated_content?id=eq.${id}`, { method: 'DELETE' });
+    allSaved[currentSubject] = allSaved[currentSubject].filter(s=>s.id!==id);
+    renderSaved();
+    showToast('Slettet');
+  } catch(e) { showToast('Fejl: ' + e.message, 'error'); }
+}
+
+function selectDoc(id) {
+  if (currentScope !== 'single') return;
+  selectedDocId = selectedDocId === id ? null : id;
+  renderDocs();
+  const doc = (allDocs[currentSubject]||[]).find(d=>d.id===id);
+  const info = document.getElementById('scopeInfo');
+  if (selectedDocId && doc) { info.textContent = `📄 ${doc.filename}`; info.style.display = 'block'; }
+  else info.style.display = 'none';
+  if (selectedDocId) loadQuizQuestions();
+}
+
+// ── QUIZ QUESTIONS ─────────────────────────────────────────
+async function loadQuizQuestions() {
+  if (currentMode !== 'quiz') return;
+  try {
+    const filename = currentScope === 'single' && selectedDocId
+      ? (allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename
+      : null;
+    let query = `quiz_questions?subject=eq.${encodeURIComponent(currentSubject)}&order=created_at.asc`;
+    if (filename) query += `&filename=eq.${encodeURIComponent(filename)}`;
+    quizQuestions = await sb(query);
+    updateQuizStats();
+    if (quizQuestions.length > 0) {
+      document.getElementById('quizBank').style.display = 'block';
+    }
+  } catch(e) {
+    showToast('Fejl ved indlæsning af spørgsmål: ' + e.message, 'error');
+  }
+}
+
+function updateQuizStats() {
+  const n = quizQuestions.length;
+  document.getElementById('qsCount').textContent = `${n} spørgsmål gemt`;
+  document.getElementById('quizBank').style.display = n > 0 ? 'block' : 'none';
+}
+
+async function saveQuizQuestions(newQs) {
+  const filename = currentScope === 'single' && selectedDocId
+    ? (allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename || null
+    : null;
+
+  const existing = quizQuestions.map(q => q.question.toLowerCase());
+  const unique = newQs.filter(q => !existing.includes(q.question.toLowerCase()));
+
+  if (unique.length === 0) { showToast('Ingen nye spørgsmål — alle var dubletter', 'error'); return; }
+
+  const toInsert = unique.map(q => ({
+    subject: currentSubject,
+    filename: filename,
+    question: q.question,
+    a: q.a, b: q.b, c: q.c, d: q.d,
+    correct: q.correct.toLowerCase(),
+    explanation: q.explanation
+  }));
+
+  const saved = await sb('quiz_questions', { method: 'POST', body: JSON.stringify(toInsert) });
+  quizQuestions = [...quizQuestions, ...saved];
+  updateQuizStats();
+  showToast(`✓ ${unique.length} nye spørgsmål gemt! (${quizQuestions.length} total)`, 'success');
+}
+
+async function clearQuestions() {
+  if (!confirm(`Slet alle ${quizQuestions.length} spørgsmål?`)) return;
+  try {
+    const filename = currentScope === 'single' && selectedDocId
+      ? (allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename
+      : null;
+    let query = `quiz_questions?subject=eq.${encodeURIComponent(currentSubject)}`;
+    if (filename) query += `&filename=eq.${encodeURIComponent(filename)}`;
+    await sb(query, { method: 'DELETE', headers: { 'Prefer': '' } });
+    quizQuestions = [];
+    updateQuizStats();
+    document.getElementById('outputWrap').classList.remove('visible');
+    document.getElementById('scoreDisplay').classList.remove('visible');
+    showToast('Alle spørgsmål slettet');
+  } catch(e) { showToast('Fejl: ' + e.message, 'error'); }
+}
+
+function startQuiz() {
+  if (quizQuestions.length === 0) return;
+  // FIX: Nulstil score tracker
+  quizScore = 0;
+  quizAnswered = 0;
+  quizTotal = quizQuestions.length;
+  updateScoreDisplay();
+  document.getElementById('scoreDisplay').classList.add('visible');
+
+  const shuffled = [...quizQuestions].sort(() => Math.random() - 0.5);
+  document.getElementById('outputLabel').textContent = `// quiz — ${shuffled.length} spørgsmål`;
+  document.getElementById('outputBtns').innerHTML = '';
+  document.getElementById('outputContent').innerHTML = renderQuizFromDB(shuffled);
+  document.getElementById('outputWrap').classList.add('visible');
+  document.getElementById('outputWrap').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// FIX: Score display opdatering
+function updateScoreDisplay() {
+  const el = document.getElementById('scoreDisplay');
+  const pct = quizTotal > 0 ? Math.round((quizScore / quizTotal) * 100) : 0;
+  el.textContent = `Score: ${quizScore}/${quizAnswered} (${pct}%)`;
+}
+
+function renderQuizFromDB(questions) {
+  return '<div class="quiz-grid">' + questions.map((q, i) => {
+    const opts = ['a','b','c','d'];
+    const letters = ['A','B','C','D'];
+    return `<div class="quiz-card">
+      <div class="quiz-num">SPØRGSMÅL ${i+1} af ${questions.length}</div>
+      <div class="quiz-q">${esc(q.question)}</div>
+      <div class="quiz-opts">
+        ${opts.map((l,idx) => `<button class="quiz-opt" onclick="handleDBAnswer(this,'${l}','${q.correct}','${esc(q.explanation)}')">${letters[idx]}) ${esc(q[l])}</button>`).join('')}
+      </div>
+      <div class="quiz-reveal">✅ Korrekt svar: ${q.correct.toUpperCase()}) ${esc(q[q.correct])} — ${esc(q.explanation)}</div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+// FIX: Fjernet ubrugt correctText-parameter + tilføjet score tracking
+function handleDBAnswer(el, letter, correct, explanation) {
+  const card = el.closest('.quiz-card');
+  if (card.querySelector('.correct,.wrong')) return;
+
+  const isCorrect = letter === correct;
+
+  card.querySelectorAll('.quiz-opt').forEach(o => {
+    const match = o.getAttribute('onclick')?.match(/handleDBAnswer\(this,'([a-d])'/);
+    const l = match ? match[1] : null;
+    if (!l) return;
+    if (l === letter && !isCorrect) o.classList.add('wrong');
+    if (l === correct) o.classList.add('correct');
+    o.disabled = true;
+  });
+
+  const reveal = card.querySelector('.quiz-reveal');
+  if (reveal) reveal.classList.add('visible');
+
+  // FIX: Opdater score
+  if (isCorrect) quizScore++;
+  quizAnswered++;
+  updateScoreDisplay();
+}
+
+// ── RENDER DOCS ────────────────────────────────────────────
+function renderDocs() {
+  const docs = allDocs[currentSubject] || [];
+  const el = document.getElementById('docItems');
+  if (!docs.length) { el.innerHTML = '<div class="empty-docs">Ingen dokumenter endnu</div>'; return; }
+  const icons = {pdf:'📄',pptx:'📊',ppt:'📊',docx:'📝',doc:'📝',txt:'📃',md:'📃'};
+  el.innerHTML = docs.map(d => {
+    const ext = d.filename.split('.').pop().toLowerCase();
+    const size = ((d.content?.length||0)/1000).toFixed(1) + 'k';
+    const date = new Date(d.created_at).toLocaleDateString('da-DK',{day:'numeric',month:'short'});
+    const isSelected = currentScope === 'single' && selectedDocId === d.id;
+    const clickable = currentScope === 'single' ? `onclick="selectDoc('${d.id}')"` : '';
+    return `<div class="doc-card${isSelected?' selected':''}" ${clickable} style="${currentScope==='single'?'cursor:pointer;':''}">
+      <span class="doc-icon">${icons[ext]||'📁'}</span>
+      <div class="doc-info"><div class="doc-name" title="${d.filename}">${d.filename}</div><div class="doc-meta">${size} · ${date}</div></div>
+      <button class="doc-del" onclick="event.stopPropagation();deleteDoc('${d.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function renderSaved() {
+  const saved = allSaved[currentSubject] || [];
+  const el = document.getElementById('savedList');
+  if (!saved.length) { el.innerHTML = '<div class="empty-docs" style="padding:8px 0;">Ingen gemte resultater</div>'; return; }
+  const icons = {quiz:'🎯',summary:'📋',explain:'💡'};
+  const labels = {quiz:'Quiz',summary:'Opsummering',explain:'Forklaring'};
+  el.innerHTML = saved.map(s => {
+    const date = new Date(s.created_at).toLocaleDateString('da-DK',{day:'numeric',month:'short'});
+    const sub = s.scope_filename ? `📄 ${s.scope_filename}` : '📚 Alle filer';
+    return `<div class="saved-card" onclick="showSaved('${s.id}')">
+      <span class="saved-card-icon">${icons[s.type]||'📄'}</span>
+      <div class="saved-card-info"><div class="saved-card-type">${labels[s.type]||s.type} · ${date}</div><div class="saved-card-sub">${sub}</div></div>
+      <button class="saved-del" onclick="event.stopPropagation();deleteSaved('${s.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function showSaved(id) {
+  const s = (allSaved[currentSubject]||[]).find(x=>x.id===id);
+  if (!s) return;
+  currentOutput = s.content; currentMode = s.type;
+  const labels = {quiz:'// quiz spørgsmål',summary:'// opsummering',explain:'// forklaring'};
+  document.getElementById('outputLabel').textContent = labels[s.type]||'// resultat';
+  renderOutput(s.content);
+  document.getElementById('outputWrap').classList.add('visible');
+}
+
+function updateStats() {
+  const docs = allDocs[currentSubject]||[];
+  const total = docs.reduce((s,d)=>s+(d.content?.length||0),0);
+  document.getElementById('statsPill').innerHTML = `<span>${docs.length}</span> dok · ${(total/1000).toFixed(0)}k tegn`;
+}
+
+// ── BUILD PROMPT ───────────────────────────────────────────
+function buildPrompt() {
+  const docs = allDocs[currentSubject]||[];
+  let useDocs = currentScope === 'single' && selectedDocId ? docs.filter(d=>d.id===selectedDocId) : docs;
+  let parts = '';
+  for (const d of useDocs) parts += `\n\n--- ${d.filename} ---\n${d.content||''}`;
+  const scopeLabel = currentScope === 'single' && selectedDocId ? `filen "${useDocs[0]?.filename}"` : `alle filer i "${currentSubject}"`;
+  const mat = parts ? `Undervisningsmateriale fra ${scopeLabel}:\n${parts}` : `Brug din viden om "${currentSubject}".`;
+  const topic = document.getElementById('topicInput').value||'';
+  if (currentMode === 'quiz') return mat;
+  if (currentMode === 'summary') return `${mat}\n\n---\nOPGAVE: Lav en grundig struktureret eksamensopsummering på dansk. Brug overskrifter og punktlister.`;
+  return `${mat}\n\n---\nOPGAVE: Forklar følgende emne grundigt på dansk: "${topic||'de vigtigste begreber i '+currentSubject}". Brug eksempler.`;
+}
+
+// ── GENERATE ───────────────────────────────────────────────
+async function generate() {
+  const docs = allDocs[currentSubject]||[];
+  if (!docs.length) { showToast('Upload mindst ét dokument først!','error'); return; }
+  if (currentScope === 'single' && !selectedDocId) { showToast('Vælg en fil ved at klikke på den!','error'); return; }
+
+  const btn = document.getElementById('genBtn');
+  const loading = document.getElementById('loading');
+  btn.disabled = true;
+  loading.classList.add('visible');
+  document.getElementById('loadingTxt').textContent = currentMode === 'quiz' ? 'GENERERER 5 NYE SPØRGSMÅL...' : currentMode === 'summary' ? 'GENERERER OPSUMMERING...' : 'GENERERER FORKLARING...';
+
+  try {
+    const body = { prompt: buildPrompt(), mode: currentMode };
+    if (currentMode === 'quiz') body.existingQuestions = quizQuestions;
+
+    const r = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await r.json();
+    if (data.error) throw new Error(data.error);
+
+    if (currentMode === 'quiz' && data.questions) {
+      await saveQuizQuestions(data.questions);
+      document.getElementById('quizBank').style.display = 'block';
+      if (quizQuestions.length <= 5) startQuiz();
+    } else {
+      currentOutput = data.text;
+      const labels = {summary:'// opsummering',explain:'// forklaring'};
+      document.getElementById('outputLabel').textContent = labels[currentMode]||'// resultat';
+      renderOutput(data.text);
+      document.getElementById('outputBtns').innerHTML = `<button class="obtn" onclick="copyOutput()">📋 Kopiér</button>`;
+      document.getElementById('outputWrap').classList.add('visible');
+      document.getElementById('outputWrap').scrollIntoView({behavior:'smooth',block:'start'});
+      await autoSave();
+    }
+  } catch(e) {
+    document.getElementById('outputContent').innerHTML = `<div class="md-out" style="color:var(--danger)">Fejl: ${e.message}</div>`;
+    document.getElementById('outputWrap').classList.add('visible');
+  }
+  btn.disabled = false;
+  loading.classList.remove('visible');
+}
+
+// ── AUTO SAVE ──────────────────────────────────────────────
+async function autoSave() {
+  if (!currentOutput) return;
+  try {
+    const scopeFilename = currentScope === 'single' && selectedDocId
+      ? (allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename||null : null;
+    const existing = (allSaved[currentSubject]||[]).find(s => s.type===currentMode && (s.scope_filename||null)===(scopeFilename||null));
+    if (existing) {
+      await sb(`generated_content?id=eq.${existing.id}`,{method:'DELETE'});
+      allSaved[currentSubject] = allSaved[currentSubject].filter(s=>s.id!==existing.id);
+    }
+    const res = await sb('generated_content',{method:'POST',body:JSON.stringify({subject:currentSubject,type:currentMode,content:currentOutput,scope_filename:scopeFilename})});
+    if (!allSaved[currentSubject]) allSaved[currentSubject]=[];
+    allSaved[currentSubject].unshift(res[0]);
+    renderSaved();
+    showToast('✓ Gemt!','success');
+  } catch(e) { console.error('AutoSave fejl:',e); }
+}
+
+// FIX: renderOutput bruger nu marked.js i stedet for hjemmelavet parser
+function renderOutput(text) {
+  document.getElementById('outputContent').innerHTML = `<div class="md-out">${marked.parse(text)}</div>`;
+}
+
+function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function copyOutput(){navigator.clipboard.writeText(document.getElementById('outputContent').innerText).then(()=>showToast('✓ Kopieret!','success'));}
+function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast visible'+(type?' '+type:'');setTimeout(()=>t.classList.remove('visible'),2800);}
+</script>
+</body>
+</html>
