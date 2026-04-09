@@ -28,15 +28,22 @@ function parseQuestions(text) {
     return JSON.parse(clean);
   } catch(e) {
     const match = text.match(/\[[\s\S]*\]/);
-    if (match) { try { return JSON.parse(match[0]); } catch(e2) { return []; } }
+    if (match) {
+      try { return JSON.parse(match[0]); } catch(e2) { return []; }
+    }
     return [];
   }
 }
 
 function validateQuestion(q) {
-  return q && q.question && q.a && q.b && q.c && q.d &&
+  return q &&
+    typeof q.question === 'string' && q.question.trim().length > 5 &&
+    typeof q.a === 'string' && q.a.trim() &&
+    typeof q.b === 'string' && q.b.trim() &&
+    typeof q.c === 'string' && q.c.trim() &&
+    typeof q.d === 'string' && q.d.trim() &&
     q.correct && ['a','b','c','d'].includes(String(q.correct).toLowerCase()) &&
-    q.explanation;
+    typeof q.explanation === 'string' && q.explanation.trim().length > 5;
 }
 
 export default async function handler(req, res) {
@@ -49,6 +56,8 @@ export default async function handler(req, res) {
   try {
     let { prompt, mode, existingQuestions = [] } = req.body;
     if (!prompt) throw new Error('Ingen prompt modtaget');
+
+    // FIX: Trim prompt til 80.000 tegn (var allerede der, beholdt)
     if (prompt.length > 80000) prompt = prompt.slice(0, 80000) + '\n\n[Afkortet]';
 
     if (mode === 'quiz') {
@@ -56,8 +65,7 @@ export default async function handler(req, res) {
         ? `\n\nUNDGÅ disse emner - der er allerede spørgsmål om dem:\n${existingQuestions.map(q => `- ${q.question}`).join('\n')}`
         : '';
 
-      const system = `Du laver multiplechoice quiz spørgsmål. Svar KUN med et JSON array - ingen anden tekst.
-
+      const system = `Du laver multiplechoice quiz spørgsmål til eksamenstræning. Svar KUN med et JSON array - ingen anden tekst, ingen forklaring udenfor JSON.
 Output format:
 [
   {
@@ -67,41 +75,48 @@ Output format:
     "c": "Svar C",
     "d": "Svar D",
     "correct": "b",
-    "explanation": "Forklaring"
+    "explanation": "Forklaring på hvorfor b er korrekt"
   }
 ]
+Alle 7 felter er obligatoriske i hvert objekt. Lav spørgsmål der dækker forskellige dele af materialet.`;
 
-Alle 7 felter er obligatoriske i hvert objekt.`;
+      // FIX: Ét enkelt kald i stedet for to — hurtigere og billigere
+      const text = await callClaude(
+        system,
+        `${prompt}${existingContext}\n\nLav præcis 5 spørgsmål på dansk. Kun JSON array, ingen tekst udenfor.`,
+        1500
+      );
 
-      // Kald 1: 3 spørgsmål
-      const text1 = await callClaude(system, `${prompt}${existingContext}\n\nLav præcis 3 spørgsmål på dansk. Kun JSON.`);
-      const q1 = parseQuestions(text1).filter(validateQuestion);
+      let questions = parseQuestions(text).filter(validateQuestion).slice(0, 5);
 
-      // Kald 2: 2 spørgsmål — undgå emner fra kald 1
-      const avoid = q1.map(q => `- ${q.question}`).join('\n');
-      const avoidCtx = avoid ? `\n\nUNDGÅ også:\n${avoid}` : '';
-      const text2 = await callClaude(system, `${prompt}${existingContext}${avoidCtx}\n\nLav præcis 2 spørgsmål på dansk. Kun JSON.`);
-      const q2 = parseQuestions(text2).filter(validateQuestion);
-
-      let questions = [...q1, ...q2].slice(0, 5);
-
-      // Retry hvis for få
+      // Retry kun hvis vi fik færre end 3 gyldige spørgsmål
       if (questions.length < 3) {
-        const text3 = await callClaude(system, `${prompt}\n\nLav præcis 5 spørgsmål på dansk. Kun JSON.`);
-        questions = parseQuestions(text3).filter(validateQuestion).slice(0, 5);
+        console.log(`Retry: kun ${questions.length} gyldige spørgsmål i første kald`);
+        const retryText = await callClaude(
+          system,
+          `${prompt}\n\nLav præcis 5 spørgsmål på dansk. Kun JSON array.`,
+          1500
+        );
+        questions = parseQuestions(retryText).filter(validateQuestion).slice(0, 5);
+      }
+
+      if (questions.length === 0) {
+        throw new Error('Kunne ikke generere gyldige spørgsmål. Prøv igen.');
       }
 
       return res.status(200).json({ questions });
     }
 
+    // Summary og explain
     const system = mode === 'summary'
-      ? 'Du laver eksamensopsummeringer. Brug markdown: # overskrifter, ## underoverskrifter, **fed** for nøglebegreber, - for punktlister.'
-      : 'Du er pædagogisk underviser. Forklar grundigt med eksempler. Brug markdown: # overskrifter, **fed**, - for punktlister, ``` for kode.';
+      ? 'Du laver eksamensopsummeringer på dansk. Brug markdown: # overskrifter, ## underoverskrifter, **fed** for nøglebegreber, - for punktlister. Vær grundig men præcis.'
+      : 'Du er pædagogisk underviser. Forklar grundigt med konkrete eksempler på dansk. Brug markdown: # overskrifter, **fed** for vigtige begreber, - for punktlister, ``` for kodeeksempler.';
 
-    const text = await callClaude(system, prompt);
+    const text = await callClaude(system, prompt, 2048);
     return res.status(200).json({ text });
 
   } catch (err) {
+    console.error('Generate error:', err);
     return res.status(500).json({ error: err.message });
   }
 }
