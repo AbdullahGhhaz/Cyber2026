@@ -84,7 +84,7 @@ Alle 7 felter er obligatoriske i hvert objekt. Lav spørgsmål der dækker forsk
       const text = await callClaude(
         system,
         `${prompt}${existingContext}\n\nLav præcis 5 spørgsmål på dansk. Kun JSON array, ingen tekst udenfor.`,
-        1500
+        4096
       );
 
       let questions = parseQuestions(text).filter(validateQuestion).slice(0, 5);
@@ -95,7 +95,7 @@ Alle 7 felter er obligatoriske i hvert objekt. Lav spørgsmål der dækker forsk
         const retryText = await callClaude(
           system,
           `${prompt}\n\nLav præcis 5 spørgsmål på dansk. Kun JSON array.`,
-          1500
+          4096
         );
         questions = parseQuestions(retryText).filter(validateQuestion).slice(0, 5);
       }
@@ -112,7 +112,7 @@ Alle 7 felter er obligatoriske i hvert objekt. Lav spørgsmål der dækker forsk
       ? 'Du laver eksamensopsummeringer på dansk. Brug markdown: # overskrifter, ## underoverskrifter, **fed** for nøglebegreber, - for punktlister. Vær grundig men præcis.'
       : 'Du er pædagogisk underviser. Forklar grundigt med konkrete eksempler på dansk. Brug markdown: # overskrifter, **fed** for vigtige begreber, - for punktlister, ``` for kodeeksempler.';
 
-    const text = await callClaude(system, prompt, 2048);
+    const text = await callClaude(system, prompt, 4096);
     return res.status(200).json({ text });
 
   } catch (err) {
