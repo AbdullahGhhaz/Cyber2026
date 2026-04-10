@@ -550,23 +550,24 @@ function renderQuizFromDB(questions) {
       <div class="quiz-num">SPØRGSMÅL ${i+1} af ${questions.length}</div>
       <div class="quiz-q">${esc(q.question)}</div>
       <div class="quiz-opts">
-        ${opts.map((l,idx) => `<button class="quiz-opt" onclick="handleDBAnswer(this,'${l}','${q.correct}','${esc(q.explanation)}')">${letters[idx]}) ${esc(q[l])}</button>`).join('')}
+        ${opts.map((l,idx) => `<button class="quiz-opt" data-letter="${l}" data-correct="${q.correct}" data-explanation="${esc(q.explanation)}" onclick="handleDBAnswer(this)">${letters[idx]}) ${esc(q[l])}</button>`).join('')}
       </div>
       <div class="quiz-reveal">✅ Korrekt svar: ${q.correct.toUpperCase()}) ${esc(q[q.correct])} — ${esc(q.explanation)}</div>
     </div>`;
   }).join('') + '</div>';
 }
 
-// FIX: Fjernet ubrugt correctText-parameter + tilføjet score tracking
-function handleDBAnswer(el, letter, correct, explanation) {
+// FIX PERMANENT: Bruger data-attributter - immune mod quotes i explanation tekst
+function handleDBAnswer(el) {
   const card = el.closest('.quiz-card');
   if (card.querySelector('.correct,.wrong')) return;
 
+  const letter = el.dataset.letter;
+  const correct = el.dataset.correct;
   const isCorrect = letter === correct;
 
   card.querySelectorAll('.quiz-opt').forEach(o => {
-    const match = o.getAttribute('onclick')?.match(/handleDBAnswer\(this,'([a-d])'/);
-    const l = match ? match[1] : null;
+    const l = o.dataset.letter;
     if (!l) return;
     if (l === letter && !isCorrect) o.classList.add('wrong');
     if (l === correct) o.classList.add('correct');
@@ -576,13 +577,11 @@ function handleDBAnswer(el, letter, correct, explanation) {
   const reveal = card.querySelector('.quiz-reveal');
   if (reveal) reveal.classList.add('visible');
 
-  // FIX: Opdater score
   if (isCorrect) quizScore++;
   quizAnswered++;
   updateScoreDisplay();
 }
 
-// ── RENDER DOCS ────────────────────────────────────────────
 function renderDocs() {
   const docs = allDocs[currentSubject] || [];
   const el = document.getElementById('docItems');
@@ -701,7 +700,7 @@ async function autoSave() {
   try {
     const scopeFilename = currentScope === 'single' && selectedDocId
       ? (allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename||null : null;
-    const existing = (allSaved[currentSubject]||[]).find(s => s.type===currentMode && (s.scope_filename||null)===(scopeFilename||null));
+    const existing = (allSaved[currentSubject]||[]).find(s => s.typhe===currentMode && (s.scope_filename||null)===(scopeFilename||null));
     if (existing) {
       await sb(`generated_content?id=eq.${existing.id}`,{method:'DELETE'});
       allSaved[currentSubject] = allSaved[currentSubject].filter(s=>s.id!==existing.id);
