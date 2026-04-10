@@ -247,7 +247,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 // FIX: marked.js konfigureret én gang
-marked.setOptions({ breaks: true, gfm: true });
+marked.use({ breaks: true, gfm: true });
 
 const SUPABASE_URL = 'https://ojpmrfhtepdvdinoixvs.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qcG1yZmh0ZXBkdmRpbm9peHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Nzc2OTEsImV4cCI6MjA5MTI1MzY5MX0.f0bRsu4fddPnOgBRsEtwO3MgSMOvQ6ypxEjtUoWHeGg';
@@ -281,6 +281,9 @@ async function selectSubject(btn, name) {
   btn.classList.add('active');
   currentSubject = name;
   selectedDocId = null;
+  if (!allDocs[name] || !allSaved[name]) {
+    try { await loadSubject(name); } catch(e) { showToast('Fejl ved indlæsning: ' + e.message, 'error'); }
+  }
   quizQuestions = [];
   document.getElementById('outputWrap').classList.remove('visible');
   document.getElementById('quizBank').style.display = 'none';
@@ -292,7 +295,7 @@ async function selectSubject(btn, name) {
   await loadQuizQuestions();
 }
 
-function selectScope(btn, scope) {
+async function selectScope(btn, scope) {
   document.querySelectorAll('.scope-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   currentScope = scope;
@@ -304,7 +307,7 @@ function selectScope(btn, scope) {
   document.getElementById('scoreDisplay').classList.remove('visible');
   renderDocs();
   // FIX: reload spørgsmål for nyt scope
-  if (scope === 'all') loadQuizQuestions();
+  if (scope === 'all') await loadQuizQuestions();
 }
 
 function selectMode(btn, mode) {
@@ -519,7 +522,12 @@ function startQuiz() {
   updateScoreDisplay();
   document.getElementById('scoreDisplay').classList.add('visible');
 
-  const shuffled = [...quizQuestions].sort(() => Math.random() - 0.5);
+  const arr = [...quizQuestions];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  const shuffled = arr;
   document.getElementById('outputLabel').textContent = `// quiz — ${shuffled.length} spørgsmål`;
   document.getElementById('outputBtns').innerHTML = '';
   document.getElementById('outputContent').innerHTML = renderQuizFromDB(shuffled);
@@ -530,8 +538,8 @@ function startQuiz() {
 // FIX: Score display opdatering
 function updateScoreDisplay() {
   const el = document.getElementById('scoreDisplay');
-  const pct = quizTotal > 0 ? Math.round((quizScore / quizTotal) * 100) : 0;
-  el.textContent = `Score: ${quizScore}/${quizAnswered} (${pct}%)`;
+  const pct = quizAnswered > 0 ? Math.round((quizScore / quizAnswered) * 100) : 0;
+  el.textContent = `✅ ${quizScore}/${quizAnswered} besvaret (${pct}%) — ${quizTotal - quizAnswered} tilbage`;
 }
 
 function renderQuizFromDB(questions) {
@@ -717,4 +725,5 @@ function showToast(msg,type=''){const t=document.getElementById('toast');t.textC
 </script>
 </body>
 </html>
+
 
