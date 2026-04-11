@@ -147,6 +147,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 /* ADMIN-ONLY ELEMENTS */
 .admin-only{display:none!important;}
 body.admin-active .admin-only{display:block!important;}
+body.admin-active .qs-admin-btns{display:inline-flex!important;gap:8px;}
 body.admin-active .upload-zone{display:flex!important;}
 
 /* LOGIN OVERLAY */
@@ -268,7 +269,7 @@ body.admin-active .upload-zone{display:flex!important;}
             <span class="score-display" id="scoreDisplay"></span>
           </div>
           <div class="qs-actions">
-            <div class="admin-only" style="display:inline-flex!important;gap:8px;">
+            <div class="admin-only qs-admin-btns">
               <button class="qsbtn add" onclick="generate()">➕ Tilføj 5 nye</button>
               <button class="qsbtn" onclick="clearQuestions()" style="border-color:var(--danger);color:var(--danger);">🗑 Slet alle</button>
             </div>
