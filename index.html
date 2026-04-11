@@ -267,7 +267,7 @@ body.admin-active .upload-zone{display:flex!important;}
             <!-- FIX: Score tracker -->
             <span class="score-display" id="scoreDisplay"></span>
           </div>
-          <div class="qs-actions">
+          <div class="qs-actions admin-only">
             <button class="qsbtn add" onclick="generate()">➕ Tilføj 5 nye</button>
             <button class="qsbtn" onclick="startQuiz()">🎯 Tag quiz</button>
             <button class="qsbtn" onclick="clearQuestions()" style="border-color:var(--danger);color:var(--danger);">🗑 Slet alle</button>
@@ -647,7 +647,7 @@ function renderDocs() {
     return `<div class="doc-card${isSelected?' selected':''}" ${clickable} style="${currentScope==='single'?'cursor:pointer;':''}">
       <span class="doc-icon">${icons[ext]||'📁'}</span>
       <div class="doc-info"><div class="doc-name" title="${d.filename}">${d.filename}</div><div class="doc-meta">${size} · ${date}</div></div>
-      <button class="doc-del" onclick="event.stopPropagation();deleteDoc('${d.id}')">✕</button>
+      <button class="doc-del admin-only" onclick="event.stopPropagation();deleteDoc('${d.id}')">✕</button>
     </div>`;
   }).join('');
 }
@@ -664,7 +664,7 @@ function renderSaved() {
     return `<div class="saved-card" onclick="showSaved('${s.id}')">
       <span class="saved-card-icon">${icons[s.type]||'📄'}</span>
       <div class="saved-card-info"><div class="saved-card-type">${labels[s.type]||s.type} · ${date}</div><div class="saved-card-sub">${sub}</div></div>
-      <button class="saved-del" onclick="event.stopPropagation();deleteSaved('${s.id}')">✕</button>
+      <button class="saved-del admin-only" onclick="event.stopPropagation();deleteSaved('${s.id}')">✕</button>
     </div>`;
   }).join('');
 }
@@ -852,6 +852,18 @@ function injectGenererAltBtns(){
   });
 }
 const _docObs=new MutationObserver(function(){if(isAdmin)injectGenererAltBtns();});
+
+// UX FIX: Clear output when switching files
+const _origSelectDoc = selectDoc;
+selectDoc = function(id) {
+  const ow = document.getElementById('outputWrap');
+  if(ow) ow.classList.remove('visible');
+  window.currentOutput = '';
+  const qb = document.getElementById('quizBank');
+  if(qb) qb.style.display = 'none';
+  _origSelectDoc(id);
+};
+
 </script>
 </body>
 </html>
