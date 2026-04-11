@@ -827,7 +827,7 @@ function injectAdminUI(){
   if(!isAdmin) return;
   if(adminUIReady) return;
   adminUIReady=true;
-  const logo=document.querySelector('.logo');
+  const logo=document.querySelector('header .logo');
   if(logo&&!logo.querySelector('.admin-badge')){
     const badge=document.createElement('span');
     badge.className='admin-badge';
