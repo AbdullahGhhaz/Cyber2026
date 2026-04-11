@@ -335,6 +335,17 @@ async function selectSubject(btn, name) {
   btn.classList.add('active');
   currentSubject = name;
   selectedDocId = null;
+  currentScope = 'all';
+  document.querySelectorAll('.scope-btn').forEach(b => b.classList.remove('active'));
+  const allScopeBtn = document.querySelector('.scope-btn');
+  if (allScopeBtn) allScopeBtn.classList.add('active');
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  const firstModeBtn = document.querySelector('.mode-btn');
+  if (firstModeBtn) firstModeBtn.classList.add('active');
+  currentMode = 'quiz';
+  document.getElementById('scopeInfo').style.display = 'none';
+  document.getElementById('quizCtrls').style.display = 'none';
+  document.getElementById('topicInput').style.display = 'none';
   if (!allDocs[name] || !allSaved[name]) {
     try { await loadSubject(name); } catch(e) { showToast('Fejl ved indlæsning: ' + e.message, 'error'); }
   }
@@ -345,8 +356,9 @@ async function selectSubject(btn, name) {
   renderDocs();
   renderSaved();
   updateStats();
-  // FIX: hent quiz-spørgsmål for det nye fag
   await loadQuizQuestions();
+  updateGenBtnVisibility();
+  autoShowContent();
 }
 
 async function selectScope(btn, scope) {
