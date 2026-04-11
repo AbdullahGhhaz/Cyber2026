@@ -247,7 +247,7 @@ body.admin-active .upload-zone{display:flex!important;}
 
     <div class="main-body">
       <div class="controls-row" id="controlsRow">
-        <div class="ctrl-group admin-only" id="quizCtrls">
+        <div class="ctrl-group" id="quizCtrls" style="display:none;">
           <span class="ctrl-label">Type:</span>
           <select class="ctrl-select" id="qType">
             <option value="multiple">Multiplechoice</option>
@@ -255,9 +255,9 @@ body.admin-active .upload-zone{display:flex!important;}
             <option value="truefalse">Sandt/Falsk</option>
           </select>
         </div>
-        <input type="text" class="topic-input admin-only" id="topicInput" placeholder="Skriv emne at forklare (fx 'OOP', 'Loops', 'OSI-modellen')..." style="display:none;">
+        <input type="text" class="topic-input" id="topicInput" placeholder="Skriv emne at forklare (fx 'OOP', 'Loops', 'OSI-modellen')..." style="display:none;">
         <div class="scope-info" id="scopeInfo" style="display:none;">📄 Enkelt fil valgt</div>
-        <button class="gen-btn admin-only" id="genBtn" onclick="generate()">⚡ GENERÉR</button>
+        <button class="gen-btn" id="genBtn" onclick="generate()" style="display:none;">⚡ GENERÉR</button>
       </div>
 
       <!-- Quiz spørgsmål bank -->
@@ -362,6 +362,7 @@ async function selectScope(btn, scope) {
   renderDocs();
   // FIX: reload spørgsmål for nyt scope
   if (scope === 'all') await loadQuizQuestions();
+  updateGenBtnVisibility();
 }
 
 function selectMode(btn, mode) {
@@ -373,6 +374,7 @@ function selectMode(btn, mode) {
   document.getElementById('outputWrap').classList.remove('visible');
   document.getElementById('quizBank').style.display = mode === 'quiz' && quizQuestions.length > 0 ? 'block' : 'none';
   if (mode === 'quiz' && quizQuestions.length > 0) updateQuizStats();
+  updateGenBtnVisibility();
 }
 
 // ── SUPABASE ───────────────────────────────────────────────
@@ -514,6 +516,7 @@ async function loadQuizQuestions() {
     if (quizQuestions.length > 0) {
       document.getElementById('quizBank').style.display = 'block';
     }
+    updateGenBtnVisibility();
   } catch(e) {
     showToast('Fejl ved indlæsning af spørgsmål: ' + e.message, 'error');
   }
@@ -794,6 +797,7 @@ function doLogin(){
     sessionStorage.setItem('authRole','user');
     document.getElementById('loginOverlay').classList.add('hidden');
     err.textContent='';
+    setTimeout(updateGenBtnVisibility, 800);
   } else {
     err.textContent='Forkert adgangskode. Prøv igen.';
     document.getElementById('loginInput').value='';
@@ -804,7 +808,7 @@ document.addEventListener('DOMContentLoaded',function(){
   if(loginInput) loginInput.addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
   const r=sessionStorage.getItem('authRole');
   if(r==='admin'){isAdmin=true;document.body.classList.add('admin-active');document.getElementById('loginOverlay').classList.add('hidden');injectAdminUI();setTimeout(injectGenererAltBtns,500);}
-  else if(r==='user'){document.getElementById('loginOverlay').classList.add('hidden');}
+  else if(r==='user'){document.getElementById('loginOverlay').classList.add('hidden');setTimeout(updateGenBtnVisibility,800);}
   const di=document.getElementById('docItems');
   if(di) _docObs.observe(di,{childList:true,subtree:true});
 });
@@ -865,8 +869,33 @@ selectDoc = function(id) {
   const qb = document.getElementById('quizBank');
   if(qb) qb.style.display = 'none';
   _origSelectDoc(id);
+  setTimeout(updateGenBtnVisibility, 300);
 };
 
+
+// SMART GENERÉR: Show gen-btn only when no content exists for current mode+file
+function updateGenBtnVisibility() {
+  const btn = document.getElementById('genBtn');
+  const qCtrls = document.getElementById('quizCtrls');
+  const tInput = document.getElementById('topicInput');
+  if (!btn) return;
+  const hasContent = currentMode === 'quiz'
+    ? quizQuestions.length > 0
+    : (allSaved[currentSubject]||[]).some(s => {
+        const scopeFn = (currentScope==='single'&&selectedDocId)
+          ? (allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename||null : null;
+        return s.type===currentMode && (s.scope_filename||null)===(scopeFn||null);
+      });
+  if (isAdmin) {
+    btn.style.display = 'block';
+    if (qCtrls) qCtrls.style.display = currentMode==='quiz' ? 'flex' : 'none';
+    if (tInput) tInput.style.display = currentMode==='explain' ? 'block' : 'none';
+  } else {
+    btn.style.display = hasContent ? 'none' : 'block';
+    if (qCtrls) qCtrls.style.display = (!hasContent && currentMode==='quiz') ? 'flex' : 'none';
+    if (tInput) tInput.style.display = (!hasContent && currentMode==='explain') ? 'block' : 'none';
+  }
+}
 </script>
 </body>
 </html>
