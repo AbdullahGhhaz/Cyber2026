@@ -246,7 +246,7 @@ body.admin-active .upload-zone{display:flex!important;}
 
     <div class="main-body">
       <div class="controls-row" id="controlsRow">
-        <div class="ctrl-group" id="quizCtrls">
+        <div class="ctrl-group admin-only" id="quizCtrls">
           <span class="ctrl-label">Type:</span>
           <select class="ctrl-select" id="qType">
             <option value="multiple">Multiplechoice</option>
@@ -254,9 +254,9 @@ body.admin-active .upload-zone{display:flex!important;}
             <option value="truefalse">Sandt/Falsk</option>
           </select>
         </div>
-        <input type="text" class="topic-input" id="topicInput" placeholder="Skriv emne at forklare (fx 'OOP', 'Loops', 'OSI-modellen')..." style="display:none;">
+        <input type="text" class="topic-input admin-only" id="topicInput" placeholder="Skriv emne at forklare (fx 'OOP', 'Loops', 'OSI-modellen')..." style="display:none;">
         <div class="scope-info" id="scopeInfo" style="display:none;">📄 Enkelt fil valgt</div>
-        <button class="gen-btn" id="genBtn" onclick="generate()">⚡ GENERÉR</button>
+        <button class="gen-btn admin-only" id="genBtn" onclick="generate()">⚡ GENERÉR</button>
       </div>
 
       <!-- Quiz spørgsmål bank -->
@@ -267,10 +267,12 @@ body.admin-active .upload-zone{display:flex!important;}
             <!-- FIX: Score tracker -->
             <span class="score-display" id="scoreDisplay"></span>
           </div>
-          <div class="qs-actions admin-only">
-            <button class="qsbtn add" onclick="generate()">➕ Tilføj 5 nye</button>
+          <div class="qs-actions">
+            <div class="admin-only" style="display:inline-flex!important;gap:8px;">
+              <button class="qsbtn add" onclick="generate()">➕ Tilføj 5 nye</button>
+              <button class="qsbtn" onclick="clearQuestions()" style="border-color:var(--danger);color:var(--danger);">🗑 Slet alle</button>
+            </div>
             <button class="qsbtn" onclick="startQuiz()">🎯 Tag quiz</button>
-            <button class="qsbtn" onclick="clearQuestions()" style="border-color:var(--danger);color:var(--danger);">🗑 Slet alle</button>
           </div>
         </div>
       </div>
