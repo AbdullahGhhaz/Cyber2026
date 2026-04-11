@@ -363,7 +363,6 @@ async function selectScope(btn, scope) {
   // FIX: reload spørgsmål for nyt scope
   if (scope === 'all') await loadQuizQuestions();
   updateGenBtnVisibility();
-  autoShowContent();
 }
 
 function selectMode(btn, mode) {
@@ -379,7 +378,57 @@ function selectMode(btn, mode) {
   autoShowContent();
 }
 
+// ── SUPABASE ───────────────────────────────────────────────
+async function sb(path, opts = {}) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...opts,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+      ...opts.headers
+    }
+  });
+  if (!r.ok) {
+    const errText = await r.text();
+    // FIX: Bedre fejlbesked hvis tabel mangler
+    if (errText.includes('relation') || errText.includes('does not exist')) {
+      throw new Error('Supabase-tabel mangler — tjek at alle tabeller er oprettet i dit dashboard');
+    }
+    throw new Error(errText);
+  }
+  const t = await r.text();
+  return t ? JSON.parse(t) : [];
+}
 
+// ── LOAD — FIX: lazy loading, kun aktivt fag ved start ─────
+async function loadData() {
+  try {
+    await loadSubject(currentSubject);
+    // Hent doc-tæller for de andre fag (kun antal, ikke indhold)
+    for (let i = 0; i < SUBJECTS.length; i++) {
+      const s = SUBJECTS[i];
+      if (s === currentSubject) continue;
+      try {
+        const docs = await sb(`documents?subject=eq.${encodeURIComponent(s)}&select=id`);
+        allDocs[s] = allDocs[s] || docs; // gem kun ids til tæller
+        document.getElementById(`cnt-${i}`).textContent = docs.length;
+      } catch(e) { /* ignorer stille */ }
+    }
+    renderDocs(); renderSaved(); updateStats();
+    await loadQuizQuestions();
+  } catch(e) { showToast('Fejl ved indlæsning: ' + e.message, 'error'); }
+}
+
+async function loadSubject(s) {
+  const i = SUBJECTS.indexOf(s);
+  allDocs[s] = await sb(`documents?subject=eq.${encodeURIComponent(s)}&order=created_at.asc`);
+  allSaved[s] = await sb(`generated_content?subject=eq.${encodeURIComponent(s)}&order=created_at.desc`);
+  if (i >= 0) document.getElementById(`cnt-${i}`).textContent = allDocs[s].length;
+}
+
+// ── FILE HANDLING ──────────────────────────────────────────
 function handleDrop(e) { e.preventDefault(); document.getElementById('uploadZone').classList.remove('dragover'); handleFiles(e.dataTransfer.files); }
 
 async function handleFiles(files) {
@@ -826,6 +875,28 @@ selectDoc = function(id) {
 };
 
 
+// AUTO-SHOW: Instantly display existing content when switching mode/file
+function autoShowContent() {
+  if (currentMode === 'quiz') {
+    if (quizQuestions.length > 0) document.getElementById('quizBank').style.display = 'block';
+    return;
+  }
+  const scopeFilename = (currentScope === 'single' && selectedDocId)
+    ? (allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename || null
+    : null;
+  const match = (allSaved[currentSubject]||[]).find(s =>
+    s.type === currentMode && (s.scope_filename||null) === (scopeFilename||null)
+  );
+  if (match) {
+    currentOutput = match.content;
+    const labels = {summary:'// opsummering', explain:'// forklaring'};
+    document.getElementById('outputLabel').textContent = labels[currentMode] || '// resultat';
+    document.getElementById('outputBtns').innerHTML = '<button class="obtn" onclick="copyOutput()">Kopiér</button>';
+    renderOutput(match.content);
+    document.getElementById('outputWrap').classList.add('visible');
+  }
+}
+
 // SMART GENERÉR: Show gen-btn only when no content exists for current mode+file
 function updateGenBtnVisibility() {
   const btn = document.getElementById('genBtn');
@@ -847,27 +918,6 @@ function updateGenBtnVisibility() {
     btn.style.display = hasContent ? 'none' : 'block';
     if (qCtrls) qCtrls.style.display = (!hasContent && currentMode==='quiz') ? 'flex' : 'none';
     if (tInput) tInput.style.display = (!hasContent && currentMode==='explain') ? 'block' : 'none';
-  }
-}
-// AUTO-SHOW: Instantly display existing content when switching mode/file
-function autoShowContent() {
-  if (currentMode === 'quiz') {
-    if (quizQuestions.length > 0) document.getElementById('quizBank').style.display = 'block';
-    return;
-  }
-  const scopeFilename = (currentScope === 'single' && selectedDocId)
-    ? (allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename || null
-    : null;
-  const match = (allSaved[currentSubject]||[]).find(s =>
-    s.type === currentMode && (s.scope_filename||null) === (scopeFilename||null)
-  );
-  if (match) {
-    currentOutput = match.content;
-    const labels = {summary:'// opsummering', explain:'// forklaring'};
-    document.getElementById('outputLabel').textContent = labels[currentMode] || '// resultat';
-    document.getElementById('outputBtns').innerHTML = '<button class="obtn" onclick="copyOutput()">Kopiér</button>';
-    renderOutput(match.content);
-    document.getElementById('outputWrap').classList.add('visible');
   }
 }
 </script>
