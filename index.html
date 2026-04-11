@@ -143,21 +143,21 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .toast.visible{opacity:1;}
 .toast.success{border-color:var(--success);}
 .toast.error{border-color:var(--danger);}
-.admin-only{display:none!important;}body.admin-active .admin-only{display:revert;}body.admin-active .upload-zone{display:flex;}#loginOverlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:1.5rem;}#loginOverlay.hidden{display:none;}.login-card{background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:2.5rem 2rem;width:min(400px,90vw);display:flex;flex-direction:column;gap:1.2rem;box-shadow:0 20px 60px rgba(0,0,0,.4);}.login-card h2{font-family:var(--mono);font-size:1.4rem;color:var(--accent2);text-align:center;margin:0;}.login-card p{color:var(--text2);font-size:.85rem;text-align:center;margin:0;}.login-input{background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:1rem;padding:.7rem 1rem;outline:none;width:100%;box-sizing:border-box;transition:border-color .2s;}.login-input:focus{border-color:var(--accent2);}.login-input::placeholder{color:var(--text2);}.login-error{color:#f87171;font-size:.82rem;text-align:center;display:none;}.login-error.show{display:block;}.login-btn{background:var(--accent2);color:#000;font-family:var(--mono);font-weight:700;font-size:1rem;border:none;border-radius:8px;padding:.75rem;cursor:pointer;transition:opacity .2s;}.login-btn:hover{opacity:.85;}.login-logo{font-family:var(--mono);font-size:1.8rem;font-weight:700;color:var(--accent2);text-align:center;}.login-dot{display:inline-block;width:10px;height:10px;background:var(--success);border-radius:50%;margin-right:6px;box-shadow:0 0 6px var(--success);}.admin-badge{background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3);border-radius:6px;font-size:.7rem;font-weight:700;padding:2px 8px;font-family:var(--mono);margin-left:8px;vertical-align:middle;}.gen-all-btn{background:none;border:1px solid var(--accent2);color:var(--accent2);border-radius:6px;font-size:.72rem;font-family:var(--mono);padding:3px 8px;cursor:pointer;opacity:.8;transition:all .2s;white-space:nowrap;flex-shrink:0;margin-left:4px;}.gen-all-btn:hover{background:var(--accent2);color:#000;opacity:1;}.gen-all-btn:disabled{opacity:.4;cursor:wait;}@media(max-width:768px){body{flex-direction:column!important;}aside{width:100%!important;max-height:40vh;overflow-y:auto;border-right:none!important;border-bottom:1px solid var(--border);}main{flex:1;min-width:0;}header{padding:0 12px!important;}.tab-btn{white-space:nowrap;}#controlsRow{flex-wrap:wrap;gap:6px;}#genBtn{width:100%;justify-content:center;}.mode-btns{gap:4px;}.mode-btn{flex:1;justify-content:center;font-size:.78rem;}.quiz-q{padding:.8rem!important;}.quiz-q .opts{grid-template-columns:1fr!important;}}@media(max-width:480px){.logo{font-size:.82rem!important;}.quiz-q h4{font-size:.88rem;}.opt-btn{font-size:.83rem;padding:.45rem .65rem;}.pill{font-size:.7rem!important;}}</style>
+.admin-only{display:none!important;}body.admin-active .admin-only{display:block!important;}body.admin-active .upload-zone{display:flex!important;}#loginOverlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:1.5rem;}#loginOverlay.hidden{display:none;}.login-card{background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:2.5rem 2rem;width:min(400px,90vw);display:flex;flex-direction:column;gap:1.2rem;box-shadow:0 20px 60px rgba(0,0,0,.4);}.login-card h2{font-family:var(--mono);font-size:1.4rem;color:var(--accent2);text-align:center;margin:0;}.login-card p{color:var(--text2);font-size:.85rem;text-align:center;margin:0;}.login-input{background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:1rem;padding:.7rem 1rem;outline:none;width:100%;box-sizing:border-box;transition:border-color .2s;}.login-input:focus{border-color:var(--accent2);}.login-input::placeholder{color:var(--text2);}.login-error{color:#f87171;font-size:.82rem;text-align:center;display:none;}.login-error.show{display:block;}.login-btn{background:var(--accent2);color:#000;font-family:var(--mono);font-weight:700;font-size:1rem;border:none;border-radius:8px;padding:.75rem;cursor:pointer;transition:opacity .2s;}.login-btn:hover{opacity:.85;}.login-logo{font-family:var(--mono);font-size:1.8rem;font-weight:700;color:var(--accent2);text-align:center;}.login-dot{display:inline-block;width:10px;height:10px;background:var(--success);border-radius:50%;margin-right:6px;box-shadow:0 0 6px var(--success);}.admin-badge{background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3);border-radius:6px;font-size:.7rem;font-weight:700;padding:2px 8px;font-family:var(--mono);margin-left:8px;vertical-align:middle;}.gen-all-btn{background:none;border:1px solid var(--accent2);color:var(--accent2);border-radius:6px;font-size:.72rem;font-family:var(--mono);padding:3px 8px;cursor:pointer;opacity:.8;transition:all .2s;white-space:nowrap;flex-shrink:0;margin-left:4px;}.gen-all-btn:hover{background:var(--accent2);color:#000;opacity:1;}.gen-all-btn:disabled{opacity:.4;cursor:wait;}@media(max-width:768px){body{flex-direction:column!important;}aside{width:100%!important;max-height:40vh;overflow-y:auto;border-right:none!important;border-bottom:1px solid var(--border);}main{flex:1;min-width:0;}header{padding:0 12px!important;}.tab-btn{white-space:nowrap;}#controlsRow{flex-wrap:wrap;gap:6px;}#genBtn{width:100%;justify-content:center;}.mode-btns{gap:4px;}.mode-btn{flex:1;justify-content:center;font-size:.78rem;}.quiz-q{padding:.8rem!important;}.quiz-q .opts{grid-template-columns:1fr!important;}}@media(max-width:480px){.logo{font-size:.82rem!important;}.quiz-q h4{font-size:.88rem;}.opt-btn{font-size:.83rem;padding:.45rem .65rem;}.pill{font-size:.7rem!important;}}</style>
 </head>
-<body><div id="loginOverlay"><div class="login-logo"><span class="login-dot"></span>EKSAMEN PREP</div><div class="login-card"><h2>Log ind</h2><p>Skriv din adgangskode for at fortsÃ¦tte</p><input id="loginInput" class="login-input" type="password" placeholder="Adgangskode..."/><div id="loginError" class="login-error">Forkert adgangskode &mdash; prÃ¸v igen</div><button class="login-btn" onclick="doLogin()">LOG IND</button></div></div>
+<body><div id="loginOverlay"><div class="login-logo"><span class="login-dot"></span>EKSAMEN PREP</div><div class="login-card"><h2>Log ind</h2><p>Skriv din adgangskode for at fortsÃÂ¦tte</p><input id="loginInput" class="login-input" type="password" placeholder="Adgangskode..."/><div id="loginError" class="login-error">Forkert adgangskode &mdash; prÃÂ¸v igen</div><button class="login-btn" onclick="doLogin()">LOG IND</button></div></div>
 <header>
   <div class="logo"><div class="logo-dot"></div>EXAM.PREP</div>
-  <button class="hbtn" onclick="toggleTheme()" id="themeBtn">â LYS</button>
+  <button class="hbtn" onclick="toggleTheme()" id="themeBtn">Ã¢ÂÂ LYS</button>
 </header>
 <div class="app">
   <aside class="sidebar">
     <div class="sidebar-section">
       <div class="slabel">// fag</div>
       <div class="sub-list">
-        <button class="sub-btn active" onclick="selectSubject(this,'Programmering')"><span class="sub-icon">ð»</span>Programmering<span class="sub-count" id="cnt-0">0</span></button>
-        <button class="sub-btn" onclick="selectSubject(this,'ForretningsforstÃ¥else')"><span class="sub-icon">ð</span>ForretningsforstÃ¥else<span class="sub-count" id="cnt-1">0</span></button>
-        <button class="sub-btn" onclick="selectSubject(this,'Computerarkitektur')"><span class="sub-icon">ð¥</span>Computerarkitektur<span class="sub-count" id="cnt-2">0</span></button>
+        <button class="sub-btn active" onclick="selectSubject(this,'Programmering')"><span class="sub-icon">Ã°ÂÂÂ»</span>Programmering<span class="sub-count" id="cnt-0">0</span></button>
+        <button class="sub-btn" onclick="selectSubject(this,'ForretningsforstÃÂ¥else')"><span class="sub-icon">Ã°ÂÂÂ</span>ForretningsforstÃÂ¥else<span class="sub-count" id="cnt-1">0</span></button>
+        <button class="sub-btn" onclick="selectSubject(this,'Computerarkitektur')"><span class="sub-icon">Ã°ÂÂÂ¥</span>Computerarkitektur<span class="sub-count" id="cnt-2">0</span></button>
       </div>
     </div>
     <div class="sidebar-docs" id="sidebarDocs">
@@ -166,8 +166,8 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
         ondragleave="this.classList.remove('dragover')"
         ondrop="handleDrop(event)">
         <input type="file" id="fileInput" multiple accept=".pdf,.pptx,.ppt,.docx,.doc,.txt,.md" onchange="handleFiles(this.files)">
-        <div class="uz-icon">ð</div>
-        <div class="uz-text">TrÃ¦k filer hertil eller <strong>klik</strong></div>
+        <div class="uz-icon">Ã°ÂÂÂ</div>
+        <div class="uz-text">TrÃÂ¦k filer hertil eller <strong>klik</strong></div>
       </div>
       <div class="doc-items" id="docItems"><div class="empty-docs">Ingen dokumenter endnu</div></div>
     </div>
@@ -181,15 +181,15 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
     <div class="main-topbar">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <div class="scope-tabs">
-          <button class="scope-btn active" onclick="selectScope(this,'all')">ð Alle filer</button>
-          <button class="scope-btn" onclick="selectScope(this,'single')">ð Enkelt fil</button>
+          <button class="scope-btn active" onclick="selectScope(this,'all')">Ã°ÂÂÂ Alle filer</button>
+          <button class="scope-btn" onclick="selectScope(this,'single')">Ã°ÂÂÂ Enkelt fil</button>
         </div>
         <div class="stats-pill" id="statsPill"><span>0</span> dokumenter</div>
       </div>
       <div class="mode-tabs">
-        <button class="mode-btn active" onclick="selectMode(this,'quiz')">ð¯ Quiz</button>
-        <button class="mode-btn" onclick="selectMode(this,'summary')">ð Opsummering</button>
-        <button class="mode-btn" onclick="selectMode(this,'explain')">ð¡ Forklaring</button>
+        <button class="mode-btn active" onclick="selectMode(this,'quiz')">Ã°ÂÂÂ¯ Quiz</button>
+        <button class="mode-btn" onclick="selectMode(this,'summary')">Ã°ÂÂÂ Opsummering</button>
+        <button class="mode-btn" onclick="selectMode(this,'explain')">Ã°ÂÂÂ¡ Forklaring</button>
       </div>
     </div>
 
@@ -199,27 +199,27 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
           <span class="ctrl-label">Type:</span>
           <select class="ctrl-select" id="qType">
             <option value="multiple">Multiplechoice</option>
-            <option value="open">Ãbne spÃ¸rgsmÃ¥l</option>
+            <option value="open">ÃÂbne spÃÂ¸rgsmÃÂ¥l</option>
             <option value="truefalse">Sandt/Falsk</option>
           </select>
         </div>
         <input type="text" class="topic-input" id="topicInput" placeholder="Skriv emne at forklare (fx 'OOP', 'Loops', 'OSI-modellen')..." style="display:none;">
-        <div class="scope-info" id="scopeInfo" style="display:none;">ð Enkelt fil valgt</div>
-        <button class="gen-btn" id="genBtn" onclick="generate()">â¡ GENERÃR</button>
+        <div class="scope-info" id="scopeInfo" style="display:none;">Ã°ÂÂÂ Enkelt fil valgt</div>
+        <button class="gen-btn" id="genBtn" onclick="generate()">Ã¢ÂÂ¡ GENERÃÂR</button>
       </div>
 
-      <!-- Quiz spÃ¸rgsmÃ¥l bank -->
+      <!-- Quiz spÃÂ¸rgsmÃÂ¥l bank -->
       <div id="quizBank" style="display:none;">
         <div class="quiz-stats-bar">
           <div class="qs-left">
-            <span class="qs-count" id="qsCount">0 spÃ¸rgsmÃ¥l gemt</span>
+            <span class="qs-count" id="qsCount">0 spÃÂ¸rgsmÃÂ¥l gemt</span>
             <!-- FIX: Score tracker -->
             <span class="score-display" id="scoreDisplay"></span>
           </div>
           <div class="qs-actions">
-            <button class="qsbtn add" onclick="generate()">â TilfÃ¸j 5 nye</button>
-            <button class="qsbtn" onclick="startQuiz()">ð¯ Tag quiz</button>
-            <button class="qsbtn" onclick="clearQuestions()" style="border-color:var(--danger);color:var(--danger);">ð Slet alle</button>
+            <button class="qsbtn add" onclick="generate()">Ã¢ÂÂ TilfÃÂ¸j 5 nye</button>
+            <button class="qsbtn" onclick="startQuiz()">Ã°ÂÂÂ¯ Tag quiz</button>
+            <button class="qsbtn" onclick="clearQuestions()" style="border-color:var(--danger);color:var(--danger);">Ã°ÂÂÂ Slet alle</button>
           </div>
         </div>
       </div>
@@ -233,7 +233,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
         <div class="output-header">
           <div class="output-label" id="outputLabel">// resultat</div>
           <div class="output-btns" id="outputBtns">
-            <button class="obtn" onclick="copyOutput()">ð KopiÃ©r</button>
+            <button class="obtn" onclick="copyOutput()">Ã°ÂÂÂ KopiÃÂ©r</button>
           </div>
         </div>
         <div id="outputContent"></div>
@@ -246,13 +246,13 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-// FIX: marked.js konfigureret Ã©n gang
+// FIX: marked.js konfigureret ÃÂ©n gang
 marked.use({ breaks: true, gfm: true });
 
 const SUPABASE_URL = 'https://ojpmrfhtepdvdinoixvs.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qcG1yZmh0ZXBkdmRpbm9peHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Nzc2OTEsImV4cCI6MjA5MTI1MzY5MX0.f0bRsu4fddPnOgBRsEtwO3MgSMOvQ6ypxEjtUoWHeGg';
 
-const SUBJECTS = ['Programmering','ForretningsforstÃ¥else','Computerarkitektur'];
+const SUBJECTS = ['Programmering','ForretningsforstÃÂ¥else','Computerarkitektur'];
 let theme = 'dark';
 let currentSubject = 'Programmering';
 let currentMode = 'quiz';
@@ -273,7 +273,7 @@ window.addEventListener('load', loadData);
 function toggleTheme() {
   theme = theme === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : '');
-  document.getElementById('themeBtn').textContent = theme === 'dark' ? 'â LYS' : 'ð MÃRK';
+  document.getElementById('themeBtn').textContent = theme === 'dark' ? 'Ã¢ÂÂ LYS' : 'Ã°ÂÂÂ MÃÂRK';
 }
 
 async function selectSubject(btn, name) {
@@ -282,7 +282,7 @@ async function selectSubject(btn, name) {
   currentSubject = name;
   selectedDocId = null;
   if (!allDocs[name] || !allSaved[name]) {
-    try { await loadSubject(name); } catch(e) { showToast('Fejl ved indlÃ¦sning: ' + e.message, 'error'); }
+    try { await loadSubject(name); } catch(e) { showToast('Fejl ved indlÃÂ¦sning: ' + e.message, 'error'); }
   }
   quizQuestions = [];
   document.getElementById('outputWrap').classList.remove('visible');
@@ -291,7 +291,7 @@ async function selectSubject(btn, name) {
   renderDocs();
   renderSaved();
   updateStats();
-  // FIX: hent quiz-spÃ¸rgsmÃ¥l for det nye fag
+  // FIX: hent quiz-spÃÂ¸rgsmÃÂ¥l for det nye fag
   await loadQuizQuestions();
 }
 
@@ -306,7 +306,7 @@ async function selectScope(btn, scope) {
   document.getElementById('scopeInfo').style.display = 'none';
   document.getElementById('scoreDisplay').classList.remove('visible');
   renderDocs();
-  // FIX: reload spÃ¸rgsmÃ¥l for nyt scope
+  // FIX: reload spÃÂ¸rgsmÃÂ¥l for nyt scope
   if (scope === 'all') await loadQuizQuestions();
 }
 
@@ -321,7 +321,7 @@ function selectMode(btn, mode) {
   if (mode === 'quiz' && quizQuestions.length > 0) updateQuizStats();
 }
 
-// ââ SUPABASE âââââââââââââââââââââââââââââââââââââââââââââââ
+// Ã¢ÂÂÃ¢ÂÂ SUPABASE Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 async function sb(path, opts = {}) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...opts,
@@ -337,7 +337,7 @@ async function sb(path, opts = {}) {
     const errText = await r.text();
     // FIX: Bedre fejlbesked hvis tabel mangler
     if (errText.includes('relation') || errText.includes('does not exist')) {
-      throw new Error('Supabase-tabel mangler â tjek at alle tabeller er oprettet i dit dashboard');
+      throw new Error('Supabase-tabel mangler Ã¢ÂÂ tjek at alle tabeller er oprettet i dit dashboard');
     }
     throw new Error(errText);
   }
@@ -345,23 +345,23 @@ async function sb(path, opts = {}) {
   return t ? JSON.parse(t) : [];
 }
 
-// ââ LOAD â FIX: lazy loading, kun aktivt fag ved start âââââ
+// Ã¢ÂÂÃ¢ÂÂ LOAD Ã¢ÂÂ FIX: lazy loading, kun aktivt fag ved start Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 async function loadData() {
   try {
     await loadSubject(currentSubject);
-    // Hent doc-tÃ¦ller for de andre fag (kun antal, ikke indhold)
+    // Hent doc-tÃÂ¦ller for de andre fag (kun antal, ikke indhold)
     for (let i = 0; i < SUBJECTS.length; i++) {
       const s = SUBJECTS[i];
       if (s === currentSubject) continue;
       try {
         const docs = await sb(`documents?subject=eq.${encodeURIComponent(s)}&select=id`);
-        allDocs[s] = allDocs[s] || docs; // gem kun ids til tÃ¦ller
+        allDocs[s] = allDocs[s] || docs; // gem kun ids til tÃÂ¦ller
         document.getElementById(`cnt-${i}`).textContent = docs.length;
       } catch(e) { /* ignorer stille */ }
     }
     renderDocs(); renderSaved(); updateStats();
     await loadQuizQuestions();
-  } catch(e) { showToast('Fejl ved indlÃ¦sning: ' + e.message, 'error'); }
+  } catch(e) { showToast('Fejl ved indlÃÂ¦sning: ' + e.message, 'error'); }
 }
 
 async function loadSubject(s) {
@@ -371,7 +371,7 @@ async function loadSubject(s) {
   if (i >= 0) document.getElementById(`cnt-${i}`).textContent = allDocs[s].length;
 }
 
-// ââ FILE HANDLING ââââââââââââââââââââââââââââââââââââââââââ
+// Ã¢ÂÂÃ¢ÂÂ FILE HANDLING Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 function handleDrop(e) { e.preventDefault(); document.getElementById('uploadZone').classList.remove('dragover'); handleFiles(e.dataTransfer.files); }
 
 async function handleFiles(files) {
@@ -387,14 +387,14 @@ async function handleFiles(files) {
       if (!text || text.length < 10) { showToast('Ingen tekst: ' + file.name, 'error'); continue; }
       // FIX: Trim dokumentindhold til 20.000 tegn pr. fil for at spare tokens
       if (text.length > 20000) {
-        text = text.slice(0, 20000) + '\n\n[Afkortet â upload kortere uddrag for bedre resultater]';
+        text = text.slice(0, 20000) + '\n\n[Afkortet Ã¢ÂÂ upload kortere uddrag for bedre resultater]';
       }
       const res = await sb('documents', { method: 'POST', body: JSON.stringify({ subject: currentSubject, filename: file.name, content: text }) });
       if (!allDocs[currentSubject]) allDocs[currentSubject] = [];
       allDocs[currentSubject].push(res[0]);
       document.getElementById(`cnt-${SUBJECTS.indexOf(currentSubject)}`).textContent = allDocs[currentSubject].length;
       renderDocs(); updateStats();
-      showToast('â ' + file.name, 'success');
+      showToast('Ã¢ÂÂ ' + file.name, 'success');
     } catch(e) { showToast('Fejl: ' + e.message, 'error'); }
   }
 }
@@ -441,12 +441,12 @@ function selectDoc(id) {
   renderDocs();
   const doc = (allDocs[currentSubject]||[]).find(d=>d.id===id);
   const info = document.getElementById('scopeInfo');
-  if (selectedDocId && doc) { info.textContent = `ð ${doc.filename}`; info.style.display = 'block'; }
+  if (selectedDocId && doc) { info.textContent = `Ã°ÂÂÂ ${doc.filename}`; info.style.display = 'block'; }
   else info.style.display = 'none';
   if (selectedDocId) loadQuizQuestions();
 }
 
-// ââ QUIZ QUESTIONS âââââââââââââââââââââââââââââââââââââââââ
+// Ã¢ÂÂÃ¢ÂÂ QUIZ QUESTIONS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 async function loadQuizQuestions() {
   if (currentMode !== 'quiz') return;
   try {
@@ -461,13 +461,13 @@ async function loadQuizQuestions() {
       document.getElementById('quizBank').style.display = 'block';
     }
   } catch(e) {
-    showToast('Fejl ved indlÃ¦sning af spÃ¸rgsmÃ¥l: ' + e.message, 'error');
+    showToast('Fejl ved indlÃÂ¦sning af spÃÂ¸rgsmÃÂ¥l: ' + e.message, 'error');
   }
 }
 
 function updateQuizStats() {
   const n = quizQuestions.length;
-  document.getElementById('qsCount').textContent = `${n} spÃ¸rgsmÃ¥l gemt`;
+  document.getElementById('qsCount').textContent = `${n} spÃÂ¸rgsmÃÂ¥l gemt`;
   document.getElementById('quizBank').style.display = n > 0 ? 'block' : 'none';
 }
 
@@ -479,7 +479,7 @@ async function saveQuizQuestions(newQs) {
   const existing = quizQuestions.map(q => q.question.toLowerCase());
   const unique = newQs.filter(q => !existing.includes(q.question.toLowerCase()));
 
-  if (unique.length === 0) { showToast('Ingen nye spÃ¸rgsmÃ¥l â alle var dubletter', 'error'); return; }
+  if (unique.length === 0) { showToast('Ingen nye spÃÂ¸rgsmÃÂ¥l Ã¢ÂÂ alle var dubletter', 'error'); return; }
 
   const toInsert = unique.map(q => ({
     subject: currentSubject,
@@ -493,11 +493,11 @@ async function saveQuizQuestions(newQs) {
   const saved = await sb('quiz_questions', { method: 'POST', body: JSON.stringify(toInsert) });
   quizQuestions = [...quizQuestions, ...saved];
   updateQuizStats();
-  showToast(`â ${unique.length} nye spÃ¸rgsmÃ¥l gemt! (${quizQuestions.length} total)`, 'success');
+  showToast(`Ã¢ÂÂ ${unique.length} nye spÃÂ¸rgsmÃÂ¥l gemt! (${quizQuestions.length} total)`, 'success');
 }
 
 async function clearQuestions() {
-  if (!confirm(`Slet alle ${quizQuestions.length} spÃ¸rgsmÃ¥l?`)) return;
+  if (!confirm(`Slet alle ${quizQuestions.length} spÃÂ¸rgsmÃÂ¥l?`)) return;
   try {
     const filename = currentScope === 'single' && selectedDocId
       ? (allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename
@@ -509,7 +509,7 @@ async function clearQuestions() {
     updateQuizStats();
     document.getElementById('outputWrap').classList.remove('visible');
     document.getElementById('scoreDisplay').classList.remove('visible');
-    showToast('Alle spÃ¸rgsmÃ¥l slettet');
+    showToast('Alle spÃÂ¸rgsmÃÂ¥l slettet');
   } catch(e) { showToast('Fejl: ' + e.message, 'error'); }
 }
 
@@ -528,7 +528,7 @@ function startQuiz() {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   const shuffled = arr;
-  document.getElementById('outputLabel').textContent = `// quiz â ${shuffled.length} spÃ¸rgsmÃ¥l`;
+  document.getElementById('outputLabel').textContent = `// quiz Ã¢ÂÂ ${shuffled.length} spÃÂ¸rgsmÃÂ¥l`;
   document.getElementById('outputBtns').innerHTML = '';
   document.getElementById('outputContent').innerHTML = renderQuizFromDB(shuffled);
   document.getElementById('outputWrap').classList.add('visible');
@@ -539,7 +539,7 @@ function startQuiz() {
 function updateScoreDisplay() {
   const el = document.getElementById('scoreDisplay');
   const pct = quizAnswered > 0 ? Math.round((quizScore / quizAnswered) * 100) : 0;
-  el.textContent = `â ${quizScore}/${quizAnswered} besvaret (${pct}%) â ${quizTotal - quizAnswered} tilbage`;
+  el.textContent = `Ã¢ÂÂ ${quizScore}/${quizAnswered} besvaret (${pct}%) Ã¢ÂÂ ${quizTotal - quizAnswered} tilbage`;
 }
 
 function renderQuizFromDB(questions) {
@@ -547,12 +547,12 @@ function renderQuizFromDB(questions) {
     const opts = ['a','b','c','d'];
     const letters = ['A','B','C','D'];
     return `<div class="quiz-card">
-      <div class="quiz-num">SPÃRGSMÃL ${i+1} af ${questions.length}</div>
+      <div class="quiz-num">SPÃÂRGSMÃÂL ${i+1} af ${questions.length}</div>
       <div class="quiz-q">${esc(q.question)}</div>
       <div class="quiz-opts">
         ${opts.map((l,idx) => `<button class="quiz-opt" data-letter="${l}" data-correct="${q.correct}" data-explanation="${esc(q.explanation)}" onclick="handleDBAnswer(this)">${letters[idx]}) ${esc(q[l])}</button>`).join('')}
       </div>
-      <div class="quiz-reveal">â Korrekt svar: ${q.correct.toUpperCase()}) ${esc(q[q.correct])} â ${esc(q.explanation)}</div>
+      <div class="quiz-reveal">Ã¢ÂÂ Korrekt svar: ${q.correct.toUpperCase()}) ${esc(q[q.correct])} Ã¢ÂÂ ${esc(q.explanation)}</div>
     </div>`;
   }).join('') + '</div>';
 }
@@ -586,7 +586,7 @@ function renderDocs() {
   const docs = allDocs[currentSubject] || [];
   const el = document.getElementById('docItems');
   if (!docs.length) { el.innerHTML = '<div class="empty-docs">Ingen dokumenter endnu</div>'; return; }
-  const icons = {pdf:'ð',pptx:'ð',ppt:'ð',docx:'ð',doc:'ð',txt:'ð',md:'ð'};
+  const icons = {pdf:'Ã°ÂÂÂ',pptx:'Ã°ÂÂÂ',ppt:'Ã°ÂÂÂ',docx:'Ã°ÂÂÂ',doc:'Ã°ÂÂÂ',txt:'Ã°ÂÂÂ',md:'Ã°ÂÂÂ'};
   el.innerHTML = docs.map(d => {
     const ext = d.filename.split('.').pop().toLowerCase();
     const size = ((d.content?.length||0)/1000).toFixed(1) + 'k';
@@ -594,9 +594,9 @@ function renderDocs() {
     const isSelected = currentScope === 'single' && selectedDocId === d.id;
     const clickable = currentScope === 'single' ? `onclick="selectDoc('${d.id}')"` : '';
     return `<div class="doc-card${isSelected?' selected':''}" ${clickable} style="${currentScope==='single'?'cursor:pointer;':''}">
-      <span class="doc-icon">${icons[ext]||'ð'}</span>
-      <div class="doc-info"><div class="doc-name" title="${d.filename}">${d.filename}</div><div class="doc-meta">${size} Â· ${date}</div></div>
-      <button class="doc-del" onclick="event.stopPropagation();deleteDoc('${d.id}')">â</button>
+      <span class="doc-icon">${icons[ext]||'Ã°ÂÂÂ'}</span>
+      <div class="doc-info"><div class="doc-name" title="${d.filename}">${d.filename}</div><div class="doc-meta">${size} ÃÂ· ${date}</div></div>
+      <button class="doc-del" onclick="event.stopPropagation();deleteDoc('${d.id}')">Ã¢ÂÂ</button>
     </div>`;
   }).join('');
 }
@@ -605,15 +605,15 @@ function renderSaved() {
   const saved = allSaved[currentSubject] || [];
   const el = document.getElementById('savedList');
   if (!saved.length) { el.innerHTML = '<div class="empty-docs" style="padding:8px 0;">Ingen gemte resultater</div>'; return; }
-  const icons = {quiz:'ð¯',summary:'ð',explain:'ð¡'};
+  const icons = {quiz:'Ã°ÂÂÂ¯',summary:'Ã°ÂÂÂ',explain:'Ã°ÂÂÂ¡'};
   const labels = {quiz:'Quiz',summary:'Opsummering',explain:'Forklaring'};
   el.innerHTML = saved.map(s => {
     const date = new Date(s.created_at).toLocaleDateString('da-DK',{day:'numeric',month:'short'});
-    const sub = s.scope_filename ? `ð ${s.scope_filename}` : 'ð Alle filer';
+    const sub = s.scope_filename ? `Ã°ÂÂÂ ${s.scope_filename}` : 'Ã°ÂÂÂ Alle filer';
     return `<div class="saved-card" onclick="showSaved('${s.id}')">
-      <span class="saved-card-icon">${icons[s.type]||'ð'}</span>
-      <div class="saved-card-info"><div class="saved-card-type">${labels[s.type]||s.type} Â· ${date}</div><div class="saved-card-sub">${sub}</div></div>
-      <button class="saved-del" onclick="event.stopPropagation();deleteSaved('${s.id}')">â</button>
+      <span class="saved-card-icon">${icons[s.type]||'Ã°ÂÂÂ'}</span>
+      <div class="saved-card-info"><div class="saved-card-type">${labels[s.type]||s.type} ÃÂ· ${date}</div><div class="saved-card-sub">${sub}</div></div>
+      <button class="saved-del" onclick="event.stopPropagation();deleteSaved('${s.id}')">Ã¢ÂÂ</button>
     </div>`;
   }).join('');
 }
@@ -622,7 +622,7 @@ function showSaved(id) {
   const s = (allSaved[currentSubject]||[]).find(x=>x.id===id);
   if (!s) return;
   currentOutput = s.content; currentMode = s.type;
-  const labels = {quiz:'// quiz spÃ¸rgsmÃ¥l',summary:'// opsummering',explain:'// forklaring'};
+  const labels = {quiz:'// quiz spÃÂ¸rgsmÃÂ¥l',summary:'// opsummering',explain:'// forklaring'};
   document.getElementById('outputLabel').textContent = labels[s.type]||'// resultat';
   renderOutput(s.content);
   document.getElementById('outputWrap').classList.add('visible');
@@ -631,10 +631,10 @@ function showSaved(id) {
 function updateStats() {
   const docs = allDocs[currentSubject]||[];
   const total = docs.reduce((s,d)=>s+(d.content?.length||0),0);
-  document.getElementById('statsPill').innerHTML = `<span>${docs.length}</span> dok Â· ${(total/1000).toFixed(0)}k tegn`;
+  document.getElementById('statsPill').innerHTML = `<span>${docs.length}</span> dok ÃÂ· ${(total/1000).toFixed(0)}k tegn`;
 }
 
-// ââ BUILD PROMPT âââââââââââââââââââââââââââââââââââââââââââ
+// Ã¢ÂÂÃ¢ÂÂ BUILD PROMPT Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 function buildPrompt() {
   const docs = allDocs[currentSubject]||[];
   let useDocs = currentScope === 'single' && selectedDocId ? docs.filter(d=>d.id===selectedDocId) : docs;
@@ -644,21 +644,21 @@ function buildPrompt() {
   const mat = parts ? `Undervisningsmateriale fra ${scopeLabel}:\n${parts}` : `Brug din viden om "${currentSubject}".`;
   const topic = document.getElementById('topicInput').value||'';
   if (currentMode === 'quiz') return mat;
-  if (currentMode === 'summary') return `${mat}\n\n---\nOPGAVE: Lav en grundig struktureret eksamensopsummering pÃ¥ dansk. Brug overskrifter og punktlister.`;
-  return `${mat}\n\n---\nOPGAVE: Forklar fÃ¸lgende emne grundigt pÃ¥ dansk: "${topic||'de vigtigste begreber i '+currentSubject}". Brug eksempler.`;
+  if (currentMode === 'summary') return `${mat}\n\n---\nOPGAVE: Lav en grundig struktureret eksamensopsummering pÃÂ¥ dansk. Brug overskrifter og punktlister.`;
+  return `${mat}\n\n---\nOPGAVE: Forklar fÃÂ¸lgende emne grundigt pÃÂ¥ dansk: "${topic||'de vigtigste begreber i '+currentSubject}". Brug eksempler.`;
 }
 
-// ââ GENERATE âââââââââââââââââââââââââââââââââââââââââââââââ
+// Ã¢ÂÂÃ¢ÂÂ GENERATE Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 async function generate() {
   const docs = allDocs[currentSubject]||[];
-  if (!docs.length) { showToast('Upload mindst Ã©t dokument fÃ¸rst!','error'); return; }
-  if (currentScope === 'single' && !selectedDocId) { showToast('VÃ¦lg en fil ved at klikke pÃ¥ den!','error'); return; }
+  if (!docs.length) { showToast('Upload mindst ÃÂ©t dokument fÃÂ¸rst!','error'); return; }
+  if (currentScope === 'single' && !selectedDocId) { showToast('VÃÂ¦lg en fil ved at klikke pÃÂ¥ den!','error'); return; }
 
   const btn = document.getElementById('genBtn');
   const loading = document.getElementById('loading');
   btn.disabled = true;
   loading.classList.add('visible');
-  document.getElementById('loadingTxt').textContent = currentMode === 'quiz' ? 'GENERERER 5 NYE SPÃRGSMÃL...' : currentMode === 'summary' ? 'GENERERER OPSUMMERING...' : 'GENERERER FORKLARING...';
+  document.getElementById('loadingTxt').textContent = currentMode === 'quiz' ? 'GENERERER 5 NYE SPÃÂRGSMÃÂL...' : currentMode === 'summary' ? 'GENERERER OPSUMMERING...' : 'GENERERER FORKLARING...';
 
   try {
     const body = { prompt: buildPrompt(), mode: currentMode };
@@ -681,7 +681,7 @@ async function generate() {
       const labels = {summary:'// opsummering',explain:'// forklaring'};
       document.getElementById('outputLabel').textContent = labels[currentMode]||'// resultat';
       renderOutput(data.text);
-      document.getElementById('outputBtns').innerHTML = `<button class="obtn" onclick="copyOutput()">ð KopiÃ©r</button>`;
+      document.getElementById('outputBtns').innerHTML = `<button class="obtn" onclick="copyOutput()">Ã°ÂÂÂ KopiÃÂ©r</button>`;
       document.getElementById('outputWrap').classList.add('visible');
       document.getElementById('outputWrap').scrollIntoView({behavior:'smooth',block:'start'});
       await autoSave();
@@ -694,7 +694,7 @@ async function generate() {
   loading.classList.remove('visible');
 }
 
-// ââ AUTO SAVE ââââââââââââââââââââââââââââââââââââââââââââââ
+// Ã¢ÂÂÃ¢ÂÂ AUTO SAVE Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 async function autoSave() {
   if (!currentOutput) return;
   try {
@@ -709,7 +709,7 @@ async function autoSave() {
     if (!allSaved[currentSubject]) allSaved[currentSubject]=[];
     allSaved[currentSubject].unshift(res[0]);
     renderSaved();
-    showToast('â Gemt!','success');
+    showToast('Ã¢ÂÂ Gemt!','success');
   } catch(e) { console.error('AutoSave fejl:',e); }
 }
 
@@ -719,7 +719,7 @@ function renderOutput(text) {
 }
 
 function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-function copyOutput(){navigator.clipboard.writeText(document.getElementById('outputContent').innerText).then(()=>showToast('â Kopieret!','success'));}
+function copyOutput(){navigator.clipboard.writeText(document.getElementById('outputContent').innerText).then(()=>showToast('Ã¢ÂÂ Kopieret!','success'));}
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast visible'+(type?' '+type:'');setTimeout(()=>t.classList.remove('visible'),2800);}
 // LOGIN SYSTEM
 const USER_PASS='Cyber2026';const ADMIN_PASS='Admin2026';let isAdmin=false;
@@ -727,6 +727,58 @@ function doLogin(){const v=document.getElementById('loginInput').value.trim();if
 document.getElementById('loginInput').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
 (function(){const r=sessionStorage.getItem('authRole');if(r==='admin'){isAdmin=true;document.getElementById('loginOverlay').classList.add('hidden');document.body.classList.add('admin-active');loadSubject(currentSubject);}else if(r==='user'){isAdmin=false;document.getElementById('loginOverlay').classList.add('hidden');loadSubject(currentSubject);}})();
 async function generateAll(n){if(!isAdmin){showToast('Kun for admin');return;}const d=docs.find(function(x){return x.name===n;});if(!d)return;const b=document.querySelector('[data-genall="'+n+'"]');if(b){b.textContent='Vent...';b.disabled=true;}const m=['quiz','opsummering','forklaring'];for(let i=0;i<m.length;i++){try{const p=buildPrompt(m[i],d.text,null);const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:p,mode:m[i],docName:d.name,subject:currentSubject})});const j=await r.json();if(j.questions)await saveQuizQuestions(j.questions,d.name,currentSubject);else if(j.content)await autoSave(j.content,m[i],d.name);}catch(e){showToast('Fejl: '+e.message);}}if(b){b.textContent='Alt';b.disabled=false;}renderDocs();renderSaved();showToast('Alt genereret!');}
+
+// ADMIN UI ENHANCEMENTS
+(function(){
+  let adminUIReady = false;
+  function injectAdminUI(){
+    if(!document.body.classList.contains('admin-active')) return;
+    if(adminUIReady) return;
+    adminUIReady = true;
+    // Add admin badge to header
+    const logo = document.querySelector('.logo');
+    if(logo && !logo.querySelector('.admin-badge')){
+      const badge = document.createElement('span');
+      badge.className = 'admin-badge';
+      badge.textContent = 'ADMIN';
+      logo.appendChild(badge);
+    }
+    // Add Generer alt buttons to doc cards
+    injectGenererAltBtns();
+  }
+  function injectGenererAltBtns(){
+    const cards = document.querySelectorAll('.doc-card');
+    cards.forEach(function(card){
+      if(card.querySelector('.generer-alt-btn')) return;
+      const name = card.querySelector('.doc-name');
+      const docName = name ? name.textContent : '';
+      const btn = document.createElement('button');
+      btn.className = 'generer-alt-btn';
+      btn.title = 'Generer quiz + opsummering + forklaring';
+      btn.textContent = '\u26a1';
+      btn.style.cssText = 'background:none;border:1px solid var(--accent);color:var(--accent);cursor:pointer;padding:2px 6px;border-radius:3px;font-size:.7rem;margin-left:2px;flex-shrink:0;';
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        if(typeof generateAll === 'function') generateAll(docName);
+      });
+      card.appendChild(btn);
+    });
+  }
+  // Watch for admin-active class changes
+  const obs = new MutationObserver(function(){
+    if(document.body.classList.contains('admin-active')){
+      injectAdminUI();
+      injectGenererAltBtns();
+    }
+  });
+  obs.observe(document.body, {attributes:true, attributeFilter:['class']});
+  // Also watch docItems for new doc cards
+  const docObs = new MutationObserver(function(){
+    if(document.body.classList.contains('admin-active')) injectGenererAltBtns();
+  });
+  const di = document.getElementById('docItems');
+  if(di) docObs.observe(di, {childList:true, subtree:true});
+})();
 </script>
 </body>
 </html>
