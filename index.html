@@ -858,12 +858,14 @@ function autoShowContent() {
   const scopeFilename = (currentScope === 'single' && selectedDocId)
     ? (allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename || null
     : null;
-  const match = (allSaved[currentSubject]||[]).find(s => s.type === currentMode && (s.scope_filename||null) === (scopeFilename||null));
+  const match = (allSaved[currentSubject]||[]).find(s =>
+    s.type === currentMode && (s.scope_filename||null) === (scopeFilename||null)
+  );
   if (match) {
     currentOutput = match.content;
-    const labels = {summary:'// opsummering',explain:'// forklaring'};
-    document.getElementById('outputLabel').textContent = labels[currentMode]||'// resultat';
-    document.getElementById('outputBtns').innerHTML = '<button class="obtn" onclick="copyOutput()">\uD83D\uDCCB Kopiér<\/button>';
+    const labels = {summary:'// opsummering', explain:'// forklaring'};
+    document.getElementById('outputLabel').textContent = labels[currentMode] || '// resultat';
+    document.getElementById('outputBtns').innerHTML = '<button class="obtn" onclick="copyOutput()">Kopiér</button>';
     renderOutput(match.content);
     document.getElementById('outputWrap').classList.add('visible');
   }
