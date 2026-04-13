@@ -192,7 +192,7 @@ body.admin-active .upload-zone{display:flex!important;}
   <div class="logo"><div class="logo-dot"></div>EKSAMEN PREP</div>
   <div class="login-box">
     <div class="login-title">Log ind</div>
-    <div class="login-sub">Skriv din adgangskode for at fortsætte</div>
+    <div class="login-sub">Skriv din adgangskode for at fortsÃ¦tte</div>
     <input id="loginInput" class="login-input" type="password" placeholder="Adgangskode ...">
     <div id="loginError" class="login-error"></div>
     <button class="login-btn" onclick="doLogin()">LOG IND</button>
@@ -200,16 +200,16 @@ body.admin-active .upload-zone{display:flex!important;}
 </div>
 <header>
   <div class="logo"><div class="logo-dot"></div>EXAM.PREP</div>
-  <button class="hbtn" onclick="toggleTheme()" id="themeBtn">☀ LYS</button>
+  <button class="hbtn" onclick="toggleTheme()" id="themeBtn">â LYS</button>
 </header>
 <div class="app">
   <aside class="sidebar">
     <div class="sidebar-section">
       <div class="slabel">// fag</div>
       <div class="sub-list">
-        <button class="sub-btn active" onclick="selectSubject(this,'Programmering')"><span class="sub-icon">💻</span>Programmering<span class="sub-count" id="cnt-0">0</span></button>
-        <button class="sub-btn" onclick="selectSubject(this,'Forretningsforståelse')"><span class="sub-icon">📊</span>Forretningsforståelse<span class="sub-count" id="cnt-1">0</span></button>
-        <button class="sub-btn" onclick="selectSubject(this,'Computerarkitektur')"><span class="sub-icon">🖥</span>Computerarkitektur<span class="sub-count" id="cnt-2">0</span></button>
+        <button class="sub-btn active" onclick="selectSubject(this,'Programmering')"><span class="sub-icon">ð»</span>Programmering<span class="sub-count" id="cnt-0">0</span></button>
+        <button class="sub-btn" onclick="selectSubject(this,'ForretningsforstÃ¥else')"><span class="sub-icon">ð</span>ForretningsforstÃ¥else<span class="sub-count" id="cnt-1">0</span></button>
+        <button class="sub-btn" onclick="selectSubject(this,'Computerarkitektur')"><span class="sub-icon">ð¥</span>Computerarkitektur<span class="sub-count" id="cnt-2">0</span></button>
       </div>
     </div>
     <div class="sidebar-docs" id="sidebarDocs">
@@ -218,8 +218,8 @@ body.admin-active .upload-zone{display:flex!important;}
         ondragleave="this.classList.remove('dragover')"
         ondrop="handleDrop(event)">
         <input type="file" id="fileInput" multiple accept=".pdf,.pptx,.ppt,.docx,.doc,.txt,.md" onchange="handleFiles(this.files)">
-        <div class="uz-icon">📂</div>
-        <div class="uz-text">Træk filer hertil eller <strong>klik</strong></div>
+        <div class="uz-icon">ð</div>
+        <div class="uz-text">TrÃ¦k filer hertil eller <strong>klik</strong></div>
       </div>
       <div class="doc-items" id="docItems"><div class="empty-docs">Ingen dokumenter endnu</div></div>
     </div>
@@ -233,15 +233,15 @@ body.admin-active .upload-zone{display:flex!important;}
     <div class="main-topbar">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <div class="scope-tabs">
-          <button class="scope-btn active" onclick="selectScope(this,'all')">📚 Alle filer</button>
-          <button class="scope-btn" onclick="selectScope(this,'single')">📄 Enkelt fil</button>
+          <button class="scope-btn active" onclick="selectScope(this,'all')">ð Alle filer</button>
+          <button class="scope-btn" onclick="selectScope(this,'single')">ð Enkelt fil</button>
         </div>
         <div class="stats-pill" id="statsPill"><span>0</span> dokumenter</div>
       </div>
       <div class="mode-tabs">
-        <button class="mode-btn active" onclick="selectMode(this,'quiz')">🎯 Quiz</button>
-        <button class="mode-btn" onclick="selectMode(this,'summary')">📋 Opsummering</button>
-        <button class="mode-btn" onclick="selectMode(this,'explain')">💡 Forklaring</button>
+        <button class="mode-btn active" onclick="selectMode(this,'quiz')">ð¯ Quiz</button>
+        <button class="mode-btn" onclick="selectMode(this,'summary')">ð Opsummering</button>
+        <button class="mode-btn" onclick="selectMode(this,'explain')">ð¡ Forklaring</button>
       </div>
     </div>
 
@@ -251,29 +251,29 @@ body.admin-active .upload-zone{display:flex!important;}
           <span class="ctrl-label">Type:</span>
           <select class="ctrl-select" id="qType">
             <option value="multiple">Multiplechoice</option>
-            <option value="open">Åbne spørgsmål</option>
+            <option value="open">Ãbne spÃ¸rgsmÃ¥l</option>
             <option value="truefalse">Sandt/Falsk</option>
           </select>
         </div>
         <input type="text" class="topic-input" id="topicInput" placeholder="Skriv emne at forklare (fx 'OOP', 'Loops', 'OSI-modellen')..." style="display:none;">
-        <div class="scope-info" id="scopeInfo" style="display:none;">📄 Enkelt fil valgt</div>
-        <button class="gen-btn" id="genBtn" onclick="generate()" style="display:none;">⚡ GENERÉR</button>
+        <div class="scope-info" id="scopeInfo" style="display:none;">ð Enkelt fil valgt</div>
+        <button class="gen-btn" id="genBtn" onclick="generate()" style="display:none;">â¡ GENERÃR</button>
       </div>
 
-      <!-- Quiz spørgsmål bank -->
+      <!-- Quiz spÃ¸rgsmÃ¥l bank -->
       <div id="quizBank" style="display:none;">
         <div class="quiz-stats-bar">
           <div class="qs-left">
-            <span class="qs-count" id="qsCount">0 spørgsmål gemt</span>
+            <span class="qs-count" id="qsCount">0 spÃ¸rgsmÃ¥l gemt</span>
             <!-- FIX: Score tracker -->
             <span class="score-display" id="scoreDisplay"></span>
           </div>
           <div class="qs-actions">
             <div class="admin-only qs-admin-btns">
-              <button class="qsbtn add" onclick="generate()">➕ Tilføj 5 nye</button>
-              <button class="qsbtn" onclick="clearQuestions()" style="border-color:var(--danger);color:var(--danger);">🗑 Slet alle</button>
+              <button class="qsbtn add" onclick="generate()">â TilfÃ¸j 5 nye</button>
+              <button class="qsbtn" onclick="clearQuestions()" style="border-color:var(--danger);color:var(--danger);">ð Slet alle</button>
             </div>
-            <button class="qsbtn" onclick="startQuiz()">🎯 Tag quiz</button>
+            <button class="qsbtn" onclick="startQuiz()">ð¯ Tag quiz</button>
           </div>
         </div>
       </div>
@@ -287,7 +287,7 @@ body.admin-active .upload-zone{display:flex!important;}
         <div class="output-header">
           <div class="output-label" id="outputLabel">// resultat</div>
           <div class="output-btns" id="outputBtns">
-            <button class="obtn" onclick="copyOutput()">📋 Kopiér</button>
+            <button class="obtn" onclick="copyOutput()">ð KopiÃ©r</button>
           </div>
         </div>
         <div id="outputContent"></div>
@@ -300,13 +300,13 @@ body.admin-active .upload-zone{display:flex!important;}
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-// FIX: marked.js konfigureret én gang
+// FIX: marked.js konfigureret Ã©n gang
 marked.use({ breaks: true, gfm: true });
 
 const SUPABASE_URL = 'https://ojpmrfhtepdvdinoixvs.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qcG1yZmh0ZXBkdmRpbm9peHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Nzc2OTEsImV4cCI6MjA5MTI1MzY5MX0.f0bRsu4fddPnOgBRsEtwO3MgSMOvQ6ypxEjtUoWHeGg';
 
-const SUBJECTS = ['Programmering','Forretningsforståelse','Computerarkitektur'];
+const SUBJECTS = ['Programmering','ForretningsforstÃ¥else','Computerarkitektur'];
 let theme = 'dark';
 let currentSubject = 'Programmering';
 let currentMode = 'quiz';
@@ -327,7 +327,7 @@ window.addEventListener('load', loadData);
 function toggleTheme() {
   theme = theme === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : '');
-  document.getElementById('themeBtn').textContent = theme === 'dark' ? '☀ LYS' : '🌙 MØRK';
+  document.getElementById('themeBtn').textContent = theme === 'dark' ? 'â LYS' : 'ð MÃRK';
 }
 
 async function selectSubject(btn, name) {
@@ -347,7 +347,7 @@ async function selectSubject(btn, name) {
   document.getElementById('quizCtrls').style.display = 'none';
   document.getElementById('topicInput').style.display = 'none';
   if (!allDocs[name] || !allSaved[name]) {
-    try { await loadSubject(name); } catch(e) { showToast('Fejl ved indlæsning: ' + e.message, 'error'); }
+    try { await loadSubject(name); } catch(e) { showToast('Fejl ved indlÃ¦sning: ' + e.message, 'error'); }
   }
   quizQuestions = [];
   document.getElementById('outputWrap').classList.remove('visible');
@@ -372,7 +372,7 @@ async function selectScope(btn, scope) {
   document.getElementById('scopeInfo').style.display = 'none';
   document.getElementById('scoreDisplay').classList.remove('visible');
   renderDocs();
-  // FIX: reload spørgsmål for nyt scope
+  // FIX: reload spÃ¸rgsmÃ¥l for nyt scope
   if (scope === 'all') await loadQuizQuestions();
   updateGenBtnVisibility();
 }
@@ -390,7 +390,7 @@ function selectMode(btn, mode) {
   autoShowContent();
 }
 
-// ── SUPABASE ───────────────────────────────────────────────
+// ââ SUPABASE âââââââââââââââââââââââââââââââââââââââââââââââ
 async function sb(path, opts = {}) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...opts,
@@ -406,7 +406,7 @@ async function sb(path, opts = {}) {
     const errText = await r.text();
     // FIX: Bedre fejlbesked hvis tabel mangler
     if (errText.includes('relation') || errText.includes('does not exist')) {
-      throw new Error('Supabase-tabel mangler — tjek at alle tabeller er oprettet i dit dashboard');
+      throw new Error('Supabase-tabel mangler â tjek at alle tabeller er oprettet i dit dashboard');
     }
     throw new Error(errText);
   }
@@ -414,23 +414,23 @@ async function sb(path, opts = {}) {
   return t ? JSON.parse(t) : [];
 }
 
-// ── LOAD — FIX: lazy loading, kun aktivt fag ved start ─────
+// ââ LOAD â FIX: lazy loading, kun aktivt fag ved start âââââ
 async function loadData() {
   try {
     await loadSubject(currentSubject);
-    // Hent doc-tæller for de andre fag (kun antal, ikke indhold)
+    // Hent doc-tÃ¦ller for de andre fag (kun antal, ikke indhold)
     for (let i = 0; i < SUBJECTS.length; i++) {
       const s = SUBJECTS[i];
       if (s === currentSubject) continue;
       try {
         const docs = await sb(`documents?subject=eq.${encodeURIComponent(s)}&select=id`);
-        allDocs[s] = allDocs[s] || docs; // gem kun ids til tæller
+        allDocs[s] = allDocs[s] || docs; // gem kun ids til tÃ¦ller
         document.getElementById(`cnt-${i}`).textContent = docs.length;
       } catch(e) { /* ignorer stille */ }
     }
     renderDocs(); renderSaved(); updateStats();
     await loadQuizQuestions();
-  } catch(e) { showToast('Fejl ved indlæsning: ' + e.message, 'error'); }
+  } catch(e) { showToast('Fejl ved indlÃ¦sning: ' + e.message, 'error'); }
 }
 
 async function loadSubject(s) {
@@ -440,7 +440,7 @@ async function loadSubject(s) {
   if (i >= 0) document.getElementById(`cnt-${i}`).textContent = allDocs[s].length;
 }
 
-// ── FILE HANDLING ──────────────────────────────────────────
+// ââ FILE HANDLING ââââââââââââââââââââââââââââââââââââââââââ
 function handleDrop(e) { e.preventDefault(); document.getElementById('uploadZone').classList.remove('dragover'); handleFiles(e.dataTransfer.files); }
 
 async function handleFiles(files) {
@@ -456,14 +456,14 @@ async function handleFiles(files) {
       if (!text || text.length < 10) { showToast('Ingen tekst: ' + file.name, 'error'); continue; }
       // FIX: Trim dokumentindhold til 20.000 tegn pr. fil for at spare tokens
       if (text.length > 20000) {
-        text = text.slice(0, 20000) + '\n\n[Afkortet — upload kortere uddrag for bedre resultater]';
+        text = text.slice(0, 20000) + '\n\n[Afkortet â upload kortere uddrag for bedre resultater]';
       }
       const res = await sb('documents', { method: 'POST', body: JSON.stringify({ subject: currentSubject, filename: file.name, content: text }) });
       if (!allDocs[currentSubject]) allDocs[currentSubject] = [];
       allDocs[currentSubject].push(res[0]);
       document.getElementById(`cnt-${SUBJECTS.indexOf(currentSubject)}`).textContent = allDocs[currentSubject].length;
       renderDocs(); updateStats();
-      showToast('✓ ' + file.name, 'success');
+      showToast('â ' + file.name, 'success');
     } catch(e) { showToast('Fejl: ' + e.message, 'error'); }
   }
 }
@@ -510,12 +510,21 @@ function selectDoc(id) {
   renderDocs();
   const doc = (allDocs[currentSubject]||[]).find(d=>d.id===id);
   const info = document.getElementById('scopeInfo');
-  if (selectedDocId && doc) { info.textContent = `📄 ${doc.filename}`; info.style.display = 'block'; }
+  if (selectedDocId && doc) { info.textContent = `ð ${doc.filename}`; info.style.display = 'block'; }
   else info.style.display = 'none';
   if (selectedDocId) loadQuizQuestions();
 }
 
-// ── QUIZ QUESTIONS ─────────────────────────────────────────
+function selectDocAndSwitch(id) {
+  // Switch to single file scope first, then select the doc
+  const singleBtn = document.querySelector('.scope-btn[onclick*=\"single\"]');
+  if (singleBtn && currentScope !== 'single') {
+    selectScope(singleBtn, 'single');
+  }
+  selectDoc(id);
+}
+
+// ââ QUIZ QUESTIONS âââââââââââââââââââââââââââââââââââââââââ
 async function loadQuizQuestions() {
   if (currentMode !== 'quiz') return;
   try {
@@ -532,13 +541,13 @@ async function loadQuizQuestions() {
     updateGenBtnVisibility();
     autoShowContent();
   } catch(e) {
-    showToast('Fejl ved indlæsning af spørgsmål: ' + e.message, 'error');
+    showToast('Fejl ved indlÃ¦sning af spÃ¸rgsmÃ¥l: ' + e.message, 'error');
   }
 }
 
 function updateQuizStats() {
   const n = quizQuestions.length;
-  document.getElementById('qsCount').textContent = `${n} spørgsmål gemt`;
+  document.getElementById('qsCount').textContent = `${n} spÃ¸rgsmÃ¥l gemt`;
   document.getElementById('quizBank').style.display = n > 0 ? 'block' : 'none';
 }
 
@@ -550,7 +559,7 @@ async function saveQuizQuestions(newQs) {
   const existing = quizQuestions.map(q => q.question.toLowerCase());
   const unique = newQs.filter(q => !existing.includes(q.question.toLowerCase()));
 
-  if (unique.length === 0) { showToast('Ingen nye spørgsmål — alle var dubletter', 'error'); return; }
+  if (unique.length === 0) { showToast('Ingen nye spÃ¸rgsmÃ¥l â alle var dubletter', 'error'); return; }
 
   const toInsert = unique.map(q => ({
     subject: currentSubject,
@@ -564,11 +573,11 @@ async function saveQuizQuestions(newQs) {
   const saved = await sb('quiz_questions', { method: 'POST', body: JSON.stringify(toInsert) });
   quizQuestions = [...quizQuestions, ...saved];
   updateQuizStats();
-  showToast(`✓ ${unique.length} nye spørgsmål gemt! (${quizQuestions.length} total)`, 'success');
+  showToast(`â ${unique.length} nye spÃ¸rgsmÃ¥l gemt! (${quizQuestions.length} total)`, 'success');
 }
 
 async function clearQuestions() {
-  if (!confirm(`Slet alle ${quizQuestions.length} spørgsmål?`)) return;
+  if (!confirm(`Slet alle ${quizQuestions.length} spÃ¸rgsmÃ¥l?`)) return;
   try {
     const filename = currentScope === 'single' && selectedDocId
       ? (allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename
@@ -580,7 +589,7 @@ async function clearQuestions() {
     updateQuizStats();
     document.getElementById('outputWrap').classList.remove('visible');
     document.getElementById('scoreDisplay').classList.remove('visible');
-    showToast('Alle spørgsmål slettet');
+    showToast('Alle spÃ¸rgsmÃ¥l slettet');
   } catch(e) { showToast('Fejl: ' + e.message, 'error'); }
 }
 
@@ -599,7 +608,7 @@ function startQuiz() {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   const shuffled = arr;
-  document.getElementById('outputLabel').textContent = `// quiz — ${shuffled.length} spørgsmål`;
+  document.getElementById('outputLabel').textContent = `// quiz â ${shuffled.length} spÃ¸rgsmÃ¥l`;
   document.getElementById('outputBtns').innerHTML = '';
   document.getElementById('outputContent').innerHTML = renderQuizFromDB(shuffled);
   document.getElementById('outputWrap').classList.add('visible');
@@ -610,7 +619,7 @@ function startQuiz() {
 function updateScoreDisplay() {
   const el = document.getElementById('scoreDisplay');
   const pct = quizAnswered > 0 ? Math.round((quizScore / quizAnswered) * 100) : 0;
-  el.textContent = `✅ ${quizScore}/${quizAnswered} besvaret (${pct}%) — ${quizTotal - quizAnswered} tilbage`;
+  el.textContent = `â ${quizScore}/${quizAnswered} besvaret (${pct}%) â ${quizTotal - quizAnswered} tilbage`;
 }
 
 function renderQuizFromDB(questions) {
@@ -618,12 +627,12 @@ function renderQuizFromDB(questions) {
     const opts = ['a','b','c','d'];
     const letters = ['A','B','C','D'];
     return `<div class="quiz-card">
-      <div class="quiz-num">SPØRGSMÅL ${i+1} af ${questions.length}</div>
+      <div class="quiz-num">SPÃRGSMÃL ${i+1} af ${questions.length}</div>
       <div class="quiz-q">${esc(q.question)}</div>
       <div class="quiz-opts">
         ${opts.map((l,idx) => `<button class="quiz-opt" data-letter="${l}" data-correct="${q.correct}" data-explanation="${esc(q.explanation)}" onclick="handleDBAnswer(this)">${letters[idx]}) ${esc(q[l])}</button>`).join('')}
       </div>
-      <div class="quiz-reveal">✅ Korrekt svar: ${q.correct.toUpperCase()}) ${esc(q[q.correct])} — ${esc(q.explanation)}</div>
+      <div class="quiz-reveal">â Korrekt svar: ${q.correct.toUpperCase()}) ${esc(q[q.correct])} â ${esc(q.explanation)}</div>
     </div>`;
   }).join('') + '</div>';
 }
@@ -657,17 +666,17 @@ function renderDocs() {
   const docs = allDocs[currentSubject] || [];
   const el = document.getElementById('docItems');
   if (!docs.length) { el.innerHTML = '<div class="empty-docs">Ingen dokumenter endnu</div>'; return; }
-  const icons = {pdf:'📄',pptx:'📊',ppt:'📊',docx:'📝',doc:'📝',txt:'📃',md:'📃'};
+  const icons = {pdf:'ð',pptx:'ð',ppt:'ð',docx:'ð',doc:'ð',txt:'ð',md:'ð'};
   el.innerHTML = docs.map(d => {
     const ext = d.filename.split('.').pop().toLowerCase();
     const size = ((d.content?.length||0)/1000).toFixed(1) + 'k';
     const date = new Date(d.created_at).toLocaleDateString('da-DK',{day:'numeric',month:'short'});
-    const isSelected = currentScope === 'single' && selectedDocId === d.id;
-    const clickable = currentScope === 'single' ? `onclick="selectDoc('${d.id}')"` : '';
-    return `<div class="doc-card${isSelected?' selected':''}" ${clickable} style="${currentScope==='single'?'cursor:pointer;':''}">
-      <span class="doc-icon">${icons[ext]||'📁'}</span>
-      <div class="doc-info"><div class="doc-name" title="${d.filename}">${d.filename}</div><div class="doc-meta">${size} · ${date}</div></div>
-      <button class="doc-del admin-only" onclick="event.stopPropagation();deleteDoc('${d.id}')">✕</button>
+    const isSelected = selectedDocId === d.id;
+    const clickable = currentScope === 'single' ? `onclick="selectDoc('${d.id}')"` : `onclick="selectDocAndSwitch('${d.id}')"`;
+    return `<div class="doc-card${isSelected?' selected':''}" ${clickable} style="cursor:pointer;">
+      <span class="doc-icon">${icons[ext]||'ð'}</span>
+      <div class="doc-info"><div class="doc-name" title="${d.filename}">${d.filename}</div><div class="doc-meta">${size} Â· ${date}</div></div>
+      <button class="doc-del admin-only" onclick="event.stopPropagation();deleteDoc('${d.id}')">â</button>
     </div>`;
   }).join('');
 }
@@ -676,15 +685,15 @@ function renderSaved() {
   const saved = allSaved[currentSubject] || [];
   const el = document.getElementById('savedList');
   if (!saved.length) { el.innerHTML = '<div class="empty-docs" style="padding:8px 0;">Ingen gemte resultater</div>'; return; }
-  const icons = {quiz:'🎯',summary:'📋',explain:'💡'};
+  const icons = {quiz:'ð¯',summary:'ð',explain:'ð¡'};
   const labels = {quiz:'Quiz',summary:'Opsummering',explain:'Forklaring'};
   el.innerHTML = saved.map(s => {
     const date = new Date(s.created_at).toLocaleDateString('da-DK',{day:'numeric',month:'short'});
-    const sub = s.scope_filename ? `📄 ${s.scope_filename}` : '📚 Alle filer';
+    const sub = s.scope_filename ? `ð ${s.scope_filename}` : 'ð Alle filer';
     return `<div class="saved-card" onclick="showSaved('${s.id}')">
-      <span class="saved-card-icon">${icons[s.type]||'📄'}</span>
-      <div class="saved-card-info"><div class="saved-card-type">${labels[s.type]||s.type} · ${date}</div><div class="saved-card-sub">${sub}</div></div>
-      <button class="saved-del admin-only" onclick="event.stopPropagation();deleteSaved('${s.id}')">✕</button>
+      <span class="saved-card-icon">${icons[s.type]||'ð'}</span>
+      <div class="saved-card-info"><div class="saved-card-type">${labels[s.type]||s.type} Â· ${date}</div><div class="saved-card-sub">${sub}</div></div>
+      <button class="saved-del admin-only" onclick="event.stopPropagation();deleteSaved('${s.id}')">â</button>
     </div>`;
   }).join('');
 }
@@ -693,7 +702,7 @@ function showSaved(id) {
   const s = (allSaved[currentSubject]||[]).find(x=>x.id===id);
   if (!s) return;
   currentOutput = s.content; currentMode = s.type;
-  const labels = {quiz:'// quiz spørgsmål',summary:'// opsummering',explain:'// forklaring'};
+  const labels = {quiz:'// quiz spÃ¸rgsmÃ¥l',summary:'// opsummering',explain:'// forklaring'};
   document.getElementById('outputLabel').textContent = labels[s.type]||'// resultat';
   renderOutput(s.content);
   document.getElementById('outputWrap').classList.add('visible');
@@ -702,10 +711,10 @@ function showSaved(id) {
 function updateStats() {
   const docs = allDocs[currentSubject]||[];
   const total = docs.reduce((s,d)=>s+(d.content?.length||0),0);
-  document.getElementById('statsPill').innerHTML = `<span>${docs.length}</span> dok · ${(total/1000).toFixed(0)}k tegn`;
+  document.getElementById('statsPill').innerHTML = `<span>${docs.length}</span> dok Â· ${(total/1000).toFixed(0)}k tegn`;
 }
 
-// ── BUILD PROMPT ───────────────────────────────────────────
+// ââ BUILD PROMPT âââââââââââââââââââââââââââââââââââââââââââ
 function buildPrompt() {
   const docs = allDocs[currentSubject]||[];
   let useDocs = currentScope === 'single' && selectedDocId ? docs.filter(d=>d.id===selectedDocId) : docs;
@@ -715,21 +724,21 @@ function buildPrompt() {
   const mat = parts ? `Undervisningsmateriale fra ${scopeLabel}:\n${parts}` : `Brug din viden om "${currentSubject}".`;
   const topic = document.getElementById('topicInput').value||'';
   if (currentMode === 'quiz') return mat;
-  if (currentMode === 'summary') return `${mat}\n\n---\nOPGAVE: Lav en grundig struktureret eksamensopsummering på dansk. Brug overskrifter og punktlister.`;
-  return `${mat}\n\n---\nOPGAVE: Forklar følgende emne grundigt på dansk: "${topic||'de vigtigste begreber i '+currentSubject}". Brug eksempler.`;
+  if (currentMode === 'summary') return `${mat}\n\n---\nOPGAVE: Lav en grundig struktureret eksamensopsummering pÃ¥ dansk. Brug overskrifter og punktlister.`;
+  return `${mat}\n\n---\nOPGAVE: Forklar fÃ¸lgende emne grundigt pÃ¥ dansk: "${topic||'de vigtigste begreber i '+currentSubject}". Brug eksempler.`;
 }
 
-// ── GENERATE ───────────────────────────────────────────────
+// ââ GENERATE âââââââââââââââââââââââââââââââââââââââââââââââ
 async function generate() {
   const docs = allDocs[currentSubject]||[];
-  if (!docs.length) { showToast('Upload mindst ét dokument først!','error'); return; }
-  if (currentScope === 'single' && !selectedDocId) { showToast('Vælg en fil ved at klikke på den!','error'); return; }
+  if (!docs.length) { showToast('Upload mindst Ã©t dokument fÃ¸rst!','error'); return; }
+  if (currentScope === 'single' && !selectedDocId) { showToast('VÃ¦lg en fil ved at klikke pÃ¥ den!','error'); return; }
 
   const btn = document.getElementById('genBtn');
   const loading = document.getElementById('loading');
   btn.disabled = true;
   loading.classList.add('visible');
-  document.getElementById('loadingTxt').textContent = currentMode === 'quiz' ? 'GENERERER 5 NYE SPØRGSMÅL...' : currentMode === 'summary' ? 'GENERERER OPSUMMERING...' : 'GENERERER FORKLARING...';
+  document.getElementById('loadingTxt').textContent = currentMode === 'quiz' ? 'GENERERER 5 NYE SPÃRGSMÃL...' : currentMode === 'summary' ? 'GENERERER OPSUMMERING...' : 'GENERERER FORKLARING...';
 
   try {
     const body = { prompt: buildPrompt(), mode: currentMode };
@@ -752,7 +761,7 @@ async function generate() {
       const labels = {summary:'// opsummering',explain:'// forklaring'};
       document.getElementById('outputLabel').textContent = labels[currentMode]||'// resultat';
       renderOutput(data.text);
-      document.getElementById('outputBtns').innerHTML = `<button class="obtn" onclick="copyOutput()">📋 Kopiér</button>`;
+      document.getElementById('outputBtns').innerHTML = `<button class="obtn" onclick="copyOutput()">ð KopiÃ©r</button>`;
       document.getElementById('outputWrap').classList.add('visible');
       document.getElementById('outputWrap').scrollIntoView({behavior:'smooth',block:'start'});
       await autoSave();
@@ -765,7 +774,7 @@ async function generate() {
   loading.classList.remove('visible');
 }
 
-// ── AUTO SAVE ──────────────────────────────────────────────
+// ââ AUTO SAVE ââââââââââââââââââââââââââââââââââââââââââââââ
 async function autoSave() {
   if (!currentOutput) return;
   try {
@@ -780,7 +789,7 @@ async function autoSave() {
     if (!allSaved[currentSubject]) allSaved[currentSubject]=[];
     allSaved[currentSubject].unshift(res[0]);
     renderSaved();
-    showToast('✓ Gemt!','success');
+    showToast('â Gemt!','success');
   } catch(e) { console.error('AutoSave fejl:',e); }
 }
 
@@ -790,7 +799,7 @@ function renderOutput(text) {
 }
 
 function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-function copyOutput(){navigator.clipboard.writeText(document.getElementById('outputContent').innerText).then(()=>showToast('✓ Kopieret!','success'));}
+function copyOutput(){navigator.clipboard.writeText(document.getElementById('outputContent').innerText).then(()=>showToast('â Kopieret!','success'));}
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast visible'+(type?' '+type:'');setTimeout(()=>t.classList.remove('visible'),2800);}
 
 // LOGIN SYSTEM
@@ -813,7 +822,7 @@ function doLogin(){
     err.textContent='';
     setTimeout(() => { updateGenBtnVisibility(); autoShowContent(); }, 800);
   } else {
-    err.textContent='Forkert adgangskode. Prøv igen.';
+    err.textContent='Forkert adgangskode. PrÃ¸v igen.';
     document.getElementById('loginInput').value='';
   }
 }
@@ -866,7 +875,7 @@ function injectGenererAltBtns(){
     const btn=document.createElement('button');
     btn.className='generer-alt-btn';
     btn.title='Generer quiz + opsummering + forklaring';
-    btn.textContent='⚡';
+    btn.textContent='â¡';
     btn.style.cssText='background:none;border:1px solid var(--accent);color:var(--accent);cursor:pointer;padding:2px 6px;border-radius:3px;font-size:.7rem;margin-left:2px;flex-shrink:0;';
     btn.addEventListener('click',function(e){e.stopPropagation();generateAll(docName);});
     card.appendChild(btn);
@@ -903,13 +912,13 @@ function autoShowContent() {
     currentOutput = match.content;
     const labels = {summary:'// opsummering', explain:'// forklaring'};
     document.getElementById('outputLabel').textContent = labels[currentMode] || '// resultat';
-    document.getElementById('outputBtns').innerHTML = '<button class="obtn" onclick="copyOutput()">Kopiér</button>';
+    document.getElementById('outputBtns').innerHTML = '<button class="obtn" onclick="copyOutput()">KopiÃ©r</button>';
     renderOutput(match.content);
     document.getElementById('outputWrap').classList.add('visible');
   }
 }
 
-// SMART GENERÉR: Show gen-btn only when no content exists for current mode+file
+// SMART GENERÃR: Show gen-btn only when no content exists for current mode+file
 function updateGenBtnVisibility() {
   const btn = document.getElementById('genBtn');
   const qCtrls = document.getElementById('quizCtrls');
