@@ -242,7 +242,7 @@ body.admin-active .upload-zone{display:flex!important;}
         <button class="mode-btn active" onclick="selectMode(this,'quiz')">🎯 Quiz</button>
         <button class="mode-btn" onclick="selectMode(this,'summary')">📋 Opsummering</button>
         <button class="mode-btn" onclick="selectMode(this,'explain')">💡 Forklaring</button>
-        <button class="mode-btn fag-sum-btn" id="fagSumBtn" onclick="generateFagOpsummering()" style="display:none;" title="Lav en kort eksamensoversigt baseret på alle gemte opsummeringer i dette fag">📚 Fag-opsummering</button>
+        <button class="mode-btn fag-sum-btn admin-only" id="fagSumBtn" onclick="generateFagOpsummering()" style="display:none;" title="Lav en kort eksamensoversigt baseret på alle gemte opsummeringer i dette fag">📚 Fag-opsummering</button>
       </div>
     </div>
 
@@ -733,6 +733,11 @@ async function generate() {
   if (!docs.length) { showToast('Upload mindst ét dokument først!','error'); return; }
   if (currentScope === 'single' && !selectedDocId) { showToast('Vælg en fil ved at klikke på den!','error'); return; }
 
+  const _modeL={quiz:'Quiz',summary:'Opsummering',explain:'Forklaring'};
+  const _mL=_modeL[currentMode]||currentMode;
+  const _sL=currentScope==='single'&&selectedDocId?(allDocs[currentSubject]||[]).find(function(d){return d.id===selectedDocId;})?.filename||'valgt fil':'alle filer i '+currentSubject;
+  if(!confirm('Generer '+_mL+' for '+_sL+'?'))return;
+
   const btn = document.getElementById('genBtn');
   const loading = document.getElementById('loading');
   btn.disabled = true;
@@ -783,6 +788,8 @@ async function generateFagOpsummering() {
     showToast("Ingen gemte opsummeringer fundet – generer opsummeringer for de enkelte filer først!", "error");
     return;
   }
+
+  if(!confirm('Generer Fag-opsummering for hele '+currentSubject+'?\n\nBygger på '+summaries.length+' gemte opsummeringer/forklaringer.'))return;
 
   const btn = document.getElementById("fagSumBtn");
   const loading = document.getElementById("loading");
