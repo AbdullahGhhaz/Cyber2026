@@ -242,6 +242,7 @@ body.admin-active .upload-zone{display:flex!important;}
         <button class="mode-btn active" onclick="selectMode(this,'quiz')">🎯 Quiz</button>
         <button class="mode-btn" onclick="selectMode(this,'summary')">📋 Opsummering</button>
         <button class="mode-btn" onclick="selectMode(this,'explain')">💡 Forklaring</button>
+        <button class="mode-btn fag-sum-btn" id="fagSumBtn" onclick="generateFagOpsummering()" style="display:none;" title="Lav en kort eksamensoversigt baseret på alle gemte opsummeringer i dette fag">📚 Fag-opsummering</button>
       </div>
     </div>
 
@@ -375,6 +376,9 @@ async function selectScope(btn, scope) {
   // FIX: reload spørgsmål for nyt scope
   if (scope === 'all') await loadQuizQuestions();
   updateGenBtnVisibility();
+  // Vis Fag-opsummering knap kun i 'alle filer' tilstand
+  const fagBtn = document.getElementById('fagSumBtn');
+  if (fagBtn) fagBtn.style.display = scope === 'all' ? '' : 'none';
 }
 
 function selectMode(btn, mode) {
@@ -454,11 +458,7 @@ async function handleFiles(files) {
       else if (['txt','md'].includes(ext)) text = await readTxt(file);
       else { showToast('Ukendt type: ' + file.name, 'error'); continue; }
       if (!text || text.length < 10) { showToast('Ingen tekst: ' + file.name, 'error'); continue; }
-      // FIX: Trim dokumentindhold til 20.000 tegn pr. fil for at spare tokens
-      if (text.length > 20000) {
-        text = text.slice(0, 20000) + '\n\n[Afkortet — upload kortere uddrag for bedre resultater]';
-      }
-      const res = await sb('documents', { method: 'POST', body: JSON.stringify({ subject: currentSubject, filename: file.name, content: text }) });
+            const res = await sb('documents', { method: 'POST', body: JSON.stringify({ subject: currentSubject, filename: file.name, content: text }) });
       if (!allDocs[currentSubject]) allDocs[currentSubject] = [];
       allDocs[currentSubject].push(res[0]);
       document.getElementById(`cnt-${SUBJECTS.indexOf(currentSubject)}`).textContent = allDocs[currentSubject].length;
@@ -774,6 +774,62 @@ async function generate() {
 }
 
 // ── AUTO SAVE ──────────────────────────────────────────────
+
+async function generateFagOpsummering() {
+  const saved = allSaved[currentSubject] || [];
+  const summaries = saved.filter(function(s) { return s.type === "summary" || s.type === "explain"; });
+
+  if (!summaries.length) {
+    showToast("Ingen gemte opsummeringer fundet – generer opsummeringer for de enkelte filer først!", "error");
+    return;
+  }
+
+  const btn = document.getElementById("fagSumBtn");
+  const loading = document.getElementById("loading");
+  if (btn) btn.disabled = true;
+  if (loading) loading.classList.add("visible");
+  document.getElementById("loadingTxt").textContent = "GENERERER FAG-OPSUMMERING...";
+
+  try {
+    const parts = summaries.map(function(s) {
+      const label = s.type === "summary" ? "Opsummering" : "Forklaring";
+      const filename = s.scope_filename ? " (" + s.scope_filename + ")" : "";
+      const content = (s.content || "").slice(0, 3000);
+      return "--- " + label + filename + " ---\n" + content;
+    }).join("\n\n");
+
+    const prompt = "Du er eksamenshjælper. Herunder er opsummeringer og forklaringer fra de enkelte filer i faget \"" + currentSubject + "\"." +
+      "\n\nDin opgave: Lav ÉN kort, struktureret eksamensopsummering af HELE faget på dansk. Fokús på de VIGTIGSTE begreber, teorier og sammenhænge på tværs af filerne. Hold den kort og overskuelig – maks 600 ord. Brug overskrifter." +
+      "\n\n" + parts;
+
+    const r = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: prompt, mode: "summary" })
+    });
+    if (!r.ok) throw new Error(await r.text());
+    const result = await r.json();
+    const content = result.content || result.text || "";
+
+    window.currentOutput = content;
+    renderOutput(content);
+    document.getElementById("outputWrap").classList.add("visible");
+    document.getElementById("outputWrap").scrollIntoView({ behavior: "smooth", block: "start" });
+
+    const res = await sb("generated_content", { method: "POST", body: JSON.stringify({
+      subject: currentSubject, type: "fag-summary", content: content, scope_filename: null
+    })});
+    if (!allSaved[currentSubject]) allSaved[currentSubject] = [];
+    if (res && res[0]) allSaved[currentSubject].unshift(res[0]);
+    showToast("✅ Fag-opsummering gemt!", "success");
+  } catch(e) {
+    showToast("Fejl: " + e.message, "error");
+  } finally {
+    if (btn) btn.disabled = false;
+    if (loading) loading.classList.remove("visible");
+  }
+}
+
 async function autoSave() {
   if (!currentOutput) return;
   try {
