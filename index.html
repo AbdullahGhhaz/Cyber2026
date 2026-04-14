@@ -1082,9 +1082,11 @@ function updateGenBtnVisibility() {
     if (qCtrls) qCtrls.style.display = (!needsFileSelection && currentMode==='quiz') ? 'flex' : 'none';
     if (tInput) tInput.style.display = (!needsFileSelection && currentMode==='explain') ? 'block' : 'none';
   } else {
-    btn.style.display = 'none';
-    if (qCtrls) qCtrls.style.display = 'none';
-    if (tInput) tInput.style.display = 'none';
+    // Ikke-admin: vis GENERÉR kun når der ikke er noget indhold i forvejen
+    const canGenerate = !hasContent && !needsFileSelection;
+    btn.style.display = canGenerate ? 'block' : 'none';
+    if (qCtrls) qCtrls.style.display = (canGenerate && currentMode==='quiz') ? 'flex' : 'none';
+    if (tInput) tInput.style.display = (canGenerate && currentMode==='explain') ? 'block' : 'none';
   }
 }
 </script>
