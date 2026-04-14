@@ -376,8 +376,6 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs
 // FIX: marked.js konfigureret én gang
 marked.use({ breaks: true, gfm: true });
 
-const SUPABASE_URL = 'https://ojpmrfhtepdvdinoixvs.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qcG1yZmh0ZXBkdmRpbm9peHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Nzc2OTEsImV4cCI6MjA5MTI1MzY5MX0.f0bRsu4fddPnOgBRsEtwO3MgSMOvQ6ypxEjtUoWHeGg';
 
 const SUBJECTS = ['Programmering','Forretningsforståelse','Computerarkitektur'];
 let theme = 'dark';
@@ -468,19 +466,18 @@ function selectMode(btn, mode) {
 
 // ── SUPABASE ───────────────────────────────────────────────
 async function sb(path, opts = {}) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    ...opts,
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation',
-      ...opts.headers
-    }
+  const r = await fetch('/api/db', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      path,
+      method: opts.method || 'GET',
+      body: opts.body ? JSON.parse(opts.body) : undefined,
+      headers: opts.headers || {}
+    })
   });
   if (!r.ok) {
     const errText = await r.text();
-    // FIX: Bedre fejlbesked hvis tabel mangler
     if (errText.includes('relation') || errText.includes('does not exist')) {
       throw new Error('Supabase-tabel mangler — tjek at alle tabeller er oprettet i dit dashboard');
     }
@@ -489,7 +486,6 @@ async function sb(path, opts = {}) {
   const t = await r.text();
   return t ? JSON.parse(t) : [];
 }
-
 // ── LOAD — FIX: lazy loading, kun aktivt fag ved start ─────
 async function loadData() {
   try {
@@ -546,7 +542,7 @@ async function readPDF(file) {
   for (let i = 1; i <= pdf.numPages; i++) { const p = await pdf.getPage(i); const c = await p.getTextContent(); t += c.items.map(x=>x.str).join(' ') + '\n'; }
   return t.trim();
 }
-async function readDOCX(file) { return (await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value.trim(); }
+async function readDOCX(file) { return (await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value.trim(); }h
 async function readPPTX(file) {
   const zip = await JSZip.loadAsync(await file.arrayBuffer());
   const slides = Object.keys(zip.files).filter(n=>n.match(/^ppt\/slides\/slide\d+\.xml$/)).sort((a,b)=>parseInt(a.match(/\d+/)?.[0]||0)-parseInt(b.match(/\d+/)?.[0]||0));
@@ -937,27 +933,35 @@ function copyOutput(){navigator.clipboard.writeText(document.getElementById('out
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast visible'+(type?' '+type:'');setTimeout(()=>t.classList.remove('visible'),2800);}
 
 // LOGIN SYSTEM
-const USER_PASS='Cyber2026';const ADMIN_PASS='Admin2026';let isAdmin=false;
-function doLogin(){
+
+async function doLogin(){
   const v=document.getElementById('loginInput').value.trim();
   const err=document.getElementById('loginError');
-  if(v===ADMIN_PASS){
-    isAdmin=true;
-    sessionStorage.setItem('authRole','admin');
-    document.body.classList.add('admin-active');
-    document.getElementById('loginOverlay').classList.add('hidden');
-    err.textContent='';
-    injectAdminUI();
-    setTimeout(injectGenererAltBtns,500);
-  } else if(v===USER_PASS){
-    isAdmin=false;
-    sessionStorage.setItem('authRole','user');
-    document.getElementById('loginOverlay').classList.add('hidden');
-    err.textContent='';
-    setTimeout(() => { updateGenBtnVisibility(); autoShowContent(); }, 800);
-  } else {
-    err.textContent='Forkert adgangskode. Prøv igen.';
-    document.getElementById('loginInput').value='';
+  try {
+    const r = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: v })
+    });
+    if (r.ok) {
+      const { role } = await r.json();
+      isAdmin = role === 'admin';
+      sessionStorage.setItem('authRole', role);
+      document.getElementById('loginOverlay').classList.add('hidden');
+      err.textContent = '';
+      if (isAdmin) {
+        document.body.classList.add('admin-active');
+        injectAdminUI();
+        setTimeout(injectGenererAltBtns, 500);
+      } else {
+        setTimeout(() => { updateGenBtnVisibility(); autoShowContent(); }, 800);
+      }
+    } else {
+      err.textContent = 'Forkert adgangskode. Prøv igen.';
+      document.getElementById('loginInput').value = '';
+    }
+  } catch(e) {
+    err.textContent = 'Fejl ved login: ' + e.message;
   }
 }
 document.addEventListener('DOMContentLoaded',function(){
