@@ -25,7 +25,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .app{display:grid;grid-template-columns:280px 1fr;height:calc(100vh - 56px);}
 .sidebar{border-right:1px solid var(--border);background:var(--bg2);display:flex;flex-direction:column;overflow:hidden;}
 .sidebar-section{padding:14px 14px 10px;border-bottom:1px solid var(--border);}
-.slabel{font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+.slabel{font-family:var(--sans);font-size:.72rem;letter-spacing:.04em;color:var(--text2);font-weight:600;margin-bottom:8px;}
 .sub-list{display:flex;flex-direction:column;gap:3px;}
 .sub-btn{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;cursor:pointer;border:1px solid transparent;background:transparent;color:var(--text2);font-family:var(--sans);font-size:.85rem;font-weight:500;transition:all .2s;width:100%;text-align:left;}
 .sub-btn:hover{background:var(--surface);color:var(--text);border-color:var(--border);}
@@ -43,8 +43,8 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .uz-text{font-size:.75rem;color:var(--text2);}
 .uz-text strong{color:var(--accent2);}
 .doc-items{display:flex;flex-direction:column;gap:5px;}
-.doc-card{display:flex;align-items:center;gap:7px;padding:7px 9px;background:var(--surface);border:1px solid var(--border);border-radius:7px;transition:all .2s;}
-.doc-card:hover{border-color:var(--border2);}
+.doc-card{display:flex;align-items:center;gap:7px;padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:7px;transition:all .2s;cursor:pointer;}
+.doc-card:hover{border-color:var(--accent2);background:var(--glow);transform:translateX(2px);}
 .doc-card.selected{border-color:var(--accent);background:var(--glow);}
 .doc-icon{font-size:.9rem;flex-shrink:0;}
 .doc-info{flex:1;min-width:0;}
@@ -64,7 +64,10 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .saved-del{background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 4px;border-radius:3px;font-size:.72rem;}
 .saved-del:hover{color:var(--danger);}
 .main{display:flex;flex-direction:column;overflow:hidden;}
-.main-topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid var(--border);background:var(--bg2);gap:12px;flex-wrap:wrap;}
+.main-topbar{padding:14px 24px 10px;border-bottom:1px solid var(--border);background:var(--bg2);}
+.topbar-left{display:flex;flex-direction:column;gap:0;}
+.topbar-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.topbar-label{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;min-width:42px;}
 .scope-tabs{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;padding:3px;gap:3px;}
 .scope-btn{padding:5px 14px;border:none;background:transparent;color:var(--text2);font-family:var(--sans);font-size:.8rem;font-weight:500;border-radius:5px;cursor:pointer;transition:all .2s;white-space:nowrap;}
 .scope-btn:hover{color:var(--text);background:var(--surface2);}
@@ -144,6 +147,37 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .toast.success{border-color:var(--success);}
 .toast.error{border-color:var(--danger);}
 
+/* TOPBAR LABELS */
+.topbar-label{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;min-width:42px;}
+
+/* FAG-OPSUMMERING ACTION BUTTON */
+.fag-sum-action-btn{padding:6px 14px;border:1px solid var(--warn);background:rgba(245,158,11,.07);color:var(--warn);font-family:var(--sans);font-size:.8rem;font-weight:600;border-radius:6px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.fag-sum-action-btn:hover{background:rgba(245,158,11,.18);box-shadow:0 2px 10px rgba(245,158,11,.2);}
+.fag-sum-action-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* SELECT FILE HINT */
+.select-file-hint{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:32px 20px;background:var(--surface);border:1px dashed var(--border2);border-radius:12px;text-align:center;margin-bottom:20px;}
+.hint-icon{font-size:2rem;}
+.hint-title{font-size:1rem;font-weight:700;color:var(--text);}
+.hint-text{font-size:.82rem;color:var(--muted);max-width:340px;line-height:1.6;}
+
+/* WELCOME PANEL */
+.welcome-panel{margin-bottom:20px;}
+.welcome-header{display:flex;align-items:center;gap:14px;padding:18px 20px;background:var(--surface);border:1px solid var(--border);border-radius:10px 10px 0 0;border-bottom:none;}
+.welcome-icon{font-size:1.8rem;}
+.welcome-title{font-size:.95rem;font-weight:700;color:var(--text);}
+.welcome-sub{font-size:.78rem;color:var(--muted);margin-top:2px;}
+.welcome-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:0;background:var(--surface);border:1px solid var(--border);border-radius:0 0 10px 10px;overflow:hidden;}
+.welcome-card{padding:16px 18px;cursor:pointer;transition:all .2s;border-right:1px solid var(--border);}
+.welcome-card:last-child{border-right:none;}
+.welcome-card:hover{background:var(--glow);}
+.wc-icon{font-size:1.4rem;margin-bottom:6px;}
+.wc-title{font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:4px;}
+.wc-desc{font-size:.73rem;color:var(--muted);line-height:1.5;}
+
+/* DOCS SECTION LABEL */
+.docs-section-label{font-size:.68rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;margin-top:4px;padding:0 2px;}
+
 /* ADMIN-ONLY ELEMENTS */
 .admin-only{display:none!important;}
 body.admin-active .admin-only{display:block!important;}
@@ -199,13 +233,13 @@ body.admin-active .upload-zone{display:flex!important;}
   </div>
 </div>
 <header>
-  <div class="logo"><div class="logo-dot"></div>EXAM.PREP</div>
+  <div class="logo"><div class="logo-dot"></div>EKSAMEN PREP</div>
   <button class="hbtn" onclick="toggleTheme()" id="themeBtn">☀ LYS</button>
 </header>
 <div class="app">
   <aside class="sidebar">
     <div class="sidebar-section">
-      <div class="slabel">// fag</div>
+      <div class="slabel">📚 Vælg fag</div>
       <div class="sub-list">
         <button class="sub-btn active" onclick="selectSubject(this,'Programmering')"><span class="sub-icon">💻</span>Programmering<span class="sub-count" id="cnt-0">0</span></button>
         <button class="sub-btn" onclick="selectSubject(this,'Forretningsforståelse')"><span class="sub-icon">📊</span>Forretningsforståelse<span class="sub-count" id="cnt-1">0</span></button>
@@ -221,35 +255,73 @@ body.admin-active .upload-zone{display:flex!important;}
         <div class="uz-icon">📂</div>
         <div class="uz-text">Træk filer hertil eller <strong>klik</strong></div>
       </div>
+      <div class="docs-section-label">Filer i dette fag <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:.62rem;">— klik for at vælge</span></div>
       <div class="doc-items" id="docItems"><div class="empty-docs">Ingen dokumenter endnu</div></div>
     </div>
     <div class="sidebar-saved">
-      <div class="slabel" style="margin-bottom:8px;">// gemte resultater</div>
+      <div class="slabel" style="margin-bottom:8px;">Gemte resultater</div>
       <div class="saved-list" id="savedList"><div class="empty-docs" style="padding:8px 0;">Ingen gemte resultater</div></div>
     </div>
   </aside>
 
   <div class="main">
     <div class="main-topbar">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <div class="scope-tabs">
-          <button class="scope-btn active" onclick="selectScope(this,'all')">📚 Alle filer</button>
-          <button class="scope-btn" onclick="selectScope(this,'single')">📄 Enkelt fil</button>
+      <div class="topbar-left">
+        <div class="topbar-row">
+          <div class="topbar-label">Vis</div>
+          <div class="scope-tabs">
+            <button class="scope-btn active" onclick="selectScope(this,'all')" title="Vis indhold for alle filer i dette fag">📚 Alle filer</button>
+            <button class="scope-btn" onclick="selectScope(this,'single')" title="Vælg og vis indhold for en enkelt fil">📄 Enkelt fil</button>
+          </div>
+          <div class="stats-pill" id="statsPill"><span>0</span> filer uploadet</div>
         </div>
-        <div class="stats-pill" id="statsPill"><span>0</span> dokumenter</div>
-      </div>
-      <div class="mode-tabs">
-        <button class="mode-btn active" onclick="selectMode(this,'quiz')">🎯 Quiz</button>
-        <button class="mode-btn" onclick="selectMode(this,'summary')">📋 Opsummering</button>
-        <button class="mode-btn" onclick="selectMode(this,'explain')">💡 Forklaring</button>
-        <button class="mode-btn fag-sum-btn admin-only" id="fagSumBtn" onclick="generateFagOpsummering()" style="display:none;" title="Lav en kort eksamensoversigt baseret på alle gemte opsummeringer i dette fag">📚 Fag-opsummering</button>
+        <div class="topbar-row" style="margin-top:8px;">
+          <div class="topbar-label">Indhold</div>
+          <div class="mode-tabs">
+            <button class="mode-btn active" onclick="selectMode(this,'quiz')">🎯 Quiz</button>
+            <button class="mode-btn" onclick="selectMode(this,'summary')">📋 Opsummering</button>
+            <button class="mode-btn" onclick="selectMode(this,'explain')">💡 Forklaring</button>
+          </div>
+          <button class="fag-sum-action-btn admin-only" id="fagSumBtn" onclick="generateFagOpsummering()" style="display:none;" title="Lav en kort eksamensoversigt baseret på alle gemte opsummeringer i dette fag">📚 Fag-opsummering</button>
+        </div>
       </div>
     </div>
 
     <div class="main-body">
+      <div class="select-file-hint" id="selectFileHint" style="display:none;">
+        <div class="hint-icon">👆</div>
+        <div class="hint-title">Vælg en fil</div>
+        <div class="hint-text">Klik på en fil i panelet til venstre for at vælge den, og se quiz, opsummering eller forklaring for netop den fil.</div>
+      </div>
+      <div class="welcome-panel" id="welcomePanel" style="display:none;">
+        <div class="welcome-header">
+          <div class="welcome-icon">🎓</div>
+          <div>
+            <div class="welcome-title">Kom godt i gang</div>
+            <div class="welcome-sub">Vælg hvad du vil se nedenfor — brug fanerne øverst til at skifte indhold</div>
+          </div>
+        </div>
+        <div class="welcome-cards">
+          <div class="welcome-card" onclick="selectMode(document.querySelector('.mode-btn'),'quiz')">
+            <div class="wc-icon">🎯</div>
+            <div class="wc-title">Quiz</div>
+            <div class="wc-desc">Test din viden med spørgsmål fra pensum</div>
+          </div>
+          <div class="welcome-card" onclick="selectMode(document.querySelectorAll('.mode-btn')[1],'summary')">
+            <div class="wc-icon">📋</div>
+            <div class="wc-title">Opsummering</div>
+            <div class="wc-desc">Få en struktureret gennemgang af fagstoffet</div>
+          </div>
+          <div class="welcome-card" onclick="selectMode(document.querySelectorAll('.mode-btn')[2],'explain')">
+            <div class="wc-icon">💡</div>
+            <div class="wc-title">Forklaring</div>
+            <div class="wc-desc">Forstå specifikke emner med eksempler</div>
+          </div>
+        </div>
+      </div>
       <div class="controls-row" id="controlsRow">
         <div class="ctrl-group" id="quizCtrls" style="display:none;">
-          <span class="ctrl-label">Type:</span>
+          <span class="ctrl-label">Quiz-type:</span>
           <select class="ctrl-select" id="qType">
             <option value="multiple">Multiplechoice</option>
             <option value="open">Åbne spørgsmål</option>
@@ -274,7 +346,7 @@ body.admin-active .upload-zone{display:flex!important;}
               <button class="qsbtn add" onclick="generate()">➕ Tilføj 5 nye</button>
               <button class="qsbtn" onclick="clearQuestions()" style="border-color:var(--danger);color:var(--danger);">🗑 Slet alle</button>
             </div>
-            <button class="qsbtn" onclick="startQuiz()">🎯 Tag quiz</button>
+            <button class="qsbtn" onclick="startQuiz()" style="background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600;">🎯 Start quiz</button>
           </div>
         </div>
       </div>
@@ -710,7 +782,7 @@ function showSaved(id) {
 function updateStats() {
   const docs = allDocs[currentSubject]||[];
   const total = docs.reduce((s,d)=>s+(d.content?.length||0),0);
-  document.getElementById('statsPill').innerHTML = `<span>${docs.length}</span> dok · ${(total/1000).toFixed(0)}k tegn`;
+  document.getElementById('statsPill').innerHTML = `<span>${docs.length}</span> filer · ${(total/1000).toFixed(0)}k tegn`;
 }
 
 // ── BUILD PROMPT ───────────────────────────────────────────
@@ -961,7 +1033,11 @@ selectDoc = function(id) {
 // AUTO-SHOW: Instantly display existing content when switching mode/file
 function autoShowContent() {
   if (currentMode === 'quiz') {
-    if (quizQuestions.length > 0) document.getElementById('quizBank').style.display = 'block';
+    if (quizQuestions.length > 0) {
+      document.getElementById('quizBank').style.display = 'block';
+      const wp = document.getElementById('welcomePanel');
+      if (wp) wp.style.display = 'none';
+    }
     return;
   }
   const scopeFilename = (currentScope === 'single' && selectedDocId)
@@ -971,10 +1047,12 @@ function autoShowContent() {
     s.type === currentMode && (s.scope_filename||null) === (scopeFilename||null)
   );
   if (match) {
+    const wp = document.getElementById('welcomePanel');
+    if (wp) wp.style.display = 'none';
     currentOutput = match.content;
     const labels = {summary:'// opsummering', explain:'// forklaring'};
     document.getElementById('outputLabel').textContent = labels[currentMode] || '// resultat';
-    document.getElementById('outputBtns').innerHTML = '<button class="obtn" onclick="copyOutput()">Kopiér</button>';
+    document.getElementById('outputBtns').innerHTML = '<button class="obtn" onclick="copyOutput()">📋 Kopiér tekst</button>';
     renderOutput(match.content);
     document.getElementById('outputWrap').classList.add('visible');
   }
@@ -985,6 +1063,8 @@ function updateGenBtnVisibility() {
   const btn = document.getElementById('genBtn');
   const qCtrls = document.getElementById('quizCtrls');
   const tInput = document.getElementById('topicInput');
+  const hintEl = document.getElementById('selectFileHint');
+  const welcomeEl = document.getElementById('welcomePanel');
   if (!btn) return;
   const hasContent = currentMode === 'quiz'
     ? quizQuestions.length > 0
@@ -993,12 +1073,15 @@ function updateGenBtnVisibility() {
           ? (allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename||null : null;
         return s.type===currentMode && (s.scope_filename||null)===(scopeFn||null);
       });
+  const needsFileSelection = currentScope === 'single' && !selectedDocId;
+  if (hintEl) hintEl.style.display = needsFileSelection ? 'flex' : 'none';
+  const showWelcome = currentScope === 'all' && !hasContent && !document.getElementById('loading').classList.contains('visible');
+  if (welcomeEl) welcomeEl.style.display = showWelcome ? 'block' : 'none';
   if (isAdmin) {
-    btn.style.display = 'block';
-    if (qCtrls) qCtrls.style.display = currentMode==='quiz' ? 'flex' : 'none';
-    if (tInput) tInput.style.display = currentMode==='explain' ? 'block' : 'none';
+    btn.style.display = needsFileSelection ? 'none' : 'block';
+    if (qCtrls) qCtrls.style.display = (!needsFileSelection && currentMode==='quiz') ? 'flex' : 'none';
+    if (tInput) tInput.style.display = (!needsFileSelection && currentMode==='explain') ? 'block' : 'none';
   } else {
-    // Ikke-admin: skjul altid GENERER knappen
     btn.style.display = 'none';
     if (qCtrls) qCtrls.style.display = 'none';
     if (tInput) tInput.style.display = 'none';
