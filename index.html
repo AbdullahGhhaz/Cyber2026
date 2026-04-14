@@ -998,9 +998,10 @@ function updateGenBtnVisibility() {
     if (qCtrls) qCtrls.style.display = currentMode==='quiz' ? 'flex' : 'none';
     if (tInput) tInput.style.display = currentMode==='explain' ? 'block' : 'none';
   } else {
-    btn.style.display = hasContent ? 'none' : 'block';
-    if (qCtrls) qCtrls.style.display = (!hasContent && currentMode==='quiz') ? 'flex' : 'none';
-    if (tInput) tInput.style.display = (!hasContent && currentMode==='explain') ? 'block' : 'none';
+    // Ikke-admin: skjul altid GENERER knappen
+    btn.style.display = 'none';
+    if (qCtrls) qCtrls.style.display = 'none';
+    if (tInput) tInput.style.display = 'none';
   }
 }
 </script>
