@@ -542,7 +542,7 @@ async function readPDF(file) {
   for (let i = 1; i <= pdf.numPages; i++) { const p = await pdf.getPage(i); const c = await p.getTextContent(); t += c.items.map(x=>x.str).join(' ') + '\n'; }
   return t.trim();
 }
-async function readDOCX(file) { return (await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value.trim(); }h
+async function readDOCX(file) { return (await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value.trim(); }
 async function readPPTX(file) {
   const zip = await JSZip.loadAsync(await file.arrayBuffer());
   const slides = Object.keys(zip.files).filter(n=>n.match(/^ppt\/slides\/slide\d+\.xml$/)).sort((a,b)=>parseInt(a.match(/\d+/)?.[0]||0)-parseInt(b.match(/\d+/)?.[0]||0));
