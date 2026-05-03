@@ -525,10 +525,10 @@ async function handleFiles(files) {
       else if (['pptx','ppt'].includes(ext)) text = await readPPTX(file);
       else if (['txt','md'].includes(ext)) text = await readTxt(file);
       else { showToast('Ukendt type: ' + file.name, 'error'); continue; }
-      if (!text || text.length < 10) { showToast('Ingen tekst: ' + file.name, 'error'); continue; }
+      if (!text || text.length < 10) { showToast('Ingen tekst i ' + file.name, 'error'); continue; }
             const res = await sb('documents', { method: 'POST', body: JSON.stringify({ subject: currentSubject, filename: file.name, content: text }) });
       if (!allDocs[currentSubject]) allDocs[currentSubject] = [];
-      allDocs[currentSubject].push(res[0]);
+      if (res?.[0]) allDocs[currentSubject].push(res[0]);
       document.getElementById(`cnt-${SUBJECTS.indexOf(currentSubject)}`).textContent = allDocs[currentSubject].length;
       renderDocs(); updateStats();
       showToast('✓ ' + file.name, 'success');
@@ -539,7 +539,7 @@ async function handleFiles(files) {
 async function readPDF(file) {
   const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
   let t = '';
-  for (let i = 1; i <= pdf.numPages; i++) { const p = await pdf.getPage(i); const c = await p.getTextContent(); t += c.items.map(x=>x.str).join(' ') + '\n'; }
+  for (let i = 1; i <= pdf.numPages; i++) { const p = await pdf.getPage(i); const c = await p.getTextContent(); t += c.items.filter(x=>x.str!==undefined).map(x=>x.str).join(' ') + '\n'; }
   return t.trim();
 }
 async function readDOCX(file) { return (await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value.trim(); }
