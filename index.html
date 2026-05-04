@@ -9,7 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <!-- FIX: marked.js erstatter hjemmelavet renderMD() -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{--bg:#080b14;--bg2:#0d1220;--surface:#111827;--surface2:#1a2235;--border:#1e2d47;--border2:#253652;--accent:#3b82f6;--accent2:#60a5fa;--glow:rgba(59,130,246,0.15);--text:#e2e8f0;--text2:#94a3b8;--muted:#4b6080;--success:#10b981;--danger:#ef4444;--warn:#f59e0b;--mono:'JetBrains Mono',monospace;--sans:'Outfit',sans-serif;}
 [data-theme="light"]{--bg:#f0f4ff;--bg2:#e8edf8;--surface:#fff;--surface2:#f1f5fb;--border:#dce3f0;--border2:#c8d3e8;--accent:#2563eb;--accent2:#3b82f6;--glow:rgba(37,99,235,0.1);--text:#0f172a;--text2:#475569;--muted:#94a3b8;}
@@ -540,7 +540,7 @@ async function readPDF(file) {
   const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
   let t = '';
   for (let i = 1; i <= pdf.numPages; i++) { const p = await pdf.getPage(i); const c = await p.getTextContent(); t += c.items.filter(x=>x.str!==undefined).map(x=>x.str).join(' ') + '\n'; }
-  return t.trim();
+  if (!t.trim()) { for (let i=1;i<=pdf.numPages;i++) { const pg=await pdf.getPage(i); const vp=pg.getViewport({scale:2}); const cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height; await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise; const r=await Tesseract.recognize(cv,'dan+eng'); t+=r.data.text; } } return t.trim();
 }
 async function readDOCX(file) { return (await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value.trim(); }
 async function readPPTX(file) {
