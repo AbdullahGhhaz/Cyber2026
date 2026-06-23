@@ -11,7 +11,7 @@ async function callClaude(system, prompt, maxTokens = 2048) {
       'anthropic-version': '2023-06-01'
     },
     body: JSON.stringify({
-            model: 'claude-sonnet-4-5',
+      model: 'claude-sonnet-4-5',
       max_tokens: maxTokens,
       system,
       messages: [{ role: 'user', content: prompt }]
@@ -54,18 +54,49 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    let { prompt, mode, existingQuestions = [] } = req.body;
-    if (!prompt) throw new Error('Ingen prompt modtaget');
+    let { prompt, mode, existingQuestions = [], reformulate = false, questionText = '' } = req.body;
+    if (!prompt && !reformulate) throw new Error('Ingen prompt modtaget');
 
-    // FIX: Trim prompt til 80.000 tegn (var allerede der, beholdt)
-    if (prompt.length > 80000) prompt = prompt.slice(0, 80000) + '\n\n[Afkortet]';
+    // Trim prompt til 80.000 tegn
+    if (prompt && prompt.length > 80000) prompt = prompt.slice(0, 80000) + '\n\n[Afkortet]';
+
+    // MODE: Omformuler ét enkelt spørgsmål
+    if (reformulate && questionText) {
+      const system = `Du omformulerer et eksamensspørgsmål til at være tydeligere og mere pædagogisk. 
+Svar KUN med et JSON objekt — ingen anden tekst.
+Format:
+{
+  "question": "Det nye spørgsmål?",
+  "a": "Svar A",
+  "b": "Svar B", 
+  "c": "Svar C",
+  "d": "Svar D",
+  "correct": "b",
+  "explanation": "Klar forklaring på hvorfor b er korrekt, og hvad de andre svar mangler"
+}
+Krav til kvalitet:
+- Spørgsmålet skal være præcist og entydigt formuleret
+- Alle svarmuligheder skal være plausible (ingen åbenlyst forkerte svar)
+- Forklaringen skal hjælpe eleven forstå HVORFOR svaret er rigtigt
+- Brug konkrete eksempler i forklaringen hvor muligt`;
+
+      const text = await callClaude(system, `Omformuler dette spørgsmål til at være klarere og mere brugervenligt:\n\n${questionText}`, 1024);
+      const clean = text.replace(/```json|```/g, '').trim();
+      try {
+        const q = JSON.parse(clean);
+        if (validateQuestion(q)) return res.status(200).json({ question: q });
+      } catch(e) {}
+      throw new Error('Kunne ikke omformulere spørgsmålet. Prøv igen.');
+    }
 
     if (mode === 'quiz') {
       const existingContext = existingQuestions.length > 0
-        ? `\n\nUNDGÅ disse emner - der er allerede spørgsmål om dem:\n${existingQuestions.map(q => `- ${q.question}`).join('\n')}`
+        ? `\n\nUNDGÅ disse emner — der er allerede spørgsmål om dem:\n${existingQuestions.map(q => `- ${q.question}`).join('\n')}`
         : '';
 
-      const system = `Du laver multiplechoice quiz spørgsmål til eksamenstræning. Svar KUN med et JSON array - ingen anden tekst, ingen forklaring udenfor JSON.
+      const system = `Du laver multiplechoice quiz spørgsmål til eksamenstræning på dansk.
+Svar KUN med et JSON array — ingen anden tekst, ingen forklaring udenfor JSON.
+
 Output format:
 [
   {
@@ -78,20 +109,25 @@ Output format:
     "explanation": "Forklaring på hvorfor b er korrekt"
   }
 ]
-Alle 7 felter er obligatoriske i hvert objekt. Lav spørgsmål der dækker forskellige dele af materialet.`;
 
-      // FIX: Ét enkelt kald i stedet for to — hurtigere og billigere
+KVALITETSKRAV — FØLG DISSE NØJE:
+1. SPØRGSMÅLET: Skal være klart og præcist. Undgå dobbelttydige formuleringer. Spørg om ét specifikt koncept ad gangen.
+2. SVARMULIGHEDER: Alle 4 svar skal være plausible — ingen svar må være åbenlyst forkerte. Lav "lokkemiddel"-svar der ligner det rigtige.
+3. KORREKT SVAR: Varier hvilket bogstav (a/b/c/d) der er korrekt — undgå at altid bruge samme bogstav.
+4. FORKLARING: Skal forklare HVORFOR svaret er rigtigt OG kort nævne hvorfor de andre svar er forkerte. Brug gerne et konkret eksempel.
+5. DÆKNING: Spørgsmålene skal dække forskellige dele af materialet — ikke kun det mest åbenlyse.
+
+Alle 7 felter er obligatoriske i hvert objekt.`;
+
       const text = await callClaude(
         system,
-        `${prompt}${existingContext}\n\nLav præcis 5 spørgsmål på dansk. Kun JSON array, ingen tekst udenfor.`,
+        `${prompt}${existingContext}\n\nLav præcis 5 spørgsmål på dansk af høj kvalitet. Kun JSON array, ingen tekst udenfor.`,
         4096
       );
 
       let questions = parseQuestions(text).filter(validateQuestion).slice(0, 5);
 
-      // Retry kun hvis vi fik færre end 3 gyldige spørgsmål
       if (questions.length < 3) {
-        console.log(`Retry: kun ${questions.length} gyldige spørgsmål i første kald`);
         const retryText = await callClaude(
           system,
           `${prompt}\n\nLav præcis 5 spørgsmål på dansk. Kun JSON array.`,
