@@ -8,8 +8,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<!-- FIX: marked.js erstatter hjemmelavet renderMD() -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{--bg:#080b14;--bg2:#0d1220;--surface:#111827;--surface2:#1a2235;--border:#1e2d47;--border2:#253652;--accent:#3b82f6;--accent2:#60a5fa;--glow:rgba(59,130,246,0.15);--text:#e2e8f0;--text2:#94a3b8;--muted:#4b6080;--success:#10b981;--danger:#ef4444;--warn:#f59e0b;--mono:'JetBrains Mono',monospace;--sans:'Outfit',sans-serif;}
 [data-theme="light"]{--bg:#f0f4ff;--bg2:#e8edf8;--surface:#fff;--surface2:#f1f5fb;--border:#dce3f0;--border2:#c8d3e8;--accent:#2563eb;--accent2:#3b82f6;--glow:rgba(37,99,235,0.1);--text:#0f172a;--text2:#475569;--muted:#94a3b8;}
@@ -94,7 +94,6 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .quiz-stats-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
 .quiz-stats-bar .qs-left{display:flex;align-items:center;gap:12px;}
 .quiz-stats-bar .qs-count{font-family:var(--mono);font-size:.78rem;color:var(--success);}
-/* FIX: Score display */
 .score-display{font-family:var(--mono);font-size:.78rem;color:var(--accent2);background:rgba(59,130,246,.1);border:1px solid var(--accent);padding:3px 10px;border-radius:6px;display:none;}
 .score-display.visible{display:inline-block;}
 .quiz-stats-bar .qs-actions{display:flex;gap:8px;}
@@ -115,7 +114,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .obtn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:.76rem;transition:all .2s;}
 .obtn:hover{border-color:var(--accent);color:var(--accent2);}
 .quiz-grid{display:flex;flex-direction:column;gap:14px;}
-.quiz-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;animation:up .3s ease;}
+.quiz-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;animation:up .3s ease;position:relative;}
 @keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .quiz-num{font-family:var(--mono);font-size:.62rem;color:var(--accent2);margin-bottom:6px;letter-spacing:.12em;text-transform:uppercase;}
 .quiz-q{font-weight:600;font-size:.93rem;line-height:1.55;margin-bottom:12px;}
@@ -128,7 +127,14 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .quiz-opt:disabled{cursor:default;}
 .quiz-reveal{margin-top:10px;padding:10px 14px;background:var(--bg2);border-left:3px solid var(--accent);border-radius:0 7px 7px 0;font-size:.8rem;color:var(--text2);display:none;line-height:1.55;}
 .quiz-reveal.visible{display:block;}
-/* FIX: marked.js styling for md output */
+/* Admin action buttons per question */
+.quiz-admin-actions{display:none;position:absolute;top:12px;right:12px;gap:6px;}
+body.admin-active .quiz-admin-actions{display:flex;}
+.q-admin-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);cursor:pointer;padding:3px 8px;border-radius:5px;font-size:.7rem;transition:all .15s;}
+.q-admin-btn:hover{border-color:var(--warn);color:var(--warn);}
+.q-admin-btn.del:hover{border-color:var(--danger);color:var(--danger);}
+.q-admin-btn:disabled{opacity:.4;cursor:not-allowed;}
+.q-reformulating{position:absolute;inset:0;background:rgba(8,11,20,.75);border-radius:12px;display:flex;align-items:center;justify-content:center;gap:10px;font-family:var(--mono);font-size:.75rem;color:var(--accent2);}
 .md-out{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:26px 30px;font-size:.9rem;line-height:1.8;color:var(--text);}
 .md-out h1{font-size:1.3rem;font-weight:700;margin-bottom:14px;color:var(--accent2);border-bottom:1px solid var(--border);padding-bottom:8px;}
 .md-out h2{font-size:1.05rem;font-weight:600;margin:20px 0 8px;color:var(--text);}
@@ -146,22 +152,13 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .toast.visible{opacity:1;}
 .toast.success{border-color:var(--success);}
 .toast.error{border-color:var(--danger);}
-
-/* TOPBAR LABELS */
-.topbar-label{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;min-width:42px;}
-
-/* FAG-OPSUMMERING ACTION BUTTON */
 .fag-sum-action-btn{padding:6px 14px;border:1px solid var(--warn);background:rgba(245,158,11,.07);color:var(--warn);font-family:var(--sans);font-size:.8rem;font-weight:600;border-radius:6px;cursor:pointer;transition:all .2s;white-space:nowrap;}
 .fag-sum-action-btn:hover{background:rgba(245,158,11,.18);box-shadow:0 2px 10px rgba(245,158,11,.2);}
 .fag-sum-action-btn:disabled{opacity:.5;cursor:not-allowed;}
-
-/* SELECT FILE HINT */
 .select-file-hint{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:32px 20px;background:var(--surface);border:1px dashed var(--border2);border-radius:12px;text-align:center;margin-bottom:20px;}
 .hint-icon{font-size:2rem;}
 .hint-title{font-size:1rem;font-weight:700;color:var(--text);}
 .hint-text{font-size:.82rem;color:var(--muted);max-width:340px;line-height:1.6;}
-
-/* WELCOME PANEL */
 .welcome-panel{margin-bottom:20px;}
 .welcome-header{display:flex;align-items:center;gap:14px;padding:18px 20px;background:var(--surface);border:1px solid var(--border);border-radius:10px 10px 0 0;border-bottom:none;}
 .welcome-icon{font-size:1.8rem;}
@@ -174,17 +171,11 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .wc-icon{font-size:1.4rem;margin-bottom:6px;}
 .wc-title{font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:4px;}
 .wc-desc{font-size:.73rem;color:var(--muted);line-height:1.5;}
-
-/* DOCS SECTION LABEL */
 .docs-section-label{font-size:.68rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;margin-top:4px;padding:0 2px;}
-
-/* ADMIN-ONLY ELEMENTS */
 .admin-only{display:none!important;}
 body.admin-active .admin-only{display:block!important;}
 body.admin-active .qs-admin-btns{display:inline-flex!important;gap:8px;}
 body.admin-active .upload-zone{display:flex!important;}
-
-/* LOGIN OVERLAY */
 #loginOverlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:1.5rem;}
 #loginOverlay.hidden{display:none;}
 .login-box{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:2rem 2.5rem;display:flex;flex-direction:column;gap:1rem;min-width:300px;max-width:400px;width:90%;}
@@ -196,8 +187,6 @@ body.admin-active .upload-zone{display:flex!important;}
 .login-btn:hover{opacity:.85;}
 .login-error{color:var(--danger);font-size:.75rem;text-align:center;min-height:1em;}
 .admin-badge{background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3);border-radius:6px;font-size:.7rem;font-weight:700;padding:2px 8px;font-family:var(--mono);margin-left:8px;}
-
-/* RESPONSIVE DESIGN */
 @media(max-width:768px){
   .app{grid-template-columns:1fr;height:auto;}
   .sidebar{border-right:none;border-bottom:1px solid var(--border);width:100%;overflow-x:auto;}
@@ -205,18 +194,10 @@ body.admin-active .upload-zone{display:flex!important;}
   .sub-list{flex-direction:row;flex-wrap:wrap;gap:4px;}
   .sub-btn{padding:6px 10px;font-size:.72rem;}
   .doc-items{max-height:180px;overflow-y:auto;}
-  .content{padding:12px;}
-  .top-bar{flex-wrap:wrap;gap:6px;}
-  .scope-btns{flex-wrap:wrap;}
-  .mode-btns{flex-wrap:wrap;}
-  header{padding:0 14px;height:48px;}
 }
 @media(max-width:480px){
   .login-box{padding:1.5rem 1.2rem;}
   .quiz-card{padding:14px 16px;}
-  .option-btn{padding:10px 12px;font-size:.82rem;}
-  .output-area{padding:12px;}
-  .top-bar{gap:4px;}
   .gen-btn{padding:8px 12px;font-size:.8rem;}
 }
 </style>
@@ -270,8 +251,8 @@ body.admin-active .upload-zone{display:flex!important;}
         <div class="topbar-row">
           <div class="topbar-label">Vis</div>
           <div class="scope-tabs">
-            <button class="scope-btn active" onclick="selectScope(this,'all')" title="Vis indhold for alle filer i dette fag">📚 Alle filer</button>
-            <button class="scope-btn" onclick="selectScope(this,'single')" title="Vælg og vis indhold for en enkelt fil">📄 Enkelt fil</button>
+            <button class="scope-btn active" onclick="selectScope(this,'all')">📚 Alle filer</button>
+            <button class="scope-btn" onclick="selectScope(this,'single')">📄 Enkelt fil</button>
           </div>
           <div class="stats-pill" id="statsPill"><span>0</span> filer uploadet</div>
         </div>
@@ -282,7 +263,7 @@ body.admin-active .upload-zone{display:flex!important;}
             <button class="mode-btn" onclick="selectMode(this,'summary')">📋 Opsummering</button>
             <button class="mode-btn" onclick="selectMode(this,'explain')">💡 Forklaring</button>
           </div>
-          <button class="fag-sum-action-btn admin-only" id="fagSumBtn" onclick="generateFagOpsummering()" style="display:none;" title="Lav en kort eksamensoversigt baseret på alle gemte opsummeringer i dette fag">📚 Fag-opsummering</button>
+          <button class="fag-sum-action-btn admin-only" id="fagSumBtn" onclick="generateFagOpsummering()" style="display:none;">📚 Fag-opsummering</button>
         </div>
       </div>
     </div>
@@ -291,7 +272,7 @@ body.admin-active .upload-zone{display:flex!important;}
       <div class="select-file-hint" id="selectFileHint" style="display:none;">
         <div class="hint-icon">👆</div>
         <div class="hint-title">Vælg en fil</div>
-        <div class="hint-text">Klik på en fil i panelet til venstre for at vælge den, og se quiz, opsummering eller forklaring for netop den fil.</div>
+        <div class="hint-text">Klik på en fil i panelet til venstre for at vælge den.</div>
       </div>
       <div class="welcome-panel" id="welcomePanel" style="display:none;">
         <div class="welcome-header">
@@ -324,8 +305,6 @@ body.admin-active .upload-zone{display:flex!important;}
           <span class="ctrl-label">Quiz-type:</span>
           <select class="ctrl-select" id="qType">
             <option value="multiple">Multiplechoice</option>
-            <option value="open">Åbne spørgsmål</option>
-            <option value="truefalse">Sandt/Falsk</option>
           </select>
         </div>
         <input type="text" class="topic-input" id="topicInput" placeholder="Skriv emne at forklare (fx 'OOP', 'Loops', 'OSI-modellen')..." style="display:none;">
@@ -333,12 +312,10 @@ body.admin-active .upload-zone{display:flex!important;}
         <button class="gen-btn" id="genBtn" onclick="generate()" style="display:none;">⚡ GENERÉR</button>
       </div>
 
-      <!-- Quiz spørgsmål bank -->
       <div id="quizBank" style="display:none;">
         <div class="quiz-stats-bar">
           <div class="qs-left">
             <span class="qs-count" id="qsCount">0 spørgsmål gemt</span>
-            <!-- FIX: Score tracker -->
             <span class="score-display" id="scoreDisplay"></span>
           </div>
           <div class="qs-actions">
@@ -372,10 +349,7 @@ body.admin-active .upload-zone{display:flex!important;}
 
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-// FIX: marked.js konfigureret én gang
 marked.use({ breaks: true, gfm: true });
-
 
 const SUBJECTS = ['Programmering','Forretningsforståelse','Computerarkitektur'];
 let theme = 'dark';
@@ -387,13 +361,26 @@ let currentOutput = '';
 let allDocs = {};
 let allSaved = {};
 let quizQuestions = [];
-
-// FIX: Score tracker state
 let quizScore = 0;
 let quizAnswered = 0;
 let quizTotal = 0;
+let isAdmin = false;
 
-window.addEventListener('load', loadData);
+window.addEventListener('load', () => { loadData(); startKeepAlive(); });
+
+// ── SUPABASE KEEP-ALIVE (fix #1) ───────────────────────────
+// Pinger databasen hvert 4. minut for at forhindre inaktivitet
+function startKeepAlive() {
+  setInterval(async () => {
+    try {
+      await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: 'documents?select=id&limit=1', method: 'GET' })
+      });
+    } catch(e) { /* ignorer stille */ }
+  }, 4 * 60 * 1000); // 4 minutter
+}
 
 function toggleTheme() {
   theme = theme === 'dark' ? 'light' : 'dark';
@@ -408,11 +395,9 @@ async function selectSubject(btn, name) {
   selectedDocId = null;
   currentScope = 'all';
   document.querySelectorAll('.scope-btn').forEach(b => b.classList.remove('active'));
-  const allScopeBtn = document.querySelector('.scope-btn');
-  if (allScopeBtn) allScopeBtn.classList.add('active');
+  document.querySelector('.scope-btn')?.classList.add('active');
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-  const firstModeBtn = document.querySelector('.mode-btn');
-  if (firstModeBtn) firstModeBtn.classList.add('active');
+  document.querySelector('.mode-btn')?.classList.add('active');
   currentMode = 'quiz';
   document.getElementById('scopeInfo').style.display = 'none';
   document.getElementById('quizCtrls').style.display = 'none';
@@ -424,9 +409,7 @@ async function selectSubject(btn, name) {
   document.getElementById('outputWrap').classList.remove('visible');
   document.getElementById('quizBank').style.display = 'none';
   document.getElementById('scoreDisplay').classList.remove('visible');
-  renderDocs();
-  renderSaved();
-  updateStats();
+  renderDocs(); renderSaved(); updateStats();
   await loadQuizQuestions();
   updateGenBtnVisibility();
   autoShowContent();
@@ -443,10 +426,8 @@ async function selectScope(btn, scope) {
   document.getElementById('scopeInfo').style.display = 'none';
   document.getElementById('scoreDisplay').classList.remove('visible');
   renderDocs();
-  // FIX: reload spørgsmål for nyt scope
   if (scope === 'all') await loadQuizQuestions();
   updateGenBtnVisibility();
-  // Vis Fag-opsummering knap kun i 'alle filer' tilstand
   const fagBtn = document.getElementById('fagSumBtn');
   if (fagBtn) fagBtn.style.display = scope === 'all' ? '' : 'none';
 }
@@ -479,26 +460,25 @@ async function sb(path, opts = {}) {
   if (!r.ok) {
     const errText = await r.text();
     if (errText.includes('relation') || errText.includes('does not exist')) {
-      throw new Error('Supabase-tabel mangler — tjek at alle tabeller er oprettet i dit dashboard');
+      throw new Error('Supabase-tabel mangler — tjek at alle tabeller er oprettet');
     }
     throw new Error(errText);
   }
   const t = await r.text();
   return t ? JSON.parse(t) : [];
 }
-// ── LOAD — FIX: lazy loading, kun aktivt fag ved start ─────
+
 async function loadData() {
   try {
     await loadSubject(currentSubject);
-    // Hent doc-tæller for de andre fag (kun antal, ikke indhold)
     for (let i = 0; i < SUBJECTS.length; i++) {
       const s = SUBJECTS[i];
       if (s === currentSubject) continue;
       try {
         const docs = await sb(`documents?subject=eq.${encodeURIComponent(s)}&select=id`);
-        allDocs[s] = allDocs[s] || docs; // gem kun ids til tæller
+        allDocs[s] = allDocs[s] || docs;
         document.getElementById(`cnt-${i}`).textContent = docs.length;
-      } catch(e) { /* ignorer stille */ }
+      } catch(e) {}
     }
     renderDocs(); renderSaved(); updateStats();
     await loadQuizQuestions();
@@ -526,7 +506,7 @@ async function handleFiles(files) {
       else if (['txt','md'].includes(ext)) text = await readTxt(file);
       else { showToast('Ukendt type: ' + file.name, 'error'); continue; }
       if (!text || text.length < 10) { showToast('Ingen tekst i ' + file.name, 'error'); continue; }
-            const res = await sb('documents', { method: 'POST', body: JSON.stringify({ subject: currentSubject, filename: file.name, content: text }) });
+      const res = await sb('documents', { method: 'POST', body: JSON.stringify({ subject: currentSubject, filename: file.name, content: text }) });
       if (!allDocs[currentSubject]) allDocs[currentSubject] = [];
       if (res?.[0]) allDocs[currentSubject].push(res[0]);
       document.getElementById(`cnt-${SUBJECTS.indexOf(currentSubject)}`).textContent = allDocs[currentSubject].length;
@@ -585,9 +565,7 @@ function selectDoc(id) {
 
 function selectDocAndSwitch(id) {
   const singleBtn = document.querySelector('.scope-btn[onclick*="single"]');
-  if (singleBtn && currentScope !== 'single') {
-    selectScope(singleBtn, 'single');
-  }
+  if (singleBtn && currentScope !== 'single') selectScope(singleBtn, 'single');
   selectDoc(id);
 }
 
@@ -602,9 +580,7 @@ async function loadQuizQuestions() {
     if (filename) query += `&filename=eq.${encodeURIComponent(filename)}`;
     quizQuestions = await sb(query);
     updateQuizStats();
-    if (quizQuestions.length > 0) {
-      document.getElementById('quizBank').style.display = 'block';
-    }
+    if (quizQuestions.length > 0) document.getElementById('quizBank').style.display = 'block';
     updateGenBtnVisibility();
     autoShowContent();
   } catch(e) {
@@ -622,21 +598,14 @@ async function saveQuizQuestions(newQs) {
   const filename = currentScope === 'single' && selectedDocId
     ? (allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename || null
     : null;
-
   const existing = quizQuestions.map(q => q.question.toLowerCase());
   const unique = newQs.filter(q => !existing.includes(q.question.toLowerCase()));
-
   if (unique.length === 0) { showToast('Ingen nye spørgsmål — alle var dubletter', 'error'); return; }
-
   const toInsert = unique.map(q => ({
-    subject: currentSubject,
-    filename: filename,
-    question: q.question,
-    a: q.a, b: q.b, c: q.c, d: q.d,
-    correct: q.correct.toLowerCase(),
-    explanation: q.explanation
+    subject: currentSubject, filename,
+    question: q.question, a: q.a, b: q.b, c: q.c, d: q.d,
+    correct: q.correct.toLowerCase(), explanation: q.explanation
   }));
-
   const saved = await sb('quiz_questions', { method: 'POST', body: JSON.stringify(toInsert) });
   quizQuestions = [...quizQuestions, ...saved];
   updateQuizStats();
@@ -647,8 +616,7 @@ async function clearQuestions() {
   if (!confirm(`Slet alle ${quizQuestions.length} spørgsmål?`)) return;
   try {
     const filename = currentScope === 'single' && selectedDocId
-      ? (allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename
-      : null;
+      ? (allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename : null;
     let query = `quiz_questions?subject=eq.${encodeURIComponent(currentSubject)}`;
     if (filename) query += `&filename=eq.${encodeURIComponent(filename)}`;
     await sb(query, { method: 'DELETE', headers: { 'Prefer': '' } });
@@ -660,59 +628,127 @@ async function clearQuestions() {
   } catch(e) { showToast('Fejl: ' + e.message, 'error'); }
 }
 
+// ── ADMIN: Slet enkelt spørgsmål (fix #3) ─────────────────
+async function deleteQuestion(questionId, cardEl) {
+  if (!isAdmin) return;
+  if (!confirm('Slet dette spørgsmål?')) return;
+  try {
+    await sb(`quiz_questions?id=eq.${questionId}`, { method: 'DELETE', headers: { 'Prefer': '' } });
+    quizQuestions = quizQuestions.filter(q => q.id !== questionId);
+    updateQuizStats();
+    cardEl.style.animation = 'none';
+    cardEl.style.transition = 'opacity .3s';
+    cardEl.style.opacity = '0';
+    setTimeout(() => cardEl.remove(), 300);
+    showToast('Spørgsmål slettet', 'success');
+  } catch(e) { showToast('Fejl: ' + e.message, 'error'); }
+}
+
+// ── ADMIN: Omformuler enkelt spørgsmål (fix #3) ───────────
+async function reformulateQuestion(questionId, cardEl) {
+  if (!isAdmin) return;
+  const q = quizQuestions.find(x => x.id === questionId);
+  if (!q) return;
+
+  // Vis loading overlay på kortet
+  const overlay = document.createElement('div');
+  overlay.className = 'q-reformulating';
+  overlay.innerHTML = '<div class="spinner"></div> Omformulerer...';
+  cardEl.appendChild(overlay);
+  cardEl.querySelector('.q-admin-btn[data-reform]').disabled = true;
+
+  const questionText = `Spørgsmål: ${q.question}\nA) ${q.a}\nB) ${q.b}\nC) ${q.c}\nD) ${q.d}\nKorrekt: ${q.correct.toUpperCase()})\nForklaring: ${q.explanation}`;
+
+  try {
+    const r = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reformulate: true, questionText, prompt: '' })
+    });
+    const data = await r.json();
+    if (data.error) throw new Error(data.error);
+    if (!data.question) throw new Error('Intet svar fra AI');
+
+    const nq = data.question;
+    // Gem opdateret spørgsmål i Supabase
+    await sb(`quiz_questions?id=eq.${questionId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        question: nq.question, a: nq.a, b: nq.b, c: nq.c, d: nq.d,
+        correct: nq.correct.toLowerCase(), explanation: nq.explanation
+      })
+    });
+
+    // Opdater lokalt
+    const idx = quizQuestions.findIndex(x => x.id === questionId);
+    if (idx >= 0) quizQuestions[idx] = { ...quizQuestions[idx], ...nq, correct: nq.correct.toLowerCase() };
+
+    overlay.remove();
+    showToast('✓ Spørgsmål omformuleret!', 'success');
+
+    // Genrender kortet
+    const allCards = document.querySelectorAll('.quiz-card');
+    const cardIdx = Array.from(allCards).indexOf(cardEl);
+    if (cardIdx >= 0) {
+      const newCardHtml = renderSingleCard(quizQuestions[cardIdx], cardIdx, quizQuestions.length);
+      const temp = document.createElement('div');
+      temp.innerHTML = newCardHtml;
+      cardEl.replaceWith(temp.firstElementChild);
+    }
+  } catch(e) {
+    overlay.remove();
+    cardEl.querySelector('.q-admin-btn[data-reform]').disabled = false;
+    showToast('Fejl: ' + e.message, 'error');
+  }
+}
+
 function startQuiz() {
   if (quizQuestions.length === 0) return;
-  // FIX: Nulstil score tracker
-  quizScore = 0;
-  quizAnswered = 0;
-  quizTotal = quizQuestions.length;
+  quizScore = 0; quizAnswered = 0; quizTotal = quizQuestions.length;
   updateScoreDisplay();
   document.getElementById('scoreDisplay').classList.add('visible');
-
   const arr = [...quizQuestions];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  const shuffled = arr;
-  document.getElementById('outputLabel').textContent = `// quiz — ${shuffled.length} spørgsmål`;
+  for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  document.getElementById('outputLabel').textContent = `// quiz — ${arr.length} spørgsmål`;
   document.getElementById('outputBtns').innerHTML = '';
-  document.getElementById('outputContent').innerHTML = renderQuizFromDB(shuffled);
+  document.getElementById('outputContent').innerHTML = renderQuizFromDB(arr);
   document.getElementById('outputWrap').classList.add('visible');
   document.getElementById('outputWrap').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
-// FIX: Score display opdatering
 function updateScoreDisplay() {
   const el = document.getElementById('scoreDisplay');
-  const pct = quizAnswered > 0 ? Math.round((quizScore / quizAnswered) * 100) : 0;
-  el.textContent = `✅ ${quizScore}/${quizAnswered} besvaret (${pct}%) — ${quizTotal - quizAnswered} tilbage`;
+  const pct = quizAnswered > 0 ? Math.round((quizScore/quizAnswered)*100) : 0;
+  el.textContent = `✅ ${quizScore}/${quizAnswered} besvaret (${pct}%) — ${quizTotal-quizAnswered} tilbage`;
+}
+
+function renderSingleCard(q, i, total) {
+  const opts = ['a','b','c','d'];
+  const letters = ['A','B','C','D'];
+  return `<div class="quiz-card" data-qid="${q.id}">
+    <div class="quiz-admin-actions">
+      <button class="q-admin-btn" data-reform="1" onclick="reformulateQuestion('${q.id}', this.closest('.quiz-card'))" title="Omformuler med AI">🔄 Omformuler</button>
+      <button class="q-admin-btn del" onclick="deleteQuestion('${q.id}', this.closest('.quiz-card'))" title="Slet dette spørgsmål">🗑 Slet</button>
+    </div>
+    <div class="quiz-num">SPØRGSMÅL ${i+1} af ${total}</div>
+    <div class="quiz-q">${esc(q.question)}</div>
+    <div class="quiz-opts">
+      ${opts.map((l,idx) => `<button class="quiz-opt" data-letter="${l}" data-correct="${q.correct}" data-explanation="${esc(q.explanation)}" onclick="handleDBAnswer(this)">${letters[idx]}) ${esc(q[l])}</button>`).join('')}
+    </div>
+    <div class="quiz-reveal">✅ Korrekt svar: ${q.correct.toUpperCase()}) ${esc(q[q.correct])} — ${esc(q.explanation)}</div>
+  </div>`;
 }
 
 function renderQuizFromDB(questions) {
-  return '<div class="quiz-grid">' + questions.map((q, i) => {
-    const opts = ['a','b','c','d'];
-    const letters = ['A','B','C','D'];
-    return `<div class="quiz-card">
-      <div class="quiz-num">SPØRGSMÅL ${i+1} af ${questions.length}</div>
-      <div class="quiz-q">${esc(q.question)}</div>
-      <div class="quiz-opts">
-        ${opts.map((l,idx) => `<button class="quiz-opt" data-letter="${l}" data-correct="${q.correct}" data-explanation="${esc(q.explanation)}" onclick="handleDBAnswer(this)">${letters[idx]}) ${esc(q[l])}</button>`).join('')}
-      </div>
-      <div class="quiz-reveal">✅ Korrekt svar: ${q.correct.toUpperCase()}) ${esc(q[q.correct])} — ${esc(q.explanation)}</div>
-    </div>`;
-  }).join('') + '</div>';
+  return '<div class="quiz-grid">' + questions.map((q, i) => renderSingleCard(q, i, questions.length)).join('') + '</div>';
 }
 
-// FIX PERMANENT: Bruger data-attributter - immune mod quotes i explanation tekst
 function handleDBAnswer(el) {
   const card = el.closest('.quiz-card');
   if (card.querySelector('.correct,.wrong')) return;
-
   const letter = el.dataset.letter;
   const correct = el.dataset.correct;
   const isCorrect = letter === correct;
-
   card.querySelectorAll('.quiz-opt').forEach(o => {
     const l = o.dataset.letter;
     if (!l) return;
@@ -720,10 +756,8 @@ function handleDBAnswer(el) {
     if (l === correct) o.classList.add('correct');
     o.disabled = true;
   });
-
   const reveal = card.querySelector('.quiz-reveal');
   if (reveal) reveal.classList.add('visible');
-
   if (isCorrect) quizScore++;
   quizAnswered++;
   updateScoreDisplay();
@@ -740,7 +774,7 @@ function renderDocs() {
     const date = new Date(d.created_at).toLocaleDateString('da-DK',{day:'numeric',month:'short'});
     const isSelected = selectedDocId === d.id;
     const clickable = currentScope === 'single' ? `onclick="selectDoc('${d.id}')"` : `onclick="selectDocAndSwitch('${d.id}')"`;
-    return `<div class="doc-card${isSelected?' selected':''}" ${clickable} style="cursor:pointer;">
+    return `<div class="doc-card${isSelected?' selected':''}" ${clickable}>
       <span class="doc-icon">${icons[ext]||'📁'}</span>
       <div class="doc-info"><div class="doc-name" title="${d.filename}">${d.filename}</div><div class="doc-meta">${size} · ${date}</div></div>
       <button class="doc-del admin-only" onclick="event.stopPropagation();deleteDoc('${d.id}')">✕</button>
@@ -752,8 +786,8 @@ function renderSaved() {
   const saved = allSaved[currentSubject] || [];
   const el = document.getElementById('savedList');
   if (!saved.length) { el.innerHTML = '<div class="empty-docs" style="padding:8px 0;">Ingen gemte resultater</div>'; return; }
-  const icons = {quiz:'🎯',summary:'📋',explain:'💡'};
-  const labels = {quiz:'Quiz',summary:'Opsummering',explain:'Forklaring'};
+  const icons = {quiz:'🎯',summary:'📋',explain:'💡','fag-summary':'📚'};
+  const labels = {quiz:'Quiz',summary:'Opsummering',explain:'Forklaring','fag-summary':'Fag-opsummering'};
   el.innerHTML = saved.map(s => {
     const date = new Date(s.created_at).toLocaleDateString('da-DK',{day:'numeric',month:'short'});
     const sub = s.scope_filename ? `📄 ${s.scope_filename}` : '📚 Alle filer';
@@ -769,7 +803,7 @@ function showSaved(id) {
   const s = (allSaved[currentSubject]||[]).find(x=>x.id===id);
   if (!s) return;
   currentOutput = s.content; currentMode = s.type;
-  const labels = {quiz:'// quiz spørgsmål',summary:'// opsummering',explain:'// forklaring'};
+  const labels = {quiz:'// quiz spørgsmål',summary:'// opsummering',explain:'// forklaring','fag-summary':'// fag-opsummering'};
   document.getElementById('outputLabel').textContent = labels[s.type]||'// resultat';
   renderOutput(s.content);
   document.getElementById('outputWrap').classList.add('visible');
@@ -781,7 +815,6 @@ function updateStats() {
   document.getElementById('statsPill').innerHTML = `<span>${docs.length}</span> filer · ${(total/1000).toFixed(0)}k tegn`;
 }
 
-// ── BUILD PROMPT ───────────────────────────────────────────
 function buildPrompt() {
   const docs = allDocs[currentSubject]||[];
   let useDocs = currentScope === 'single' && selectedDocId ? docs.filter(d=>d.id===selectedDocId) : docs;
@@ -795,7 +828,6 @@ function buildPrompt() {
   return `${mat}\n\n---\nOPGAVE: Forklar følgende emne grundigt på dansk: "${topic||'de vigtigste begreber i '+currentSubject}". Brug eksempler.`;
 }
 
-// ── GENERATE ───────────────────────────────────────────────
 async function generate() {
   const docs = allDocs[currentSubject]||[];
   if (!docs.length) { showToast('Upload mindst ét dokument først!','error'); return; }
@@ -803,7 +835,7 @@ async function generate() {
 
   const _modeL={quiz:'Quiz',summary:'Opsummering',explain:'Forklaring'};
   const _mL=_modeL[currentMode]||currentMode;
-  const _sL=currentScope==='single'&&selectedDocId?(allDocs[currentSubject]||[]).find(function(d){return d.id===selectedDocId;})?.filename||'valgt fil':'alle filer i '+currentSubject;
+  const _sL=currentScope==='single'&&selectedDocId?(allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename||'valgt fil':'alle filer i '+currentSubject;
   if(!confirm('Generer '+_mL+' for '+_sL+'?'))return;
 
   const btn = document.getElementById('genBtn');
@@ -815,15 +847,9 @@ async function generate() {
   try {
     const body = { prompt: buildPrompt(), mode: currentMode };
     if (currentMode === 'quiz') body.existingQuestions = quizQuestions;
-
-    const r = await fetch('/api/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
+    const r = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const data = await r.json();
     if (data.error) throw new Error(data.error);
-
     if (currentMode === 'quiz' && data.questions) {
       await saveQuizQuestions(data.questions);
       document.getElementById('quizBank').style.display = 'block';
@@ -846,63 +872,38 @@ async function generate() {
   loading.classList.remove('visible');
 }
 
-// ── AUTO SAVE ──────────────────────────────────────────────
-
 async function generateFagOpsummering() {
   const saved = allSaved[currentSubject] || [];
-  const summaries = saved.filter(function(s) { return s.type === "summary" || s.type === "explain"; });
-
-  if (!summaries.length) {
-    showToast("Ingen gemte opsummeringer fundet – generer opsummeringer for de enkelte filer først!", "error");
-    return;
-  }
-
+  const summaries = saved.filter(s => s.type === "summary" || s.type === "explain");
+  if (!summaries.length) { showToast("Ingen gemte opsummeringer fundet – generer opsummeringer for de enkelte filer først!", "error"); return; }
   if(!confirm('Generer Fag-opsummering for hele '+currentSubject+'?\n\nBygger på '+summaries.length+' gemte opsummeringer/forklaringer.'))return;
-
   const btn = document.getElementById("fagSumBtn");
   const loading = document.getElementById("loading");
   if (btn) btn.disabled = true;
   if (loading) loading.classList.add("visible");
   document.getElementById("loadingTxt").textContent = "GENERERER FAG-OPSUMMERING...";
-
   try {
-    const parts = summaries.map(function(s) {
+    const parts = summaries.map(s => {
       const label = s.type === "summary" ? "Opsummering" : "Forklaring";
       const filename = s.scope_filename ? " (" + s.scope_filename + ")" : "";
-      const content = (s.content || "").slice(0, 3000);
-      return "--- " + label + filename + " ---\n" + content;
+      return "--- " + label + filename + " ---\n" + (s.content || "").slice(0, 3000);
     }).join("\n\n");
-
-    const prompt = "Du er eksamenshjælper. Herunder er opsummeringer og forklaringer fra de enkelte filer i faget \"" + currentSubject + "\"." +
-      "\n\nDin opgave: Lav ÉN kort, struktureret eksamensopsummering af HELE faget på dansk. Fokús på de VIGTIGSTE begreber, teorier og sammenhænge på tværs af filerne. Hold den kort og overskuelig – maks 600 ord. Brug overskrifter." +
-      "\n\n" + parts;
-
-    const r = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: prompt, mode: "summary" })
-    });
+    const prompt = `Du er eksamenshjælper. Herunder er opsummeringer og forklaringer fra de enkelte filer i faget "${currentSubject}".\n\nDin opgave: Lav ÉN kort, struktureret eksamensopsummering af HELE faget på dansk. Fokús på de VIGTIGSTE begreber, teorier og sammenhænge på tværs af filerne. Hold den kort og overskuelig – maks 600 ord. Brug overskrifter.\n\n${parts}`;
+    const r = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt, mode: "summary" }) });
     if (!r.ok) throw new Error(await r.text());
     const result = await r.json();
     const content = result.content || result.text || "";
-
-    window.currentOutput = content;
+    currentOutput = content;
     renderOutput(content);
     document.getElementById("outputWrap").classList.add("visible");
     document.getElementById("outputWrap").scrollIntoView({ behavior: "smooth", block: "start" });
-
-    const res = await sb("generated_content", { method: "POST", body: JSON.stringify({
-      subject: currentSubject, type: "fag-summary", content: content, scope_filename: null
-    })});
+    const res = await sb("generated_content", { method: "POST", body: JSON.stringify({ subject: currentSubject, type: "fag-summary", content, scope_filename: null })});
     if (!allSaved[currentSubject]) allSaved[currentSubject] = [];
     if (res && res[0]) allSaved[currentSubject].unshift(res[0]);
+    renderSaved();
     showToast("✅ Fag-opsummering gemt!", "success");
-  } catch(e) {
-    showToast("Fejl: " + e.message, "error");
-  } finally {
-    if (btn) btn.disabled = false;
-    if (loading) loading.classList.remove("visible");
-  }
+  } catch(e) { showToast("Fejl: " + e.message, "error"); }
+  finally { if (btn) btn.disabled = false; if (loading) loading.classList.remove("visible"); }
 }
 
 async function autoSave() {
@@ -910,7 +911,7 @@ async function autoSave() {
   try {
     const scopeFilename = currentScope === 'single' && selectedDocId
       ? (allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename||null : null;
-    const existing = (allSaved[currentSubject]||[]).find(s => s.typhe===currentMode && (s.scope_filename||null)===(scopeFilename||null));
+    const existing = (allSaved[currentSubject]||[]).find(s => s.type===currentMode && (s.scope_filename||null)===(scopeFilename||null));
     if (existing) {
       await sb(`generated_content?id=eq.${existing.id}`,{method:'DELETE'});
       allSaved[currentSubject] = allSaved[currentSubject].filter(s=>s.id!==existing.id);
@@ -923,7 +924,6 @@ async function autoSave() {
   } catch(e) { console.error('AutoSave fejl:',e); }
 }
 
-// FIX: renderOutput bruger nu marked.js i stedet for hjemmelavet parser
 function renderOutput(text) {
   document.getElementById('outputContent').innerHTML = `<div class="md-out">${marked.parse(text)}</div>`;
 }
@@ -932,38 +932,23 @@ function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 function copyOutput(){navigator.clipboard.writeText(document.getElementById('outputContent').innerText).then(()=>showToast('✓ Kopieret!','success'));}
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast visible'+(type?' '+type:'');setTimeout(()=>t.classList.remove('visible'),2800);}
 
-// LOGIN SYSTEM
-
 async function doLogin(){
   const v=document.getElementById('loginInput').value.trim();
   const err=document.getElementById('loginError');
   try {
-    const r = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: v })
-    });
+    const r = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: v }) });
     if (r.ok) {
       const { role } = await r.json();
       isAdmin = role === 'admin';
       sessionStorage.setItem('authRole', role);
       document.getElementById('loginOverlay').classList.add('hidden');
       err.textContent = '';
-      if (isAdmin) {
-        document.body.classList.add('admin-active');
-        injectAdminUI();
-        setTimeout(injectGenererAltBtns, 500);
-      } else {
-        setTimeout(() => { updateGenBtnVisibility(); autoShowContent(); }, 800);
-      }
-    } else {
-      err.textContent = 'Forkert adgangskode. Prøv igen.';
-      document.getElementById('loginInput').value = '';
-    }
-  } catch(e) {
-    err.textContent = 'Fejl ved login: ' + e.message;
-  }
+      if (isAdmin) { document.body.classList.add('admin-active'); injectAdminUI(); setTimeout(injectGenererAltBtns, 500); }
+      else { setTimeout(() => { updateGenBtnVisibility(); autoShowContent(); }, 800); }
+    } else { err.textContent = 'Forkert adgangskode. Prøv igen.'; document.getElementById('loginInput').value = ''; }
+  } catch(e) { err.textContent = 'Fejl ved login: ' + e.message; }
 }
+
 document.addEventListener('DOMContentLoaded',function(){
   const loginInput=document.getElementById('loginInput');
   if(loginInput) loginInput.addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
@@ -974,7 +959,6 @@ document.addEventListener('DOMContentLoaded',function(){
   if(di) _docObs.observe(di,{childList:true,subtree:true});
 });
 
-// GENERATE ALL
 async function generateAll(docName){
   if(!isAdmin){showToast('Kun for admin','error');return;}
   const modes=['quiz','summary','explain'];
@@ -989,11 +973,9 @@ async function generateAll(docName){
   showToast('Alt genereret for '+docName,'success');
 }
 
-// ADMIN UI
 let adminUIReady=false;
 function injectAdminUI(){
-  if(!isAdmin) return;
-  if(adminUIReady) return;
+  if(!isAdmin||adminUIReady) return;
   adminUIReady=true;
   const logo=document.querySelector('header .logo');
   if(logo&&!logo.querySelector('.admin-badge')){
@@ -1005,8 +987,7 @@ function injectAdminUI(){
 }
 function injectGenererAltBtns(){
   if(!isAdmin) return;
-  const cards=document.querySelectorAll('.doc-card');
-  cards.forEach(function(card){
+  document.querySelectorAll('.doc-card').forEach(function(card){
     if(card.querySelector('.generer-alt-btn')) return;
     const name=card.querySelector('.doc-name');
     const docName=name?name.textContent:'';
@@ -1021,38 +1002,28 @@ function injectGenererAltBtns(){
 }
 const _docObs=new MutationObserver(function(){if(isAdmin)injectGenererAltBtns();});
 
-// UX FIX: Clear output when switching files
 const _origSelectDoc = selectDoc;
 selectDoc = function(id) {
-  const ow = document.getElementById('outputWrap');
-  if(ow) ow.classList.remove('visible');
-  window.currentOutput = '';
-  const qb = document.getElementById('quizBank');
-  if(qb) qb.style.display = 'none';
+  document.getElementById('outputWrap').classList.remove('visible');
+  currentOutput = '';
+  document.getElementById('quizBank').style.display = 'none';
   _origSelectDoc(id);
   setTimeout(() => { updateGenBtnVisibility(); autoShowContent(); }, 300);
 };
 
-
-// AUTO-SHOW: Instantly display existing content when switching mode/file
 function autoShowContent() {
   if (currentMode === 'quiz') {
     if (quizQuestions.length > 0) {
       document.getElementById('quizBank').style.display = 'block';
-      const wp = document.getElementById('welcomePanel');
-      if (wp) wp.style.display = 'none';
+      document.getElementById('welcomePanel').style.display = 'none';
     }
     return;
   }
   const scopeFilename = (currentScope === 'single' && selectedDocId)
-    ? (allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename || null
-    : null;
-  const match = (allSaved[currentSubject]||[]).find(s =>
-    s.type === currentMode && (s.scope_filename||null) === (scopeFilename||null)
-  );
+    ? (allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename || null : null;
+  const match = (allSaved[currentSubject]||[]).find(s => s.type === currentMode && (s.scope_filename||null) === (scopeFilename||null));
   if (match) {
-    const wp = document.getElementById('welcomePanel');
-    if (wp) wp.style.display = 'none';
+    document.getElementById('welcomePanel').style.display = 'none';
     currentOutput = match.content;
     const labels = {summary:'// opsummering', explain:'// forklaring'};
     document.getElementById('outputLabel').textContent = labels[currentMode] || '// resultat';
@@ -1062,7 +1033,6 @@ function autoShowContent() {
   }
 }
 
-// SMART GENERÉR: Show gen-btn only when no content exists for current mode+file
 function updateGenBtnVisibility() {
   const btn = document.getElementById('genBtn');
   const qCtrls = document.getElementById('quizCtrls');
@@ -1086,7 +1056,6 @@ function updateGenBtnVisibility() {
     if (qCtrls) qCtrls.style.display = (!needsFileSelection && currentMode==='quiz') ? 'flex' : 'none';
     if (tInput) tInput.style.display = (!needsFileSelection && currentMode==='explain') ? 'block' : 'none';
   } else {
-    // Ikke-admin: vis GENERÉR kun når der ikke er noget indhold i forvejen
     const canGenerate = !hasContent && !needsFileSelection;
     btn.style.display = canGenerate ? 'block' : 'none';
     if (qCtrls) qCtrls.style.display = (canGenerate && currentMode==='quiz') ? 'flex' : 'none';
@@ -1096,5 +1065,3 @@ function updateGenBtnVisibility() {
 </script>
 </body>
 </html>
-
-
