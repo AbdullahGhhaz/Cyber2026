@@ -279,7 +279,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
 .login-input-wrap{position:relative;display:flex;align-items:center;}
 .login-input{background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.88rem;padding:.6rem 2.4rem .6rem 1rem;outline:none;width:100%;}
 .login-input:focus{border-color:var(--accent);}
-.login-eye{position:absolute;right:10px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:.9rem;padding:2px;transition:color .2s;line-height:1;}
+.login-eye{position:absolute;right:8px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.1rem;padding:6px;transition:color .2s;line-height:1;z-index:2;-webkit-tap-highlight-color:transparent;}
 .login-eye:hover{color:var(--text2);}
 .login-btn{background:var(--accent2);color:#000;border:none;border-radius:8px;padding:.62rem;font-weight:700;font-family:var(--mono);font-size:.82rem;cursor:pointer;letter-spacing:.06em;transition:all .2s;}
 .login-btn:hover{opacity:.85;}
@@ -327,7 +327,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
   <div class="logo"><div class="logo-dot"></div>EKSAMEN PREP</div>
 
   <!-- NORMAL LOGIN -->
-  <div class="login-box" id="loginBox">
+  <div class="login-box" id="loginBox" style="display:flex;flex-direction:column;">
     <div class="login-title">Log ind</div>
     <div class="login-sub">Skriv dine loginoplysninger</div>
     <input id="loginUsername" class="login-input" type="text" placeholder="Brugernavn  (tomt = admin)">
