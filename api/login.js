@@ -35,8 +35,8 @@ function validateUsername(u) {
 
 function validatePassword(p) {
   if (!p || typeof p !== 'string') return 'Adgangskode mangler';
-  if (p.length < 4) return 'Adgangskode skal være mindst 4 tegn';
-  if (p.length > 128) return 'Adgangskode er for lang';
+  if (p.length < 6) return 'Adgangskode skal være mindst 6 tegn';
+  if (p.length > 26) return 'Adgangskode må maks være 26 tegn';
   if (DANGEROUS_RE.test(p)) return 'Ugyldige tegn i adgangskode';
   return null;
 }
