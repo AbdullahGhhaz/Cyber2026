@@ -333,7 +333,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
     <input id="loginUsername" class="login-input" type="text" placeholder="Brugernavn  (tomt = admin)">
     <div class="login-input-wrap">
       <input id="loginPassword" class="login-input" type="password" placeholder="Adgangskode">
-      <button type="button" class="login-eye" onclick="toggleEye('loginPassword','eyeLogin')" title="Vis/skjul adgangskode"><span id="eyeLogin">👁</span></button>
+      <button type="button" class="login-eye" onclick="toggleEye('loginPassword','eyeLogin')" title="Vis/skjul"><span id="eyeLogin">👁</span></button>
     </div>
     <div id="loginError" class="login-error"></div>
     <button class="login-btn" onclick="doLogin()">LOG IND</button>
@@ -346,11 +346,11 @@ body.admin-active .quiz-admin-actions{display:flex;}
     <input id="regUsername" class="login-input" type="text" placeholder="Vælg et brugernavn" oninput="clearRegError()">
     <div class="login-input-wrap">
       <input id="regPassword" class="login-input" type="password" placeholder="Adgangskode (6-26 tegn)" oninput="checkPwMatch()">
-      <button type="button" class="login-eye" onclick="toggleEye('regPassword','eyeReg1')" title="Vis/skjul adgangskode"><span id="eyeReg1">👁</span></button>
+      <button type="button" class="login-eye" onclick="toggleEye('regPassword','eyeReg1')" title="Vis/skjul"><span id="eyeReg1">👁</span></button>
     </div>
     <div class="login-input-wrap">
       <input id="regPassword2" class="login-input" type="password" placeholder="Gentag adgangskode" oninput="checkPwMatch()">
-      <button type="button" class="login-eye" onclick="toggleEye('regPassword2','eyeReg2')" title="Vis/skjul adgangskode"><span id="eyeReg2">👁</span></button>
+      <button type="button" class="login-eye" onclick="toggleEye('regPassword2','eyeReg2')" title="Vis/skjul"><span id="eyeReg2">👁</span></button>
     </div>
     <div id="pwMatch" class="pw-match"></div>
     <div id="regError" class="login-error"></div>
@@ -358,7 +358,6 @@ body.admin-active .quiz-admin-actions{display:flex;}
     <button class="login-btn secondary" onclick="showLoginBox()">← Tilbage til login</button>
   </div>
 </div>
-
 <!-- ADMIN BRUGER-PANEL -->
 <div class="admin-panel hidden" id="adminPanel">
   <div class="admin-box">
