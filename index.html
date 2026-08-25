@@ -270,26 +270,14 @@ body.admin-active .quiz-admin-actions{display:flex;}
 /* ── LOGIN ── */
 #loginOverlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:1.5rem;}
 #loginOverlay.hidden{display:none;}
-.login-box{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:2rem 2.5rem;display:flex;flex-direction:column;gap:.85rem;min-width:300px;max-width:400px;width:90%;}
+.login-box{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:2rem 2.5rem;display:flex;flex-direction:column;gap:1rem;min-width:300px;max-width:380px;width:90%;}
 .login-title{font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--accent2);text-align:center;}
 .login-sub{font-size:.78rem;color:var(--muted);text-align:center;}
-.login-tabs{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:3px;gap:3px;}
-.login-tab{flex:1;padding:6px;border:none;background:transparent;color:var(--text2);font-family:var(--sans);font-size:.78rem;font-weight:500;border-radius:5px;cursor:pointer;transition:all .2s;}
-.login-tab.active{background:var(--accent);color:#fff;}
-.login-input-wrap{position:relative;display:flex;align-items:center;}
-.login-input{background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.88rem;padding:.6rem 2.4rem .6rem 1rem;outline:none;width:100%;}
+.login-input{background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.88rem;padding:.6rem 1rem;outline:none;width:100%;}
 .login-input:focus{border-color:var(--accent);}
-.login-eye{position:absolute;right:8px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.1rem;padding:6px;transition:color .2s;line-height:1;z-index:2;-webkit-tap-highlight-color:transparent;user-select:none;}.login-eye span{pointer-events:none;}
-.login-eye:hover{color:var(--text2);}
-.login-btn{background:var(--accent2);color:#000;border:none;border-radius:8px;padding:.62rem;font-weight:700;font-family:var(--mono);font-size:.82rem;cursor:pointer;letter-spacing:.06em;transition:all .2s;}
+.login-btn{background:var(--accent2);color:#000;border:none;border-radius:8px;padding:.62rem;font-weight:700;font-family:var(--mono);font-size:.82rem;cursor:pointer;letter-spacing:.06em;transition:opacity .2s;}
 .login-btn:hover{opacity:.85;}
-.login-btn.secondary{background:transparent;border:1px solid var(--border);color:var(--text2);}
-.login-btn.secondary:hover{border-color:var(--accent);color:var(--accent2);opacity:1;}
 .login-error{color:var(--danger);font-size:.73rem;text-align:center;min-height:1em;}
-.login-success{color:var(--success);font-size:.73rem;text-align:center;}
-.pw-match{font-size:.7rem;margin-top:-4px;}
-.pw-match.ok{color:var(--success);}
-.pw-match.no{color:var(--danger);}
 
 /* ── MOBILOPTIMERING ── */
 .mobile-nav{display:none;}
@@ -325,39 +313,16 @@ body.admin-active .quiz-admin-actions{display:flex;}
 <!-- LOGIN -->
 <div id="loginOverlay">
   <div class="logo"><div class="logo-dot"></div>EKSAMEN PREP</div>
-
-  <!-- NORMAL LOGIN -->
-  <div class="login-box" id="loginBox" style="display:flex;flex-direction:column;">
+  <div class="login-box">
     <div class="login-title">Log ind</div>
     <div class="login-sub">Skriv dine loginoplysninger</div>
-    <input id="loginUsername" class="login-input" type="text" placeholder="Brugernavn  (tomt = admin)">
-    <div class="login-input-wrap">
-      <input id="loginPassword" class="login-input" type="password" placeholder="Adgangskode">
-      <button type="button" class="login-eye" data-target="loginPassword" title="Vis/skjul adgangskode"><span id="eyeLogin">👁</span></button>
-    </div>
+    <input id="loginUsername" class="login-input" type="text" placeholder="Brugernavn (tom = admin-adgangskode)">
+    <input id="loginPassword" class="login-input" type="password" placeholder="Adgangskode">
     <div id="loginError" class="login-error"></div>
     <button class="login-btn" onclick="doLogin()">LOG IND</button>
   </div>
-
-  <!-- REGISTRERING via invite -->
-  <div class="login-box" id="registerBox" style="display:none;">
-    <div class="login-title">Opret konto</div>
-    <div class="login-sub" id="inviteStatus" style="color:var(--success);">Validerer link...</div>
-    <input id="regUsername" class="login-input" type="text" placeholder="Vælg et brugernavn" oninput="clearRegError()">
-    <div class="login-input-wrap">
-      <input id="regPassword" class="login-input" type="password" placeholder="Adgangskode (6-26 tegn)" oninput="checkPwMatch()">
-      <button type="button" class="login-eye" data-target="regPassword" title="Vis/skjul adgangskode"><span id="eyeReg1">👁</span></button>
-    </div>
-    <div class="login-input-wrap">
-      <input id="regPassword2" class="login-input" type="password" placeholder="Gentag adgangskode" oninput="checkPwMatch()">
-      <button type="button" class="login-eye" data-target="regPassword2" title="Vis/skjul adgangskode"><span id="eyeReg2">👁</span></button>
-    </div>
-    <div id="pwMatch" class="pw-match"></div>
-    <div id="regError" class="login-error"></div>
-    <button class="login-btn" id="regBtn" onclick="doRegister()">OPRET KONTO</button>
-    <button class="login-btn secondary" onclick="showLoginBox()">← Tilbage til login</button>
-  </div>
 </div>
+
 <!-- ADMIN BRUGER-PANEL -->
 <div class="admin-panel hidden" id="adminPanel">
   <div class="admin-box">
@@ -608,81 +573,9 @@ function mobileNav(tab){
 }
 
 // ── LOGIN ──────────────────────────────────────────────────
-// ── LOGIN HELPERS ──────────────────────────────────────────
-let currentInviteToken = null;
-
-function showLoginBox(){
-  document.getElementById('loginBox').style.display='flex';
-  document.getElementById('registerBox').style.display='none';
-}
-
-function toggleEye(inputId,iconId){
-  const inp=document.getElementById(inputId);
-  const ico=document.getElementById(iconId);
-  if(!inp||!ico)return;
-  if(inp.type==='password'){inp.type='text';ico.textContent='🙈';}
-  else{inp.type='password';ico.textContent='👁';}
-}
-// Sæt øje-knapper op via JS (mere robust end inline onclick)
-function setupEyeButtons(){
-  document.querySelectorAll('.login-eye').forEach(btn=>{
-    btn.addEventListener('mousedown',function(e){
-      e.preventDefault();// forhindrer at input mister fokus
-      const inp=document.getElementById(this.dataset.target);
-      const ico=this.querySelector('span');
-      if(!inp||!ico)return;
-      if(inp.type==='password'){inp.type='text';ico.textContent='🙈';}
-      else{inp.type='password';ico.textContent='👁';}
-    });
-  });
-}
-
-function checkPwMatch(){
-  const p1=document.getElementById('regPassword').value;
-  const p2=document.getElementById('regPassword2').value;
-  const el=document.getElementById('pwMatch');
-  if(!p2){el.textContent='';return;}
-  if(p1===p2){el.textContent='✓ Adgangskoderne matcher';el.className='pw-match ok';}
-  else{el.textContent='✗ Adgangskoderne er ikke ens';el.className='pw-match no';}
-}
-
-function clearRegError(){document.getElementById('regError').textContent='';}
-
-async function checkInviteFromUrl(){
-  const params=new URLSearchParams(window.location.search);
-  const token=params.get('invite');
-  if(!token)return;
-  document.getElementById('loginBox').style.display='none';
-  document.getElementById('registerBox').style.display='flex';
-  const statusEl=document.getElementById('inviteStatus');
-  statusEl.textContent='Validerer invitationslink...';
-  statusEl.style.color='var(--text2)';
-  document.getElementById('regBtn').disabled=true;
-  try{
-    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkInvite',token})});
-    const d=await r.json();
-    if(d.valid){
-      currentInviteToken=token;
-      statusEl.textContent='✓ Gyldigt invitationslink — opret din konto';
-      statusEl.style.color='var(--success)';
-      document.getElementById('regBtn').disabled=false;
-      window.history.replaceState({},'',window.location.pathname);
-    } else {
-      statusEl.textContent='✗ '+(d.error||'Ugyldigt link');
-      statusEl.style.color='var(--danger)';
-      document.getElementById('regBtn').disabled=true;
-      setTimeout(()=>showLoginBox(),3000);
-    }
-  } catch(e){
-    statusEl.textContent='Fejl ved validering';
-    statusEl.style.color='var(--danger)';
-    setTimeout(()=>showLoginBox(),3000);
-  }
-}
-
 async function doLogin(){
   const username=document.getElementById('loginUsername').value.trim();
-  const password=document.getElementById('loginPassword').value;
+  const password=document.getElementById('loginPassword').value.trim();
   const err=document.getElementById('loginError');
   if(!password){err.textContent='Skriv adgangskode';return;}
   try{
@@ -690,10 +583,13 @@ async function doLogin(){
     const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d=await r.json();
     if(r.ok){
-      isAdmin=d.role==='admin';currentUserId=d.userId||null;
-      sessionStorage.setItem('authRole',d.role);sessionStorage.setItem('authName',d.displayName||'Bruger');
+      isAdmin=d.role==='admin';
+      currentUserId=d.userId||null;
+      sessionStorage.setItem('authRole',d.role);
+      sessionStorage.setItem('authName',d.displayName||'Bruger');
       if(d.userId)sessionStorage.setItem('authUserId',d.userId);
-      document.getElementById('loginOverlay').classList.add('hidden');err.textContent='';
+      document.getElementById('loginOverlay').classList.add('hidden');
+      err.textContent='';
       afterLogin(d.role,d.displayName||'Admin');
     } else {
       err.textContent=d.error||'Forkert login';
@@ -702,114 +598,34 @@ async function doLogin(){
   } catch(e){err.textContent='Fejl: '+e.message;}
 }
 
-async function doRegister(){
-  if(!currentInviteToken){document.getElementById('regError').textContent='Intet gyldigt invitationslink';return;}
-  const username=document.getElementById('regUsername').value.trim();
-  const password=document.getElementById('regPassword').value;
-  const password2=document.getElementById('regPassword2').value;
-  const err=document.getElementById('regError');
-  if(!username){err.textContent='Skriv et brugernavn';return;}
-  if(!password){err.textContent='Skriv en adgangskode';return;}
-  if(password!==password2){err.textContent='Adgangskoderne er ikke ens';return;}
-  const btn=document.getElementById('regBtn');
-  btn.disabled=true;btn.textContent='OPRETTER...';
-  try{
-    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'register',newUsername:username,newPassword:password,inviteToken:currentInviteToken})});
-    const d=await r.json();
-    if(r.ok){
-      isAdmin=false;currentUserId=d.userId||null;
-      sessionStorage.setItem('authRole',d.role);sessionStorage.setItem('authName',d.displayName||username);
-      if(d.userId)sessionStorage.setItem('authUserId',d.userId);
-      document.getElementById('loginOverlay').classList.add('hidden');
-      afterLogin(d.role,d.displayName||username);
-      showToast('✓ Konto oprettet! Velkommen, '+username,'success');
-    } else {
-      err.textContent=d.error||'Kunne ikke oprette konto';
-      btn.disabled=false;btn.textContent='OPRET KONTO';
-    }
-  } catch(e){err.textContent='Fejl: '+e.message;btn.disabled=false;btn.textContent='OPRET KONTO';}
-}
-
-// ── ADMIN: INVITE-LINKS ────────────────────────────────────
-async function createInvite(){
-  const adminPass=sessionStorage.getItem('adminPass');if(!adminPass)return;
-  const hours=parseInt(document.getElementById('inviteExpiry').value);
-  try{
-    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'createInvite',adminPassword:adminPass,expiresHours:hours})});
-    const d=await r.json();
-    if(r.ok){
-      const link=window.location.origin+window.location.pathname+'?invite='+d.token;
-      document.getElementById('inviteLinkText').textContent=link;
-      document.getElementById('inviteResult').style.display='block';
-      loadInvites();
-    } else showToast(d.error||'Fejl','error');
-  } catch(e){showToast('Fejl: '+e.message,'error');}
-}
-
-function copyInviteLink(){
-  const text=document.getElementById('inviteLinkText').textContent;
-  navigator.clipboard.writeText(text).then(()=>showToast('✓ Link kopieret!','success'));
-}
-
-async function loadInvites(){
-  const adminPass=sessionStorage.getItem('adminPass');if(!adminPass)return;
-  try{
-    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'listInvites',adminPassword:adminPass})});
-    const d=await r.json();
-    if(r.ok)renderInvites(d.invites);
-  } catch(e){}
-}
-
-function renderInvites(invites){
-  const el=document.getElementById('inviteList');
-  if(!invites||!invites.length){el.innerHTML='<div class="empty-docs">Ingen links endnu</div>';return;}
-  const now=new Date();
-  el.innerHTML=invites.map(inv=>{
-    const expires=new Date(inv.expires_at);
-    const expired=expires<now;
-    const used=!!inv.used_at;
-    const status=used?'✓ Brugt af '+esc(inv.used_by||'?'):expired?'⏰ Udløbet':'🟢 Aktiv';
-    const color=used?'var(--success)':expired?'var(--danger)':'var(--warn)';
-    const shortToken=inv.token.substring(0,12)+'...';
-    const copyBtn=(!used&&!expired)?`<button class="admin-mini-btn" onclick="copyInviteById(this)" data-token="${esc(inv.token)}">📋</button>`:'';
-    const delBtn=`<button class="admin-mini-btn del" onclick="deleteInvite(this)" data-id="${esc(inv.id)}">🗑</button>`;
-    return `<div class="user-row${used||expired?' user-inactive':''}">
-      <div class="user-row-info">
-        <div class="user-row-name" style="font-family:var(--mono);font-size:.72rem;">${shortToken}</div>
-        <div class="user-row-meta" style="color:${color}">${status} · Udløber ${expires.toLocaleDateString('da-DK',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
-      </div>
-      <div class="user-row-actions">${copyBtn}${delBtn}</div>
-    </div>`;
-  }).join('');
-}
-
-function copyInviteById(btn){
-  const token=btn.dataset.token;
-  const link=window.location.origin+window.location.pathname+'?invite='+token;
-  navigator.clipboard.writeText(link).then(()=>showToast('✓ Link kopieret!','success'));
-}
-
-async function deleteInvite(btn){
-  const inviteId=btn.dataset.id;
-  const adminPass=sessionStorage.getItem('adminPass');if(!adminPass)return;
-  await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'deleteInvite',adminPassword:adminPass,inviteId})});
-  showToast('Link slettet','success');loadInvites();
+function afterLogin(role,name){
+  const chip=document.getElementById('userChip');
+  document.getElementById('userDisplayName').textContent=name;
+  chip.style.display='flex';
+  if(role==='admin'){
+    document.body.classList.add('admin-active');
+    document.getElementById('headerAdminBadge').style.display='inline';
+    document.getElementById('adminPanelBtn').style.display='inline-block';
+    document.getElementById('uploadZone').style.display='block';
+    document.getElementById('sidebarSaved').style.display='block';
+  } else {
+    document.getElementById('sidebarSaved').style.display='block';
+  }
+  loadData();
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
-  setupEyeButtons();
-  document.getElementById('loginUsername').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-  document.getElementById('loginPassword').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-  document.getElementById('regPassword2') && document.getElementById('regPassword2').addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});
+  ['loginUsername','loginPassword'].forEach(id=>
+    document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();})
+  );
   const r=sessionStorage.getItem('authRole');
   const n=sessionStorage.getItem('authName')||'Bruger';
   const uid=sessionStorage.getItem('authUserId');
   if(r){
-    isAdmin=r==='admin';currentUserId=uid||null;
+    isAdmin=r==='admin';
+    currentUserId=uid||null;
     document.getElementById('loginOverlay').classList.add('hidden');
     afterLogin(r,n);
-  } else {
-    checkInviteFromUrl();
   }
   document.getElementById('docItems') && _docObs.observe(document.getElementById('docItems'),{childList:true,subtree:true});
 });
@@ -830,7 +646,6 @@ async function loadUsers(){
     const d=await r.json();
     if(!r.ok){showToast(d.error||'Fejl','error');return;}
     renderUsers(d.users);
-    loadInvites();
   } catch(e){showToast('Fejl: '+e.message,'error');}
 }
 
