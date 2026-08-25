@@ -279,7 +279,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
 .login-input-wrap{position:relative;display:flex;align-items:center;}
 .login-input{background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.88rem;padding:.6rem 2.4rem .6rem 1rem;outline:none;width:100%;}
 .login-input:focus{border-color:var(--accent);}
-.login-eye{position:absolute;right:8px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.1rem;padding:6px;transition:color .2s;line-height:1;z-index:2;-webkit-tap-highlight-color:transparent;}
+.login-eye{position:absolute;right:8px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.1rem;padding:6px;transition:color .2s;line-height:1;z-index:2;-webkit-tap-highlight-color:transparent;user-select:none;}.login-eye span{pointer-events:none;}
 .login-eye:hover{color:var(--text2);}
 .login-btn{background:var(--accent2);color:#000;border:none;border-radius:8px;padding:.62rem;font-weight:700;font-family:var(--mono);font-size:.82rem;cursor:pointer;letter-spacing:.06em;transition:all .2s;}
 .login-btn:hover{opacity:.85;}
@@ -333,7 +333,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
     <input id="loginUsername" class="login-input" type="text" placeholder="Brugernavn  (tomt = admin)">
     <div class="login-input-wrap">
       <input id="loginPassword" class="login-input" type="password" placeholder="Adgangskode">
-      <button type="button" class="login-eye" onclick="toggleEye('loginPassword','eyeLogin')" title="Vis/skjul"><span id="eyeLogin">👁</span></button>
+      <button type="button" class="login-eye" data-target="loginPassword" title="Vis/skjul adgangskode"><span id="eyeLogin">👁</span></button>
     </div>
     <div id="loginError" class="login-error"></div>
     <button class="login-btn" onclick="doLogin()">LOG IND</button>
@@ -346,11 +346,11 @@ body.admin-active .quiz-admin-actions{display:flex;}
     <input id="regUsername" class="login-input" type="text" placeholder="Vælg et brugernavn" oninput="clearRegError()">
     <div class="login-input-wrap">
       <input id="regPassword" class="login-input" type="password" placeholder="Adgangskode (6-26 tegn)" oninput="checkPwMatch()">
-      <button type="button" class="login-eye" onclick="toggleEye('regPassword','eyeReg1')" title="Vis/skjul"><span id="eyeReg1">👁</span></button>
+      <button type="button" class="login-eye" data-target="regPassword" title="Vis/skjul adgangskode"><span id="eyeReg1">👁</span></button>
     </div>
     <div class="login-input-wrap">
       <input id="regPassword2" class="login-input" type="password" placeholder="Gentag adgangskode" oninput="checkPwMatch()">
-      <button type="button" class="login-eye" onclick="toggleEye('regPassword2','eyeReg2')" title="Vis/skjul"><span id="eyeReg2">👁</span></button>
+      <button type="button" class="login-eye" data-target="regPassword2" title="Vis/skjul adgangskode"><span id="eyeReg2">👁</span></button>
     </div>
     <div id="pwMatch" class="pw-match"></div>
     <div id="regError" class="login-error"></div>
@@ -619,8 +619,22 @@ function showLoginBox(){
 function toggleEye(inputId,iconId){
   const inp=document.getElementById(inputId);
   const ico=document.getElementById(iconId);
+  if(!inp||!ico)return;
   if(inp.type==='password'){inp.type='text';ico.textContent='🙈';}
   else{inp.type='password';ico.textContent='👁';}
+}
+// Sæt øje-knapper op via JS (mere robust end inline onclick)
+function setupEyeButtons(){
+  document.querySelectorAll('.login-eye').forEach(btn=>{
+    btn.addEventListener('mousedown',function(e){
+      e.preventDefault();// forhindrer at input mister fokus
+      const inp=document.getElementById(this.dataset.target);
+      const ico=this.querySelector('span');
+      if(!inp||!ico)return;
+      if(inp.type==='password'){inp.type='text';ico.textContent='🙈';}
+      else{inp.type='password';ico.textContent='👁';}
+    });
+  });
 }
 
 function checkPwMatch(){
@@ -781,6 +795,7 @@ async function deleteInvite(inviteId){
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
+  setupEyeButtons();
   document.getElementById('loginUsername').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
   document.getElementById('loginPassword').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
   document.getElementById('regPassword2') && document.getElementById('regPassword2').addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});
