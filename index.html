@@ -766,29 +766,31 @@ function renderInvites(invites){
   const now=new Date();
   el.innerHTML=invites.map(inv=>{
     const expires=new Date(inv.expires_at);
-    const expired=expires<now;const used=!!inv.used_at;
+    const expired=expires<now;
+    const used=!!inv.used_at;
     const status=used?'✓ Brugt af '+esc(inv.used_by||'?'):expired?'⏰ Udløbet':'🟢 Aktiv';
     const color=used?'var(--success)':expired?'var(--danger)':'var(--warn)';
     const shortToken=inv.token.substring(0,12)+'...';
-    return '<div class="user-row'+(used||expired?' user-inactive':'')+'">'+
-      '<div class="user-row-info">'+
-        '<div class="user-row-name" style="font-family:var(--mono);font-size:.72rem;">'+shortToken+'</div>'+
-        '<div class="user-row-meta" style="color:'+color+'">'+status+' · Udløber '+expires.toLocaleDateString('da-DK',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+'</div>'+
-      '</div>'+
-      '<div class="user-row-actions">'+
-        (!used&&!expired?'<button class="admin-mini-btn" onclick="copyInviteById(''+esc(inv.token)+'')">📋</button>':'')+
-        '<button class="admin-mini-btn del" onclick="deleteInvite(''+esc(inv.id)+'')">🗑</button>'+
-      '</div>'+
-    '</div>';
+    const copyBtn=(!used&&!expired)?`<button class="admin-mini-btn" onclick="copyInviteById(this)" data-token="${esc(inv.token)}">📋</button>`:'';
+    const delBtn=`<button class="admin-mini-btn del" onclick="deleteInvite(this)" data-id="${esc(inv.id)}">🗑</button>`;
+    return `<div class="user-row${used||expired?' user-inactive':''}">
+      <div class="user-row-info">
+        <div class="user-row-name" style="font-family:var(--mono);font-size:.72rem;">${shortToken}</div>
+        <div class="user-row-meta" style="color:${color}">${status} · Udløber ${expires.toLocaleDateString('da-DK',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+      <div class="user-row-actions">${copyBtn}${delBtn}</div>
+    </div>`;
   }).join('');
 }
 
-function copyInviteById(token){
+function copyInviteById(btn){
+  const token=btn.dataset.token;
   const link=window.location.origin+window.location.pathname+'?invite='+token;
   navigator.clipboard.writeText(link).then(()=>showToast('✓ Link kopieret!','success'));
 }
 
-async function deleteInvite(inviteId){
+async function deleteInvite(btn){
+  const inviteId=btn.dataset.id;
   const adminPass=sessionStorage.getItem('adminPass');if(!adminPass)return;
   await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'deleteInvite',adminPassword:adminPass,inviteId})});
   showToast('Link slettet','success');loadInvites();
