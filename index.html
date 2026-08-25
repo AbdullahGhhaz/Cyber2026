@@ -325,45 +325,37 @@ body.admin-active .quiz-admin-actions{display:flex;}
 <!-- LOGIN -->
 <div id="loginOverlay">
   <div class="logo"><div class="logo-dot"></div>EKSAMEN PREP</div>
-  <div class="login-box">
-    <div class="login-title" id="loginTitle">Log ind</div>
 
-    <!-- Tabs: Log ind / Opret konto -->
-    <div class="login-tabs">
-      <button class="login-tab active" onclick="switchLoginTab('login')">Log ind</button>
-      <button class="login-tab" onclick="switchLoginTab('register')">Opret konto</button>
+  <!-- NORMAL LOGIN -->
+  <div class="login-box" id="loginBox">
+    <div class="login-title">Log ind</div>
+    <div class="login-sub">Skriv dine loginoplysninger</div>
+    <input id="loginUsername" class="login-input" type="text" placeholder="Brugernavn  (tomt = admin)">
+    <div class="login-input-wrap">
+      <input id="loginPassword" class="login-input" type="password" placeholder="Adgangskode">
+      <button type="button" class="login-eye" onclick="toggleEye('loginPassword','eyeLogin')" title="Vis/skjul adgangskode"><span id="eyeLogin">👁</span></button>
     </div>
+    <div id="loginError" class="login-error"></div>
+    <button class="login-btn" onclick="doLogin()">LOG IND</button>
+  </div>
 
-    <!-- LOG IND -->
-    <div id="tabLogin">
-      <div style="display:flex;flex-direction:column;gap:.85rem;">
-        <input id="loginUsername" class="login-input" type="text" placeholder="Brugernavn  (eller tomt for admin)">
-        <div class="login-input-wrap">
-          <input id="loginPassword" class="login-input" type="password" placeholder="Adgangskode">
-          <button class="login-eye" onclick="toggleEye('loginPassword','eyeLogin')" title="Vis/skjul"><span id="eyeLogin">👁</span></button>
-        </div>
-        <div id="loginError" class="login-error"></div>
-        <button class="login-btn" onclick="doLogin()">LOG IND</button>
-      </div>
+  <!-- REGISTRERING via invite -->
+  <div class="login-box" id="registerBox" style="display:none;">
+    <div class="login-title">Opret konto</div>
+    <div class="login-sub" id="inviteStatus" style="color:var(--success);">Validerer link...</div>
+    <input id="regUsername" class="login-input" type="text" placeholder="Vælg et brugernavn" oninput="clearRegError()">
+    <div class="login-input-wrap">
+      <input id="regPassword" class="login-input" type="password" placeholder="Adgangskode (6-26 tegn)" oninput="checkPwMatch()">
+      <button type="button" class="login-eye" onclick="toggleEye('regPassword','eyeReg1')" title="Vis/skjul adgangskode"><span id="eyeReg1">👁</span></button>
     </div>
-
-    <!-- OPRET KONTO -->
-    <div id="tabRegister" style="display:none;">
-      <div style="display:flex;flex-direction:column;gap:.85rem;">
-        <input id="regUsername" class="login-input" type="text" placeholder="Vælg et brugernavn" oninput="clearRegError()">
-        <div class="login-input-wrap">
-          <input id="regPassword" class="login-input" type="password" placeholder="Vælg adgangskode (min. 4 tegn)" oninput="checkPwMatch()">
-          <button class="login-eye" onclick="toggleEye('regPassword','eyeReg1')" title="Vis/skjul"><span id="eyeReg1">👁</span></button>
-        </div>
-        <div class="login-input-wrap">
-          <input id="regPassword2" class="login-input" type="password" placeholder="Gentag adgangskode" oninput="checkPwMatch()">
-          <button class="login-eye" onclick="toggleEye('regPassword2','eyeReg2')" title="Vis/skjul"><span id="eyeReg2">👁</span></button>
-        </div>
-        <div id="pwMatch" class="pw-match"></div>
-        <div id="regError" class="login-error"></div>
-        <button class="login-btn" onclick="doRegister()">OPRET KONTO</button>
-      </div>
+    <div class="login-input-wrap">
+      <input id="regPassword2" class="login-input" type="password" placeholder="Gentag adgangskode" oninput="checkPwMatch()">
+      <button type="button" class="login-eye" onclick="toggleEye('regPassword2','eyeReg2')" title="Vis/skjul adgangskode"><span id="eyeReg2">👁</span></button>
     </div>
+    <div id="pwMatch" class="pw-match"></div>
+    <div id="regError" class="login-error"></div>
+    <button class="login-btn" id="regBtn" onclick="doRegister()">OPRET KONTO</button>
+    <button class="login-btn secondary" onclick="showLoginBox()">← Tilbage til login</button>
   </div>
 </div>
 
