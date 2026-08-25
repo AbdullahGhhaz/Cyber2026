@@ -270,14 +270,26 @@ body.admin-active .quiz-admin-actions{display:flex;}
 /* ── LOGIN ── */
 #loginOverlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:1.5rem;}
 #loginOverlay.hidden{display:none;}
-.login-box{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:2rem 2.5rem;display:flex;flex-direction:column;gap:1rem;min-width:300px;max-width:380px;width:90%;}
+.login-box{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:2rem 2.5rem;display:flex;flex-direction:column;gap:.85rem;min-width:300px;max-width:400px;width:90%;}
 .login-title{font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--accent2);text-align:center;}
 .login-sub{font-size:.78rem;color:var(--muted);text-align:center;}
-.login-input{background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.88rem;padding:.6rem 1rem;outline:none;width:100%;}
+.login-tabs{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:3px;gap:3px;}
+.login-tab{flex:1;padding:6px;border:none;background:transparent;color:var(--text2);font-family:var(--sans);font-size:.78rem;font-weight:500;border-radius:5px;cursor:pointer;transition:all .2s;}
+.login-tab.active{background:var(--accent);color:#fff;}
+.login-input-wrap{position:relative;display:flex;align-items:center;}
+.login-input{background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.88rem;padding:.6rem 2.4rem .6rem 1rem;outline:none;width:100%;}
 .login-input:focus{border-color:var(--accent);}
-.login-btn{background:var(--accent2);color:#000;border:none;border-radius:8px;padding:.62rem;font-weight:700;font-family:var(--mono);font-size:.82rem;cursor:pointer;letter-spacing:.06em;transition:opacity .2s;}
+.login-eye{position:absolute;right:10px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:.9rem;padding:2px;transition:color .2s;line-height:1;}
+.login-eye:hover{color:var(--text2);}
+.login-btn{background:var(--accent2);color:#000;border:none;border-radius:8px;padding:.62rem;font-weight:700;font-family:var(--mono);font-size:.82rem;cursor:pointer;letter-spacing:.06em;transition:all .2s;}
 .login-btn:hover{opacity:.85;}
+.login-btn.secondary{background:transparent;border:1px solid var(--border);color:var(--text2);}
+.login-btn.secondary:hover{border-color:var(--accent);color:var(--accent2);opacity:1;}
 .login-error{color:var(--danger);font-size:.73rem;text-align:center;min-height:1em;}
+.login-success{color:var(--success);font-size:.73rem;text-align:center;}
+.pw-match{font-size:.7rem;margin-top:-4px;}
+.pw-match.ok{color:var(--success);}
+.pw-match.no{color:var(--danger);}
 
 /* ── MOBILOPTIMERING ── */
 .mobile-nav{display:none;}
@@ -314,12 +326,44 @@ body.admin-active .quiz-admin-actions{display:flex;}
 <div id="loginOverlay">
   <div class="logo"><div class="logo-dot"></div>EKSAMEN PREP</div>
   <div class="login-box">
-    <div class="login-title">Log ind</div>
-    <div class="login-sub">Skriv dine loginoplysninger</div>
-    <input id="loginUsername" class="login-input" type="text" placeholder="Brugernavn (tom = admin-adgangskode)">
-    <input id="loginPassword" class="login-input" type="password" placeholder="Adgangskode">
-    <div id="loginError" class="login-error"></div>
-    <button class="login-btn" onclick="doLogin()">LOG IND</button>
+    <div class="login-title" id="loginTitle">Log ind</div>
+
+    <!-- Tabs: Log ind / Opret konto -->
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="switchLoginTab('login')">Log ind</button>
+      <button class="login-tab" onclick="switchLoginTab('register')">Opret konto</button>
+    </div>
+
+    <!-- LOG IND -->
+    <div id="tabLogin">
+      <div style="display:flex;flex-direction:column;gap:.85rem;">
+        <input id="loginUsername" class="login-input" type="text" placeholder="Brugernavn  (eller tomt for admin)">
+        <div class="login-input-wrap">
+          <input id="loginPassword" class="login-input" type="password" placeholder="Adgangskode">
+          <button class="login-eye" onclick="toggleEye('loginPassword','eyeLogin')" title="Vis/skjul"><span id="eyeLogin">👁</span></button>
+        </div>
+        <div id="loginError" class="login-error"></div>
+        <button class="login-btn" onclick="doLogin()">LOG IND</button>
+      </div>
+    </div>
+
+    <!-- OPRET KONTO -->
+    <div id="tabRegister" style="display:none;">
+      <div style="display:flex;flex-direction:column;gap:.85rem;">
+        <input id="regUsername" class="login-input" type="text" placeholder="Vælg et brugernavn" oninput="clearRegError()">
+        <div class="login-input-wrap">
+          <input id="regPassword" class="login-input" type="password" placeholder="Vælg adgangskode (min. 4 tegn)" oninput="checkPwMatch()">
+          <button class="login-eye" onclick="toggleEye('regPassword','eyeReg1')" title="Vis/skjul"><span id="eyeReg1">👁</span></button>
+        </div>
+        <div class="login-input-wrap">
+          <input id="regPassword2" class="login-input" type="password" placeholder="Gentag adgangskode" oninput="checkPwMatch()">
+          <button class="login-eye" onclick="toggleEye('regPassword2','eyeReg2')" title="Vis/skjul"><span id="eyeReg2">👁</span></button>
+        </div>
+        <div id="pwMatch" class="pw-match"></div>
+        <div id="regError" class="login-error"></div>
+        <button class="login-btn" onclick="doRegister()">OPRET KONTO</button>
+      </div>
+    </div>
   </div>
 </div>
 
