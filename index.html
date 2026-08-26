@@ -277,7 +277,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
 .login-input:focus{border-color:var(--accent);}
 .login-btn{background:var(--accent2);color:#000;border:none;border-radius:8px;padding:.62rem;font-weight:700;font-family:var(--mono);font-size:.82rem;cursor:pointer;letter-spacing:.06em;transition:opacity .2s;}
 .login-btn:hover{opacity:.85;}
-.login-error{color:var(--danger);font-size:.73rem;text-align:center;min-height:1em;}
+.login-error{color:var(--danger);font-size:.73rem;text-align:center;min-height:1em;}.login-btn.secondary{background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:.62rem;font-weight:600;font-family:var(--mono);font-size:.82rem;cursor:pointer;width:100%;transition:all .2s;}.pw-match{font-size:.7rem;margin-top:-4px;text-align:center;}.pw-match.ok{color:var(--success);}.pw-match.no{color:var(--danger);}
 
 /* ── MOBILOPTIMERING ── */
 .mobile-nav{display:none;}
@@ -313,13 +313,24 @@ body.admin-active .quiz-admin-actions{display:flex;}
 <!-- LOGIN -->
 <div id="loginOverlay">
   <div class="logo"><div class="logo-dot"></div>EKSAMEN PREP</div>
-  <div class="login-box">
+  <div class="login-box" id="loginBox">
     <div class="login-title">Log ind</div>
     <div class="login-sub">Skriv dine loginoplysninger</div>
-    <input id="loginUsername" class="login-input" type="text" placeholder="Brugernavn (tom = admin-adgangskode)">
+    <input id="loginUsername" class="login-input" type="text" placeholder="Brugernavn  (tomt = admin)">
     <input id="loginPassword" class="login-input" type="password" placeholder="Adgangskode">
     <div id="loginError" class="login-error"></div>
     <button class="login-btn" onclick="doLogin()">LOG IND</button>
+  </div>
+  <div class="login-box" id="registerBox" style="display:none;flex-direction:column;gap:.85rem;">
+    <div class="login-title">Opret konto</div>
+    <div class="login-sub" id="inviteStatus">Validerer link...</div>
+    <input id="regUsername" class="login-input" type="text" placeholder="Vælg brugernavn (2-30 tegn)">
+    <input id="regPassword" class="login-input" type="password" placeholder="Adgangskode (6-26 tegn)" oninput="checkPwMatch()">
+    <input id="regPassword2" class="login-input" type="password" placeholder="Gentag adgangskode" oninput="checkPwMatch()">
+    <div id="pwMatch" class="pw-match"></div>
+    <div id="regError" class="login-error"></div>
+    <button class="login-btn" id="regBtn" onclick="doRegister()" disabled>OPRET KONTO</button>
+    <button class="login-btn secondary" onclick="showLoginBox()">Tilbage til login</button>
   </div>
 </div>
 
@@ -351,6 +362,12 @@ body.admin-active .quiz-admin-actions{display:flex;}
       <div class="admin-section">
         <div class="admin-section-title">Brugere</div>
         <div class="user-list" id="userList"><div class="empty-docs">Indlæser...</div></div>
+      </div>
+      <div class="admin-section">
+        <div class="admin-section-title">Invitationslinks</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;"><select class="admin-select" id="inviteExpiry"><option value="24">24 timer</option><option value="48" selected>48 timer</option><option value="168">7 dage</option></select><button class="admin-btn" onclick="createInvite()">Generer link</button></div>
+        <div id="inviteResult" style="display:none;margin-bottom:10px;"><div style="background:var(--bg2);border:1px solid var(--success);border-radius:8px;padding:10px 12px;"><div style="font-size:.68rem;color:var(--success);margin-bottom:5px;">KOPIÉR OG SEND</div><div style="display:flex;align-items:center;gap:8px;"><code id="inviteLinkText" style="flex:1;font-size:.66rem;color:var(--text2);word-break:break-all;font-family:var(--mono);"></code><button class="admin-btn" onclick="copyInviteLink()">Kopiér</button></div></div></div>
+        <div class="user-list" id="inviteList"><div class="empty-docs">Ingen links endnu</div></div>
       </div>
     </div>
   </div>
@@ -614,6 +631,15 @@ function afterLogin(role,name){
   loadData();
 }
 
+var currentInviteToken=null;
+function showLoginBox(){document.getElementById('loginBox').style.display='flex';document.getElementById('registerBox').style.display='none';}
+function checkPwMatch(){var p1=document.getElementById('regPassword').value,p2=document.getElementById('regPassword2').value,el=document.getElementById('pwMatch');if(!p2){el.textContent='';el.className='pw-match';return;}if(p1===p2){el.textContent='Matcher';el.className='pw-match ok';}else{el.textContent='Ikke ens';el.className='pw-match no';}}
+async function checkInviteFromUrl(){var token=new URLSearchParams(window.location.search).get('invite');if(!token)return;document.getElementById('loginBox').style.display='none';document.getElementById('registerBox').style.display='flex';var st=document.getElementById('inviteStatus');st.style.color='var(--text2)';st.textContent='Validerer...';document.getElementById('regBtn').disabled=true;try{var r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkInvite',token:token})});var d=await r.json();if(d.valid){currentInviteToken=token;st.textContent='Gyldigt - opret konto';st.style.color='var(--success)';document.getElementById('regBtn').disabled=false;window.history.replaceState({},'',window.location.pathname);}else{st.textContent=d.error||'Ugyldigt';st.style.color='var(--danger)';setTimeout(function(){showLoginBox();},3000);}}catch(e){st.textContent='Fejl';setTimeout(function(){showLoginBox();},3000);}}
+async function doRegister(){if(!currentInviteToken){document.getElementById('regError').textContent='Intet link';return;}var u=document.getElementById('regUsername').value.trim(),p=document.getElementById('regPassword').value,p2=document.getElementById('regPassword2').value,err=document.getElementById('regError');if(!u||u.length<2){err.textContent='Min. 2 tegn';return;}if(!p||p.length<6){err.textContent='Min. 6 tegn';return;}if(p.length>26){err.textContent='Maks 26 tegn';return;}if(p!==p2){err.textContent='Ikke ens';return;}var btn=document.getElementById('regBtn');btn.disabled=true;btn.textContent='OPRETTER...';try{var r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'register',newUsername:u,newPassword:p,inviteToken:currentInviteToken})});var d=await r.json();if(r.ok){isAdmin=false;currentUserId=d.userId||null;sessionStorage.setItem('authRole',d.role);sessionStorage.setItem('authName',d.displayName||u);if(d.userId)sessionStorage.setItem('authUserId',d.userId);document.getElementById('loginOverlay').classList.add('hidden');afterLogin(d.role,d.displayName||u);showToast('Konto oprettet! Velkommen, '+u,'success');}else{err.textContent=d.error||'Fejl';btn.disabled=false;btn.textContent='OPRET KONTO';}}catch(e){err.textContent='Fejl';btn.disabled=false;btn.textContent='OPRET KONTO';}}
+function createInvite(){var ap=sessionStorage.getItem('adminPass');if(!ap)return;var h=parseInt(document.getElementById('inviteExpiry').value);fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'createInvite',adminPassword:ap,expiresHours:h})}).then(function(r){return r.json();}).then(function(d){if(d.token){var link=window.location.origin+window.location.pathname+'?invite='+d.token;document.getElementById('inviteLinkText').textContent=link;document.getElementById('inviteResult').style.display='block';loadInviteList();}else showToast(d.error||'Fejl','error');});}
+function copyInviteLink(){navigator.clipboard.writeText(document.getElementById('inviteLinkText').textContent).then(function(){showToast('Kopieret!','success');});}
+function loadInviteList(){var ap=sessionStorage.getItem('adminPass');if(!ap)return;fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'listInvites',adminPassword:ap})}).then(function(r){return r.json();}).then(function(d){if(d.invites)renderInviteList(d.invites);});}
+function renderInviteList(invites){var el=document.getElementById('inviteList');if(!invites||!invites.length){el.innerHTML='<div class="empty-docs">Ingen links endnu</div>';return;}var now=new Date();el.innerHTML='';invites.forEach(function(inv){var exp=new Date(inv.expires_at),expired=exp<now,used=!!inv.used_at,row=document.createElement('div');row.className='user-row'+(used||expired?' user-inactive':'');var info=document.createElement('div');info.className='user-row-info';var nm=document.createElement('div');nm.className='user-row-name';nm.style.fontFamily='var(--mono)';nm.style.fontSize='.72rem';nm.textContent=inv.token.substring(0,16)+'...';var mt=document.createElement('div');mt.className='user-row-meta';mt.style.color=used?'var(--success)':expired?'var(--danger)':'var(--warn)';mt.textContent=(used?'Brugt af '+(inv.used_by||'?'):expired?'Udlobet':'Aktiv')+' - '+exp.toLocaleDateString('da-DK',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});info.appendChild(nm);info.appendChild(mt);row.appendChild(info);var ac=document.createElement('div');ac.className='user-row-actions';if(!used&&!expired){var cb=document.createElement('button');cb.className='admin-mini-btn';cb.textContent='Kopier';(function(t){cb.addEventListener('click',function(){navigator.clipboard.writeText(window.location.origin+window.location.pathname+'?invite='+t).then(function(){showToast('Kopieret!','success');});});})(inv.token);ac.appendChild(cb);}var db=document.createElement('button');db.className='admin-mini-btn del';db.textContent='Slet';(function(id){db.addEventListener('click',function(){var ap=sessionStorage.getItem('adminPass');if(!ap)return;fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'deleteInvite',adminPassword:ap,inviteId:id})}).then(function(){showToast('Slettet','success');loadInviteList();});});})(inv.id);ac.appendChild(db);row.appendChild(ac);el.appendChild(row);});}
 document.addEventListener('DOMContentLoaded',()=>{
   ['loginUsername','loginPassword'].forEach(id=>
     document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();})
@@ -626,6 +652,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     currentUserId=uid||null;
     document.getElementById('loginOverlay').classList.add('hidden');
     afterLogin(r,n);
+  } else {
+    checkInviteFromUrl();
   }
   document.getElementById('docItems') && _docObs.observe(document.getElementById('docItems'),{childList:true,subtree:true});
 });
@@ -646,6 +674,7 @@ async function loadUsers(){
     const d=await r.json();
     if(!r.ok){showToast(d.error||'Fejl','error');return;}
     renderUsers(d.users);
+    loadInviteList();
   } catch(e){showToast('Fejl: '+e.message,'error');}
 }
 
