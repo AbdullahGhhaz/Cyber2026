@@ -195,7 +195,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
 .wrong-ans .correct{color:var(--success);}
 
 /* ── MARKDOWN OUTPUT ── */
-.md-out{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px 28px;font-size:.88rem;line-height:1.8;color:var(--text);}
+.md-out{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px 28px;font-size:.88rem;line-height:1.8;color:var(--text);}#codeInput:focus{border-color:var(--accent)!important;}
 .md-out h1{font-size:1.25rem;font-weight:700;margin-bottom:12px;color:var(--accent2);border-bottom:1px solid var(--border);padding-bottom:7px;}
 .md-out h2{font-size:1rem;font-weight:600;margin:18px 0 7px;color:var(--text);}
 .md-out h3{font-size:.9rem;font-weight:600;margin:12px 0 5px;color:var(--text2);}
@@ -436,6 +436,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
         <div class="mode-tabs">
           <button class="mode-btn active" onclick="selectMode(this,'quiz')">🎯 Quiz</button>
           <button class="mode-btn" onclick="selectMode(this,'exam')">📝 Eksamen</button>
+          <button class="mode-btn" onclick="selectMode(this,'code')">💻 Øv dig</button>
           <button class="mode-btn" onclick="selectMode(this,'summary')">📋 Opsummering</button>
           <button class="mode-btn" onclick="selectMode(this,'explain')">💡 Forklaring</button>
         </div>
@@ -510,6 +511,30 @@ body.admin-active .quiz-admin-actions{display:flex;}
           </div>
           <button class="exam-start-btn" onclick="startExam()">🚀 Start eksamen</button>
           <div style="margin-top:10px;font-size:.75rem;color:var(--muted);">Under eksamen vises ingen feedback — resultater vises til sidst.</div>
+        </div>
+      </div>
+
+      <!-- KOD-ØVELSE -->
+      <div id="codeExercise" style="display:none;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+            <div style="font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;color:var(--accent2);text-transform:uppercase;">// kodeopgave</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span id="codeLangBadge" style="font-family:var(--mono);font-size:.65rem;background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:6px;"></span>
+              <button class="qsbtn" onclick="generateCodeExercise()" id="nextExerciseBtn" style="display:none;">Naeste opgave</button>
+            </div>
+          </div>
+          <div id="codeTask" style="font-size:.88rem;line-height:1.7;color:var(--text);margin-bottom:16px;padding:14px;background:var(--bg2);border-radius:8px;border-left:3px solid var(--accent);"></div>
+          <textarea id="codeInput" spellcheck="false" placeholder="Skriv din kode her..." style="width:100%;min-height:160px;background:#0d1117;color:#e6edf3;font-family:var(--mono);font-size:.82rem;line-height:1.6;padding:14px;border-radius:8px;border:1px solid var(--border);resize:vertical;outline:none;display:block;margin-bottom:12px;box-sizing:border-box;"></textarea>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button onclick="checkCodeAnswer()" style="background:var(--accent);border:none;color:#fff;padding:8px 22px;border-radius:8px;cursor:pointer;font-family:var(--mono);font-size:.72rem;font-weight:600;letter-spacing:.07em;transition:all .2s;">TJEK SVAR</button>
+            <button onclick="showHint()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:.78rem;">Hint</button>
+            <button onclick="generateCodeExercise()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:.78rem;">Ny opgave</button>
+          </div>
+          <div id="hintBox" style="display:none;margin-top:10px;padding:10px 14px;background:var(--bg2);border-left:3px solid var(--warn);border-radius:0 7px 7px 0;font-size:.8rem;color:var(--text2);line-height:1.55;font-family:var(--mono);"></div>
+        </div>
+        <div id="codeFeedback" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;">
+          <div id="codeFeedbackContent"></div>
         </div>
       </div>
 
@@ -650,6 +675,64 @@ function doLogout(){
   document.getElementById('loginError').textContent='';
 }
 
+var CODE_SUBJECTS=['Programmering','Scripting og automatisering','Computerarkitektur'];
+var currentCodeExercise=null;
+function isCodeSubject(s){return CODE_SUBJECTS.indexOf(s)>=0;}
+function getCodeLang(s){if(s==='Scripting og automatisering')return 'Bash/PowerShell';if(s==='Programmering')return 'Python/JS';if(s==='Computerarkitektur')return 'Assembly/C';return 'Kode';}
+function showHint(){var hb=document.getElementById('hintBox');hb.style.display=hb.style.display==='none'?'block':'none';}
+async function generateCodeExercise(){
+  var docs=allDocs[currentSubject]||[];
+  if(!docs.length){showToast('Upload mindst et dokument forst!','error');return;}
+  var parts='';docs.forEach(function(d){parts+='\n\n--- '+d.filename+' ---\n'+(d.content||'').slice(0,5000);});
+  document.getElementById('codeTask').innerHTML='<span style="color:var(--muted);font-family:var(--mono);font-size:.78rem;">Genererer opgave...</span>';
+  document.getElementById('codeFeedback').style.display='none';
+  document.getElementById('codeInput').value='';
+  document.getElementById('hintBox').style.display='none';
+  document.getElementById('nextExerciseBtn').style.display='none';
+  document.getElementById('codeLangBadge').textContent=getCodeLang(currentSubject);
+  document.getElementById('loading').classList.add('visible');
+  document.getElementById('loadingTxt').textContent='GENERERER KODEOPGAVE...';
+  var prompt='Du er eksamenshjælper for faget "'+currentSubject+'". Baseret på dette materiale:\n'+parts+'\n\n---\nLav EN praktisk kodeopgave pa dansk. Svar KUN med JSON uden tekst udenfor:\n{"task":"Opgavebeskrivelse (2-4 saetninger, konkret)","language":"bash/powershell/python/js/andet","hint":"Hjalpsomt hint uden at afsloere svar","solution":"Korrekt model-losning (kun kode)","explanation":"Kort forklaring af losningen"}\nKrav: Opgaven loeses pa 5-15 linjer, praktisk og baseret pa materialet.';
+  try{
+    var r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt,mode:'explain'})});
+    var d=await r.json();
+    if(d.error)throw new Error(d.error);
+    var text=(d.text||'').replace(/```json|```/g,'').trim();
+    var ex=JSON.parse(text);
+    currentCodeExercise=ex;
+    document.getElementById('codeTask').innerHTML='<strong style="color:var(--text);display:block;margin-bottom:6px;">Opgave</strong>'+esc(ex.task);
+    document.getElementById('hintBox').textContent=ex.hint||'';
+  }catch(e){document.getElementById('codeTask').innerHTML='<span style="color:var(--danger);">Fejl: '+esc(e.message)+' - prov igen</span>';}
+  document.getElementById('loading').classList.remove('visible');
+}
+async function checkCodeAnswer(){
+  if(!currentCodeExercise){showToast('Generer en opgave forst','error');return;}
+  var userCode=document.getElementById('codeInput').value.trim();
+  if(!userCode){showToast('Skriv noget kode forst!','error');return;}
+  document.getElementById('loading').classList.add('visible');
+  document.getElementById('loadingTxt').textContent='ANALYSERER DIN KODE...';
+  document.getElementById('codeFeedback').style.display='none';
+  var prompt='Du er kodeinstruktor. Sammenlign elevens kode med model-losningen og giv feedback pa dansk.\n\nOPGAVE: '+currentCodeExercise.task+'\n\nMODEL-LOSNING:\n```\n'+currentCodeExercise.solution+'\n```\n\nELEVENS KODE:\n```\n'+userCode+'\n```\n\nSvar KUN med JSON:\n{"correct":true/false,"score":0-100,"praise":"Hvad eleven gjorde rigtigt","issues":"Hvad mangler eller kan forbedres","tip":"Et konkret tip"}';
+  try{
+    var r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt,mode:'explain'})});
+    var d=await r.json();
+    if(d.error)throw new Error(d.error);
+    var text=(d.text||'').replace(/```json|```/g,'').trim();
+    var fb=JSON.parse(text);
+    var sc=fb.score>=80?'var(--success)':fb.score>=50?'var(--warn)':'var(--danger)';
+    var lbl=fb.correct?'Godt lost!':fb.score>=50?'Naesten!':'Ikke helt rigtigt';
+    var html='<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;"><div style="font-size:2rem;font-weight:700;font-family:var(--mono);color:'+sc+'">'+fb.score+'</div><div><div style="font-size:.85rem;font-weight:600;color:'+sc+'">'+lbl+'</div><div style="font-size:.75rem;color:var(--text2);">ud af 100 point</div></div></div>';
+    if(fb.praise)html+='<div style="margin-bottom:10px;padding:10px 14px;background:rgba(16,185,129,.08);border-left:3px solid var(--success);border-radius:0 7px 7px 0;font-size:.82rem;color:var(--text);line-height:1.55;"><strong style="color:var(--success);display:block;margin-bottom:3px;">Det du gjorde rigtigt</strong>'+esc(fb.praise)+'</div>';
+    if(fb.issues)html+='<div style="margin-bottom:10px;padding:10px 14px;background:rgba(239,68,68,.07);border-left:3px solid var(--danger);border-radius:0 7px 7px 0;font-size:.82rem;color:var(--text);line-height:1.55;"><strong style="color:var(--danger);display:block;margin-bottom:3px;">Hvad kan forbedres</strong>'+esc(fb.issues)+'</div>';
+    html+='<div style="margin-bottom:14px;padding:10px 14px;background:var(--bg2);border-radius:8px;font-size:.82rem;line-height:1.55;"><strong style="color:var(--accent2);display:block;margin-bottom:6px;">Model-losning</strong><pre style="font-family:var(--mono);font-size:.78rem;color:var(--text2);margin:0;white-space:pre-wrap;">'+esc(currentCodeExercise.solution)+'</pre></div>';
+    if(fb.tip)html+='<div style="font-size:.78rem;color:var(--text2);font-style:italic;">'+esc(fb.tip)+'</div>';
+    document.getElementById('codeFeedbackContent').innerHTML=html;
+    document.getElementById('codeFeedback').style.display='block';
+    document.getElementById('nextExerciseBtn').style.display='inline-block';
+    document.getElementById('codeFeedback').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(e){document.getElementById('codeFeedbackContent').innerHTML='<span style="color:var(--danger);">Fejl: '+esc(e.message)+'</span>';document.getElementById('codeFeedback').style.display='block';}
+  document.getElementById('loading').classList.remove('visible');
+}
 var currentInviteToken=null;
 function showLoginBox(){document.getElementById('loginBox').style.display='flex';document.getElementById('registerBox').style.display='none';}
 function checkPwMatch(){var p1=document.getElementById('regPassword').value,p2=document.getElementById('regPassword2').value,el=document.getElementById('pwMatch');if(!p2){el.textContent='';el.className='pw-match';return;}if(p1===p2){el.textContent='Matcher';el.className='pw-match ok';}else{el.textContent='Ikke ens';el.className='pw-match no';}}
@@ -663,6 +746,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   ['loginUsername','loginPassword'].forEach(id=>
     document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();})
   );
+  var ci=document.getElementById('codeInput');if(ci){ci.addEventListener('keydown',function(e){if(e.key==='Tab'){e.preventDefault();var s=ci.selectionStart;ci.value=ci.value.substring(0,s)+'  '+ci.value.substring(ci.selectionEnd);ci.selectionStart=ci.selectionEnd=s+2;}});}
   const r=sessionStorage.getItem('authRole');
   const n=sessionStorage.getItem('authName')||'Bruger';
   const uid=sessionStorage.getItem('authUserId');
@@ -834,8 +918,14 @@ function selectMode(btn,mode){
   document.getElementById('outputWrap').classList.remove('visible');
   document.getElementById('quizBank').style.display=mode==='quiz'&&quizQuestions.length>0?'block':'none';
   document.getElementById('examSetup').style.display='none';
+  document.getElementById('codeExercise').style.display='none';
   if(mode==='quiz'&&quizQuestions.length>0)updateQuizStats();
   if(mode==='exam'&&quizQuestions.length>0)document.getElementById('examSetup').style.display='block';
+  if(mode==='code'){
+    document.getElementById('codeExercise').style.display='block';
+    if(!currentCodeExercise&&isCodeSubject(currentSubject)){generateCodeExercise();}
+    else if(!isCodeSubject(currentSubject)){document.getElementById('codeTask').innerHTML='<span style="color:var(--muted);font-size:.82rem;">Kode-ovelser er tilgaengelige for: '+CODE_SUBJECTS.join(', ')+'</span>';}
+  }
   updateGenBtnVisibility();
   autoShowContent();
 }
