@@ -383,6 +383,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
     </div>
     <button class="hbtn" id="adminPanelBtn" onclick="openAdminPanel()" style="display:none;">👥 Brugere</button>
     <button class="hbtn" onclick="toggleTheme()" id="themeBtn">☀ LYS</button>
+    <button class="hbtn" id="logoutBtn" onclick="doLogout()" style="display:none;border-color:var(--danger);color:var(--danger);">↩ Log ud</button>
   </div>
 </header>
 
@@ -395,6 +396,10 @@ body.admin-active .quiz-admin-actions{display:flex;}
         <button class="sub-btn active" onclick="selectSubject(this,'Programmering')"><span class="sub-icon">💻</span>Programmering<span class="sub-count" id="cnt-0">0</span></button>
         <button class="sub-btn" onclick="selectSubject(this,'Forretningsforståelse')"><span class="sub-icon">📊</span>Forretningsforståelse<span class="sub-count" id="cnt-1">0</span></button>
         <button class="sub-btn" onclick="selectSubject(this,'Computerarkitektur')"><span class="sub-icon">🖥</span>Computerarkitektur<span class="sub-count" id="cnt-2">0</span></button>
+        <button class="sub-btn" onclick="selectSubject(this,'Datasikkerhed')"><span class="sub-icon">🔒</span>Datasikkerhed<span class="sub-count" id="cnt-3">0</span></button>
+        <button class="sub-btn" onclick="selectSubject(this,'Scripting og automatisering')"><span class="sub-icon">⚙️</span>Scripting<span class="sub-count" id="cnt-4">0</span></button>
+        <button class="sub-btn" onclick="selectSubject(this,'Netværksarkitektur')"><span class="sub-icon">🌐</span>Netværksarkitektur<span class="sub-count" id="cnt-5">0</span></button>
+        <button class="sub-btn" onclick="selectSubject(this,'Kommunikation og rapportering')"><span class="sub-icon">📝</span>Kommunikation<span class="sub-count" id="cnt-6">0</span></button>
       </div>
     </div>
     <div class="sidebar-docs" id="sidebarDocs">
@@ -422,7 +427,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
         <div class="topbar-label">Vis</div>
         <div class="scope-tabs">
           <button class="scope-btn active" onclick="selectScope(this,'all')">📚 Alle filer</button>
-          <button class="scope-btn" onclick="selectScope(this,'single')">📄 Enkelt fil</button>
+          <button class="scope-btn admin-only" onclick="selectScope(this,'single')" style="display:none;">📄 Enkelt fil</button>
         </div>
         <div class="stats-pill" id="statsPill"><span>0</span> filer</div>
       </div>
@@ -434,7 +439,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
           <button class="mode-btn" onclick="selectMode(this,'summary')">📋 Opsummering</button>
           <button class="mode-btn" onclick="selectMode(this,'explain')">💡 Forklaring</button>
         </div>
-        <button class="fag-sum-btn" id="fagSumBtn" onclick="generateFagOpsummering()">📚 Fag-overblik</button>
+        <button class="fag-sum-btn admin-only" id="fagSumBtn" onclick="generateFagOpsummering()" style="display:none;">📚 Fag-overblik</button>
       </div>
     </div>
 
@@ -545,7 +550,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 marked.use({breaks:true,gfm:true});
 
-const SUBJECTS=['Programmering','Forretningsforståelse','Computerarkitektur'];
+const SUBJECTS=['Programmering','Forretningsforståelse','Computerarkitektur','Datasikkerhed','Scripting og automatisering','Netværksarkitektur','Kommunikation og rapportering'];
 let theme='dark', currentSubject='Programmering', currentMode='quiz', currentScope='all';
 let selectedDocId=null, currentOutput='', isAdmin=false, currentUserId=null;
 let allDocs={}, allSaved={}, quizQuestions=[];
@@ -619,16 +624,30 @@ function afterLogin(role,name){
   const chip=document.getElementById('userChip');
   document.getElementById('userDisplayName').textContent=name;
   chip.style.display='flex';
+  document.getElementById('logoutBtn').style.display='inline-block';
   if(role==='admin'){
     document.body.classList.add('admin-active');
     document.getElementById('headerAdminBadge').style.display='inline';
     document.getElementById('adminPanelBtn').style.display='inline-block';
     document.getElementById('uploadZone').style.display='block';
     document.getElementById('sidebarSaved').style.display='block';
+    document.getElementById('fagSumBtn').style.display='inline-block';
+    document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
   } else {
     document.getElementById('sidebarSaved').style.display='block';
   }
   loadData();
+}
+function doLogout(){
+  sessionStorage.clear();
+  document.body.classList.remove('admin-active');
+  document.getElementById('loginOverlay').classList.remove('hidden');
+  document.getElementById('userChip').style.display='none';
+  document.getElementById('logoutBtn').style.display='none';
+  document.getElementById('adminPanelBtn').style.display='none';
+  document.getElementById('loginPassword').value='';
+  document.getElementById('loginUsername').value='';
+  document.getElementById('loginError').textContent='';
 }
 
 var currentInviteToken=null;
