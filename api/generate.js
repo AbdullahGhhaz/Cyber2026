@@ -1,3 +1,22 @@
+async function verifySessionToken(token) {
+  if (!token || typeof token !== 'string' || !token.includes('.')) return null;
+  const [payloadB64, sig] = token.split('.');
+  const secret = process.env.SESSION_SECRET || '';
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const expectedBuf = await crypto.subtle.sign('HMAC', key, enc.encode(payloadB64));
+  const expected = Array.from(new Uint8Array(expectedBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  if (expected.length !== sig.length) return null;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ sig.charCodeAt(i);
+  if (diff !== 0) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(payloadB64, 'base64').toString('utf8'));
+    if (!payload.exp || payload.exp < Date.now()) return null;
+    return payload;
+  } catch (e) { return null; }
+}
+
 export const config = {
   api: { bodyParser: { sizeLimit: '50mb' } }
 };
@@ -52,6 +71,9 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const session = await verifySessionToken(req.body?.sessionToken);
+  if (!session) return res.status(401).json({ error: 'Login kraevet' });
 
   try {
     let { prompt, mode, existingQuestions = [], reformulate = false, questionText = '' } = req.body;
