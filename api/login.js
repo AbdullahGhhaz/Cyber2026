@@ -56,6 +56,22 @@ function verifyAdmin(pw) {
   return diff === 0;
 }
 
+async function hmacHex(payload) {
+  const secret = process.env.SESSION_SECRET || '';
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(payload));
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function createSessionToken(uid, role) {
+  const exp = Date.now() + 14 * 24 * 3600000; // 14 dage
+  const payloadStr = JSON.stringify({ uid: uid || null, role, exp });
+  const payloadB64 = Buffer.from(payloadStr).toString('base64');
+  const sig = await hmacHex(payloadB64);
+  return `${payloadB64}.${sig}`;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
   const body = req.body || {};
@@ -91,7 +107,7 @@ export default async function handler(req, res) {
     const user = result.data[0];
     await sbPatch(`invite_tokens?id=eq.${rows[0].id}`, { used_by: newUsername, used_at: new Date().toISOString() });
     await sbPatch(`users?id=eq.${user.id}`, { last_login: new Date().toISOString() });
-    return res.status(200).json({ role: 'user', displayName: user.username, userId: user.id });
+    return res.status(200).json({ role: 'user', displayName: user.username, userId: user.id, sessionToken: await createSessionToken(user.id, 'user') });
   }
 
   // ── ADMIN HANDLINGER ────────────────────────────────────
@@ -142,7 +158,7 @@ export default async function handler(req, res) {
   // ── NORMAL LOGIN ────────────────────────────────────────
   const adminPass = process.env.ADMIN_PASS;
   if (!username && password === adminPass) {
-    return res.status(200).json({ role: 'admin', displayName: 'Admin' });
+    return res.status(200).json({ role: 'admin', displayName: 'Admin', sessionToken: await createSessionToken(null, 'admin') });
   }
   if (username && password) {
     try {
@@ -153,7 +169,7 @@ export default async function handler(req, res) {
       const hash = await hashPassword(password);
       if (hash !== user.password_hash) return res.status(401).json({ error: 'Forkert brugernavn eller adgangskode' });
       await sbPatch(`users?id=eq.${user.id}`, { last_login: new Date().toISOString() });
-      return res.status(200).json({ role: user.role, displayName: user.username, userId: user.id });
+      return res.status(200).json({ role: user.role, displayName: user.username, userId: user.id, sessionToken: await createSessionToken(user.id, user.role) });
     } catch(e) {
       return res.status(500).json({ error: 'Serverfejl — prøv igen' });
     }
