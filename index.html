@@ -1309,7 +1309,8 @@ async function generate(){
   try{
     const body={prompt:buildPrompt(),mode:currentMode};
     if(currentMode==='quiz')body.existingQuestions=quizQuestions;
-    const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),55000);
+    let r;try{r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ctrl.signal});}finally{clearTimeout(to);}
     const data=await r.json();
     if(data.error)throw new Error(data.error);
     if(currentMode==='quiz'&&data.questions){
@@ -1327,7 +1328,8 @@ async function generate(){
       await autoSave();
     }
   }catch(e){
-    document.getElementById('outputContent').innerHTML=`<div class="md-out" style="color:var(--danger)">Fejl: ${e.message}</div>`;
+    const msg=e.name==='AbortError'?'Tidsbegrænsning overskredet (55s) — prøv igen, evt. med færre filer eller vælg én enkelt fil.':e.message;
+    document.getElementById('outputContent').innerHTML=`<div class="md-out" style="color:var(--danger)">Fejl: ${msg}</div>`;
     document.getElementById('outputWrap').classList.add('visible');
   }
   btn.disabled=false;loading.classList.remove('visible');
@@ -1421,7 +1423,7 @@ function updateStats(){
   document.getElementById('statsPill').innerHTML=`<span>${docs.length}</span> filer · ${(total/1000).toFixed(0)}k tegn`;
 }
 
-function renderOutput(text){document.getElementById('outputContent').innerHTML=`<div class="md-out">${marked.parse(text)}</div>`;}
+function renderOutput(text){const safe=(typeof text==='string')?text:'';document.getElementById('outputContent').innerHTML=safe.trim()?`<div class="md-out">${marked.parse(safe)}</div>`:`<div class="md-out" style="color:var(--danger)">Intet indhold at vise — prøv at generere igen.</div>`;}
 function copyOutput(){navigator.clipboard.writeText(document.getElementById('outputContent').innerText).then(()=>showToast('✓ Kopieret!','success'));}
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast visible'+(type?' '+type:'');setTimeout(()=>t.classList.remove('visible'),2800);}
 function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
