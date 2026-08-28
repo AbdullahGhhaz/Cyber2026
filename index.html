@@ -521,7 +521,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
             <div style="font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;color:var(--accent2);text-transform:uppercase;">// kodeopgave</div>
             <div style="display:flex;gap:8px;align-items:center;">
               <span id="codeLangBadge" style="font-family:var(--mono);font-size:.65rem;background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:6px;"></span>
-              <button class="qsbtn" onclick="generateCodeExercise()" id="nextExerciseBtn" style="display:none;">Naeste opgave</button>
+              <button class="qsbtn" onclick="nextCodeExercise()" id="nextExerciseBtn" style="display:none;">Naeste opgave</button>
             </div>
           </div>
           <div id="codeTask" style="font-size:.88rem;line-height:1.7;color:var(--text);margin-bottom:16px;padding:14px;background:var(--bg2);border-radius:8px;border-left:3px solid var(--accent);"></div>
@@ -529,7 +529,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button onclick="checkCodeAnswer()" style="background:var(--accent);border:none;color:#fff;padding:8px 22px;border-radius:8px;cursor:pointer;font-family:var(--mono);font-size:.72rem;font-weight:600;letter-spacing:.07em;transition:all .2s;">TJEK SVAR</button>
             <button onclick="showHint()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:.78rem;">Hint</button>
-            <button onclick="generateCodeExercise()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:.78rem;">Ny opgave</button>
+            <button onclick="nextCodeExercise()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:.78rem;">Ny opgave</button>
           </div>
           <div id="hintBox" style="display:none;margin-top:10px;padding:10px 14px;background:var(--bg2);border-left:3px solid var(--warn);border-radius:0 7px 7px 0;font-size:.8rem;color:var(--text2);line-height:1.55;font-family:var(--mono);"></div>
         </div>
@@ -686,10 +686,11 @@ async function loadOrGenerateCodeExercise(){
   if(currentCodeExercise&&currentCodeExerciseSubject===currentSubject)return;
   var subj=currentSubject;
   try{
-    var rows=await sb(`generated_content?subject=eq.${encodeURIComponent(subj)}&type=eq.code-exercise&order=created_at.desc&limit=1`);
+    var rows=await sb(`generated_content?subject=eq.${encodeURIComponent(subj)}&type=eq.code-exercise&order=exercise_slot.asc`);
     if(subj!==currentSubject)return;
-    if(rows&&rows.length&&rows[0].content){
-      var savedEx=JSON.parse(rows[0].content);
+    if(rows&&rows.length){
+      var pick=rows[Math.floor(Math.random()*rows.length)];
+      var savedEx=JSON.parse(pick.content);
       currentCodeExercise=savedEx;
       currentCodeExerciseSubject=subj;
       document.getElementById('codeTask').innerHTML='<strong style="color:var(--text);display:block;margin-bottom:6px;">Opgave</strong>'+esc(savedEx.task);
@@ -703,6 +704,31 @@ async function loadOrGenerateCodeExercise(){
     }
   }catch(e){}
   if(subj===currentSubject)generateCodeExercise();
+}
+async function nextCodeExercise(){
+  var subj=currentSubject;
+  try{
+    var rows=await sb(`generated_content?subject=eq.${encodeURIComponent(subj)}&type=eq.code-exercise&order=exercise_slot.asc`);
+    if(subj!==currentSubject)return;
+    if(!rows||rows.length<5){
+      await generateCodeExercise();
+      return;
+    }
+    var current=currentCodeExercise?JSON.stringify(currentCodeExercise):null;
+    var candidates=rows.filter(function(r){return r.content!==current;});
+    var pool=candidates.length?candidates:rows;
+    var pick=pool[Math.floor(Math.random()*pool.length)];
+    var ex=JSON.parse(pick.content);
+    currentCodeExercise=ex;
+    currentCodeExerciseSubject=subj;
+    document.getElementById('codeTask').innerHTML='<strong style="color:var(--text);display:block;margin-bottom:6px;">Opgave</strong>'+esc(ex.task);
+    document.getElementById('hintBox').textContent=ex.hint||'';
+    document.getElementById('codeLangBadge').textContent=getCodeLang(subj);
+    document.getElementById('nextExerciseBtn').style.display='inline-block';
+    document.getElementById('codeFeedback').style.display='none';
+    document.getElementById('codeInput').value='';
+    document.getElementById('hintBox').style.display='none';
+  }catch(e){}
 }
 async function generateCodeExercise(){
   var docs=allDocs[currentSubject]||[];
@@ -726,9 +752,9 @@ async function generateCodeExercise(){
     currentCodeExercise=ex;
     currentCodeExerciseSubject=currentSubject;
     try{
-      var oldRows=await sb(`generated_content?subject=eq.${encodeURIComponent(currentSubject)}&type=eq.code-exercise&select=id`);
-      if(oldRows&&oldRows.length){for(var oi=0;oi<oldRows.length;oi++){await sb(`generated_content?id=eq.${oldRows[oi].id}`,{method:'DELETE'});}}
-      await sb('generated_content',{method:'POST',body:JSON.stringify({subject:currentSubject,type:'code-exercise',content:JSON.stringify(ex),scope_filename:null})});
+      var poolRows=await sb(`generated_content?subject=eq.${encodeURIComponent(currentSubject)}&type=eq.code-exercise&select=id`);
+      var slot=Math.min((poolRows&&poolRows.length?poolRows.length:0)+1,5);
+      await sb('generated_content',{method:'POST',body:JSON.stringify({subject:currentSubject,type:'code-exercise',content:JSON.stringify(ex),scope_filename:null,exercise_slot:slot})});
     }catch(e){}
     document.getElementById('codeTask').innerHTML='<strong style="color:var(--text);display:block;margin-bottom:6px;">Opgave</strong>'+esc(ex.task);
     document.getElementById('hintBox').textContent=ex.hint||'';
