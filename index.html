@@ -682,6 +682,28 @@ var currentCodeExerciseSubject=null;
 function isCodeSubject(s){return CODE_SUBJECTS.indexOf(s)>=0;}
 function getCodeLang(s){if(s==='Scripting og automatisering')return 'Bash/PowerShell';if(s==='Programmering')return 'Python/JS';if(s==='Computerarkitektur')return 'Assembly/C';return 'Kode';}
 function showHint(){var hb=document.getElementById('hintBox');hb.style.display=hb.style.display==='none'?'block':'none';}
+async function loadOrGenerateCodeExercise(){
+  if(currentCodeExercise&&currentCodeExerciseSubject===currentSubject)return;
+  var subj=currentSubject;
+  try{
+    var rows=await sb(`generated_content?subject=eq.${encodeURIComponent(subj)}&type=eq.code-exercise&order=created_at.desc&limit=1`);
+    if(subj!==currentSubject)return;
+    if(rows&&rows.length&&rows[0].content){
+      var savedEx=JSON.parse(rows[0].content);
+      currentCodeExercise=savedEx;
+      currentCodeExerciseSubject=subj;
+      document.getElementById('codeTask').innerHTML='<strong style="color:var(--text);display:block;margin-bottom:6px;">Opgave</strong>'+esc(savedEx.task);
+      document.getElementById('hintBox').textContent=savedEx.hint||'';
+      document.getElementById('codeLangBadge').textContent=getCodeLang(subj);
+      document.getElementById('nextExerciseBtn').style.display='inline-block';
+      document.getElementById('codeFeedback').style.display='none';
+      document.getElementById('codeInput').value='';
+      document.getElementById('hintBox').style.display='none';
+      return;
+    }
+  }catch(e){}
+  if(subj===currentSubject)generateCodeExercise();
+}
 async function generateCodeExercise(){
   var docs=allDocs[currentSubject]||[];
   if(!docs.length){showToast('Upload mindst et dokument forst!','error');return;}
@@ -703,7 +725,11 @@ async function generateCodeExercise(){
     var ex=JSON.parse(text);
     currentCodeExercise=ex;
     currentCodeExerciseSubject=currentSubject;
-    try{localStorage.setItem('codeExercise_'+currentSubject,JSON.stringify(ex));}catch(e){}
+    try{
+      var oldRows=await sb(`generated_content?subject=eq.${encodeURIComponent(currentSubject)}&type=eq.code-exercise&select=id`);
+      if(oldRows&&oldRows.length){for(var oi=0;oi<oldRows.length;oi++){await sb(`generated_content?id=eq.${oldRows[oi].id}`,{method:'DELETE'});}}
+      await sb('generated_content',{method:'POST',body:JSON.stringify({subject:currentSubject,type:'code-exercise',content:JSON.stringify(ex),scope_filename:null})});
+    }catch(e){}
     document.getElementById('codeTask').innerHTML='<strong style="color:var(--text);display:block;margin-bottom:6px;">Opgave</strong>'+esc(ex.task);
     document.getElementById('hintBox').textContent=ex.hint||'';
   }catch(e){document.getElementById('codeTask').innerHTML='<span style="color:var(--danger);">Fejl: '+esc(e.message)+' - prov igen</span>';}
@@ -928,25 +954,7 @@ function selectMode(btn,mode){
   if(mode==='code'){
     document.getElementById('codeExercise').style.display='block';
     if(isCodeSubject(currentSubject)){
-      if(currentCodeExercise&&currentCodeExerciseSubject===currentSubject){
-        // allerede indlaest
-      }else{
-        var savedEx=null;
-        try{savedEx=JSON.parse(localStorage.getItem('codeExercise_'+currentSubject)||'null');}catch(e){}
-        if(savedEx){
-          currentCodeExercise=savedEx;
-          currentCodeExerciseSubject=currentSubject;
-          document.getElementById('codeTask').innerHTML='<strong style="color:var(--text);display:block;margin-bottom:6px;">Opgave</strong>'+esc(savedEx.task);
-          document.getElementById('hintBox').textContent=savedEx.hint||'';
-          document.getElementById('codeLangBadge').textContent=getCodeLang(currentSubject);
-          document.getElementById('nextExerciseBtn').style.display='inline-block';
-          document.getElementById('codeFeedback').style.display='none';
-          document.getElementById('codeInput').value='';
-          document.getElementById('hintBox').style.display='none';
-        }else{
-          generateCodeExercise();
-        }
-      }
+      loadOrGenerateCodeExercise();
     }else{
       document.getElementById('codeTask').innerHTML='<span style="color:var(--muted);font-size:.82rem;">Kode-ovelser er tilgaengelige for: '+CODE_SUBJECTS.join(', ')+'</span>';
     }
