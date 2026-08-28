@@ -635,6 +635,7 @@ async function doLogin(){
       sessionStorage.setItem('authRole',d.role);
       sessionStorage.setItem('authName',d.displayName||'Bruger');
       if(d.userId)sessionStorage.setItem('authUserId',d.userId);
+      if(d.sessionToken)sessionStorage.setItem('sessionToken',d.sessionToken);
       document.getElementById('loginOverlay').classList.add('hidden');
       err.textContent='';
       afterLogin(d.role,d.displayName||'Admin');
@@ -694,7 +695,7 @@ async function generateCodeExercise(){
   document.getElementById('loadingTxt').textContent='GENERERER KODEOPGAVE...';
   var prompt='Du er eksamenshjælper for faget "'+currentSubject+'". Baseret på dette materiale:\n'+parts+'\n\n---\nLav EN praktisk kodeopgave pa dansk. Svar KUN med JSON uden tekst udenfor:\n{"task":"Opgavebeskrivelse (2-4 saetninger, konkret)","language":"bash/powershell/python/js/andet","hint":"Hjalpsomt hint uden at afsloere svar","solution":"Korrekt model-losning (kun kode)","explanation":"Kort forklaring af losningen"}\nKrav: Opgaven loeses pa 5-15 linjer, praktisk og baseret pa materialet.';
   try{
-    var r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt,mode:'explain'})});
+    var r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt,mode:'explain',sessionToken:sessionStorage.getItem('sessionToken')})});
     var d=await r.json();
     if(d.error)throw new Error(d.error);
     var text=(d.text||'').replace(/```json|```/g,'').trim();
@@ -714,7 +715,7 @@ async function checkCodeAnswer(){
   document.getElementById('codeFeedback').style.display='none';
   var prompt='Du er kodeinstruktor. Sammenlign elevens kode med model-losningen og giv feedback pa dansk.\n\nOPGAVE: '+currentCodeExercise.task+'\n\nMODEL-LOSNING:\n```\n'+currentCodeExercise.solution+'\n```\n\nELEVENS KODE:\n```\n'+userCode+'\n```\n\nSvar KUN med JSON:\n{"correct":true/false,"score":0-100,"praise":"Hvad eleven gjorde rigtigt","issues":"Hvad mangler eller kan forbedres","tip":"Et konkret tip"}';
   try{
-    var r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt,mode:'explain'})});
+    var r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt,mode:'explain',sessionToken:sessionStorage.getItem('sessionToken')})});
     var d=await r.json();
     if(d.error)throw new Error(d.error);
     var text=(d.text||'').replace(/```json|```/g,'').trim();
@@ -737,7 +738,7 @@ var currentInviteToken=null;
 function showLoginBox(){document.getElementById('loginBox').style.display='flex';document.getElementById('registerBox').style.display='none';}
 function checkPwMatch(){var p1=document.getElementById('regPassword').value,p2=document.getElementById('regPassword2').value,el=document.getElementById('pwMatch');if(!p2){el.textContent='';el.className='pw-match';return;}if(p1===p2){el.textContent='Matcher';el.className='pw-match ok';}else{el.textContent='Ikke ens';el.className='pw-match no';}}
 async function checkInviteFromUrl(){var token=new URLSearchParams(window.location.search).get('invite');if(!token)return;document.getElementById('loginBox').style.display='none';document.getElementById('registerBox').style.display='flex';var st=document.getElementById('inviteStatus');st.style.color='var(--text2)';st.textContent='Validerer...';document.getElementById('regBtn').disabled=true;try{var r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkInvite',token:token})});var d=await r.json();if(d.valid){currentInviteToken=token;st.textContent='Gyldigt - opret konto';st.style.color='var(--success)';document.getElementById('regBtn').disabled=false;window.history.replaceState({},'',window.location.pathname);}else{st.textContent=d.error||'Ugyldigt';st.style.color='var(--danger)';setTimeout(function(){showLoginBox();},3000);}}catch(e){st.textContent='Fejl';setTimeout(function(){showLoginBox();},3000);}}
-async function doRegister(){if(!currentInviteToken){document.getElementById('regError').textContent='Intet link';return;}var u=document.getElementById('regUsername').value.trim(),p=document.getElementById('regPassword').value,p2=document.getElementById('regPassword2').value,err=document.getElementById('regError');if(!u||u.length<2){err.textContent='Min. 2 tegn';return;}if(!p||p.length<6){err.textContent='Min. 6 tegn';return;}if(p.length>26){err.textContent='Maks 26 tegn';return;}if(p!==p2){err.textContent='Ikke ens';return;}var btn=document.getElementById('regBtn');btn.disabled=true;btn.textContent='OPRETTER...';try{var r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'register',newUsername:u,newPassword:p,inviteToken:currentInviteToken})});var d=await r.json();if(r.ok){isAdmin=false;currentUserId=d.userId||null;sessionStorage.setItem('authRole',d.role);sessionStorage.setItem('authName',d.displayName||u);if(d.userId)sessionStorage.setItem('authUserId',d.userId);document.getElementById('loginOverlay').classList.add('hidden');afterLogin(d.role,d.displayName||u);showToast('Konto oprettet! Velkommen, '+u,'success');}else{err.textContent=d.error||'Fejl';btn.disabled=false;btn.textContent='OPRET KONTO';}}catch(e){err.textContent='Fejl';btn.disabled=false;btn.textContent='OPRET KONTO';}}
+async function doRegister(){if(!currentInviteToken){document.getElementById('regError').textContent='Intet link';return;}var u=document.getElementById('regUsername').value.trim(),p=document.getElementById('regPassword').value,p2=document.getElementById('regPassword2').value,err=document.getElementById('regError');if(!u||u.length<2){err.textContent='Min. 2 tegn';return;}if(!p||p.length<6){err.textContent='Min. 6 tegn';return;}if(p.length>26){err.textContent='Maks 26 tegn';return;}if(p!==p2){err.textContent='Ikke ens';return;}var btn=document.getElementById('regBtn');btn.disabled=true;btn.textContent='OPRETTER...';try{var r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'register',newUsername:u,newPassword:p,inviteToken:currentInviteToken})});var d=await r.json();if(r.ok){isAdmin=false;currentUserId=d.userId||null;sessionStorage.setItem('authRole',d.role);sessionStorage.setItem('authName',d.displayName||u);if(d.userId)sessionStorage.setItem('authUserId',d.userId);if(d.sessionToken)sessionStorage.setItem('sessionToken',d.sessionToken);document.getElementById('loginOverlay').classList.add('hidden');afterLogin(d.role,d.displayName||u);showToast('Konto oprettet! Velkommen, '+u,'success');}else{err.textContent=d.error||'Fejl';btn.disabled=false;btn.textContent='OPRET KONTO';}}catch(e){err.textContent='Fejl';btn.disabled=false;btn.textContent='OPRET KONTO';}}
 function createInvite(){var ap=sessionStorage.getItem('adminPass');if(!ap)return;var h=parseInt(document.getElementById('inviteExpiry').value);fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'createInvite',adminPassword:ap,expiresHours:h})}).then(function(r){return r.json();}).then(function(d){if(d.token){var link=window.location.origin+window.location.pathname+'?invite='+d.token;document.getElementById('inviteLinkText').textContent=link;document.getElementById('inviteResult').style.display='block';loadInviteList();}else showToast(d.error||'Fejl','error');});}
 function copyInviteLink(){navigator.clipboard.writeText(document.getElementById('inviteLinkText').textContent).then(function(){showToast('Kopieret!','success');});}
 function loadInviteList(){var ap=sessionStorage.getItem('adminPass');if(!ap)return;fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'listInvites',adminPassword:ap})}).then(function(r){return r.json();}).then(function(d){if(d.invites)renderInviteList(d.invites);});}
@@ -847,7 +848,7 @@ async function changeUserPassword(userId,username){
 
 // ── SUPABASE ───────────────────────────────────────────────
 async function sb(path,opts={}){
-  const r=await fetch('/api/db',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path,method:opts.method||'GET',body:opts.body?JSON.parse(opts.body):undefined,headers:opts.headers||{}})});
+  const r=await fetch('/api/db',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path,method:opts.method||'GET',body:opts.body?JSON.parse(opts.body):undefined,headers:opts.headers||{},sessionToken:sessionStorage.getItem('sessionToken')})});
   if(!r.ok){const t=await r.text();throw new Error(t);}
   const t=await r.text();return t?JSON.parse(t):[];
 }
@@ -1209,7 +1210,7 @@ async function reformulateQuestion(questionId,cardEl){
   cardEl.querySelector('.q-admin-btn[data-reform]').disabled=true;
   const questionText=`Spørgsmål: ${q.question}\nA) ${q.a}\nB) ${q.b}\nC) ${q.c}\nD) ${q.d}\nKorrekt: ${q.correct.toUpperCase()})\nForklaring: ${q.explanation}`;
   try{
-    const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reformulate:true,questionText,prompt:''})});
+    const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reformulate:true,questionText,prompt:'',sessionToken:sessionStorage.getItem('sessionToken')})});
     const data=await r.json();
     if(data.error)throw new Error(data.error);
     const nq=data.question;
@@ -1307,7 +1308,7 @@ async function generate(){
   btn.disabled=true;loading.classList.add('visible');
   document.getElementById('loadingTxt').textContent=currentMode==='quiz'?'GENERERER 5 NYE SPØRGSMÅL...':currentMode==='summary'?'GENERERER OPSUMMERING...':'GENERERER FORKLARING...';
   try{
-    const body={prompt:buildPrompt(),mode:currentMode};
+    const body={prompt:buildPrompt(),mode:currentMode,sessionToken:sessionStorage.getItem('sessionToken')};
     if(currentMode==='quiz')body.existingQuestions=quizQuestions;
     const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),55000);
     let r;try{r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ctrl.signal});}finally{clearTimeout(to);}
@@ -1346,7 +1347,7 @@ async function generateFagOpsummering(){
   try{
     const parts=summaries.map(s=>`--- ${s.type==='summary'?'Opsummering':'Forklaring'}${s.scope_filename?' ('+s.scope_filename+')':''} ---\n${(s.content||'').slice(0,3000)}`).join('\n\n');
     const prompt=`Du er eksamenshjælper. Lav ÉN kort, struktureret eksamensopsummering af HELE faget "${currentSubject}" på dansk. Fokus på de VIGTIGSTE begreber og sammenhænge. Maks 600 ord. Brug overskrifter.\n\n${parts}`;
-    const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,mode:'summary'})});
+    const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,mode:'summary',sessionToken:sessionStorage.getItem('sessionToken')})});
     const result=await r.json();
     const content=result.text||'';
     currentOutput=content;renderOutput(content);
