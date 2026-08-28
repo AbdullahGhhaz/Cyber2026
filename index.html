@@ -678,6 +678,7 @@ function doLogout(){
 
 var CODE_SUBJECTS=['Programmering','Scripting og automatisering','Computerarkitektur'];
 var currentCodeExercise=null;
+var currentCodeExerciseSubject=null;
 function isCodeSubject(s){return CODE_SUBJECTS.indexOf(s)>=0;}
 function getCodeLang(s){if(s==='Scripting og automatisering')return 'Bash/PowerShell';if(s==='Programmering')return 'Python/JS';if(s==='Computerarkitektur')return 'Assembly/C';return 'Kode';}
 function showHint(){var hb=document.getElementById('hintBox');hb.style.display=hb.style.display==='none'?'block':'none';}
@@ -701,6 +702,8 @@ async function generateCodeExercise(){
     var text=(d.text||'').replace(/```json|```/g,'').trim();
     var ex=JSON.parse(text);
     currentCodeExercise=ex;
+    currentCodeExerciseSubject=currentSubject;
+    try{localStorage.setItem('codeExercise_'+currentSubject,JSON.stringify(ex));}catch(e){}
     document.getElementById('codeTask').innerHTML='<strong style="color:var(--text);display:block;margin-bottom:6px;">Opgave</strong>'+esc(ex.task);
     document.getElementById('hintBox').textContent=ex.hint||'';
   }catch(e){document.getElementById('codeTask').innerHTML='<span style="color:var(--danger);">Fejl: '+esc(e.message)+' - prov igen</span>';}
@@ -924,8 +927,29 @@ function selectMode(btn,mode){
   if(mode==='exam'&&quizQuestions.length>0)document.getElementById('examSetup').style.display='block';
   if(mode==='code'){
     document.getElementById('codeExercise').style.display='block';
-    if(!currentCodeExercise&&isCodeSubject(currentSubject)){generateCodeExercise();}
-    else if(!isCodeSubject(currentSubject)){document.getElementById('codeTask').innerHTML='<span style="color:var(--muted);font-size:.82rem;">Kode-ovelser er tilgaengelige for: '+CODE_SUBJECTS.join(', ')+'</span>';}
+    if(isCodeSubject(currentSubject)){
+      if(currentCodeExercise&&currentCodeExerciseSubject===currentSubject){
+        // allerede indlaest
+      }else{
+        var savedEx=null;
+        try{savedEx=JSON.parse(localStorage.getItem('codeExercise_'+currentSubject)||'null');}catch(e){}
+        if(savedEx){
+          currentCodeExercise=savedEx;
+          currentCodeExerciseSubject=currentSubject;
+          document.getElementById('codeTask').innerHTML='<strong style="color:var(--text);display:block;margin-bottom:6px;">Opgave</strong>'+esc(savedEx.task);
+          document.getElementById('hintBox').textContent=savedEx.hint||'';
+          document.getElementById('codeLangBadge').textContent=getCodeLang(currentSubject);
+          document.getElementById('nextExerciseBtn').style.display='inline-block';
+          document.getElementById('codeFeedback').style.display='none';
+          document.getElementById('codeInput').value='';
+          document.getElementById('hintBox').style.display='none';
+        }else{
+          generateCodeExercise();
+        }
+      }
+    }else{
+      document.getElementById('codeTask').innerHTML='<span style="color:var(--muted);font-size:.82rem;">Kode-ovelser er tilgaengelige for: '+CODE_SUBJECTS.join(', ')+'</span>';
+    }
   }
   updateGenBtnVisibility();
   autoShowContent();
