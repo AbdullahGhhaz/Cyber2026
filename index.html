@@ -761,33 +761,16 @@ async function generateCodeExercise(){
   }catch(e){document.getElementById('codeTask').innerHTML='<span style="color:var(--danger);">Fejl: '+esc(e.message)+' - prov igen</span>';}
   document.getElementById('loading').classList.remove('visible');
 }
-async function checkCodeAnswer(){
+function checkCodeAnswer(){
   if(!currentCodeExercise){showToast('Generer en opgave forst','error');return;}
   var userCode=document.getElementById('codeInput').value.trim();
   if(!userCode){showToast('Skriv noget kode forst!','error');return;}
-  document.getElementById('loading').classList.add('visible');
-  document.getElementById('loadingTxt').textContent='ANALYSERER DIN KODE...';
-  document.getElementById('codeFeedback').style.display='none';
-  var prompt='Du er kodeinstruktor. Sammenlign elevens kode med model-losningen og giv feedback pa dansk.\n\nOPGAVE: '+currentCodeExercise.task+'\n\nMODEL-LOSNING:\n```\n'+currentCodeExercise.solution+'\n```\n\nELEVENS KODE:\n```\n'+userCode+'\n```\n\nSvar KUN med JSON:\n{"correct":true/false,"score":0-100,"praise":"Hvad eleven gjorde rigtigt","issues":"Hvad mangler eller kan forbedres","tip":"Et konkret tip"}';
-  try{
-    var r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt,mode:'explain',sessionToken:sessionStorage.getItem('sessionToken')})});
-    var d=await r.json();
-    if(d.error)throw new Error(d.error);
-    var text=(d.text||'').replace(/```json|```/g,'').trim();
-    var fb=JSON.parse(text);
-    var sc=fb.score>=80?'var(--success)':fb.score>=50?'var(--warn)':'var(--danger)';
-    var lbl=fb.correct?'Godt lost!':fb.score>=50?'Naesten!':'Ikke helt rigtigt';
-    var html='<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;"><div style="font-size:2rem;font-weight:700;font-family:var(--mono);color:'+sc+'">'+fb.score+'</div><div><div style="font-size:.85rem;font-weight:600;color:'+sc+'">'+lbl+'</div><div style="font-size:.75rem;color:var(--text2);">ud af 100 point</div></div></div>';
-    if(fb.praise)html+='<div style="margin-bottom:10px;padding:10px 14px;background:rgba(16,185,129,.08);border-left:3px solid var(--success);border-radius:0 7px 7px 0;font-size:.82rem;color:var(--text);line-height:1.55;"><strong style="color:var(--success);display:block;margin-bottom:3px;">Det du gjorde rigtigt</strong>'+esc(fb.praise)+'</div>';
-    if(fb.issues)html+='<div style="margin-bottom:10px;padding:10px 14px;background:rgba(239,68,68,.07);border-left:3px solid var(--danger);border-radius:0 7px 7px 0;font-size:.82rem;color:var(--text);line-height:1.55;"><strong style="color:var(--danger);display:block;margin-bottom:3px;">Hvad kan forbedres</strong>'+esc(fb.issues)+'</div>';
-    html+='<div style="margin-bottom:14px;padding:10px 14px;background:var(--bg2);border-radius:8px;font-size:.82rem;line-height:1.55;"><strong style="color:var(--accent2);display:block;margin-bottom:6px;">Model-losning</strong><pre style="font-family:var(--mono);font-size:.78rem;color:var(--text2);margin:0;white-space:pre-wrap;">'+esc(currentCodeExercise.solution)+'</pre></div>';
-    if(fb.tip)html+='<div style="font-size:.78rem;color:var(--text2);font-style:italic;">'+esc(fb.tip)+'</div>';
-    document.getElementById('codeFeedbackContent').innerHTML=html;
-    document.getElementById('codeFeedback').style.display='block';
-    document.getElementById('nextExerciseBtn').style.display='inline-block';
-    document.getElementById('codeFeedback').scrollIntoView({behavior:'smooth',block:'start'});
-  }catch(e){document.getElementById('codeFeedbackContent').innerHTML='<span style="color:var(--danger);">Fejl: '+esc(e.message)+'</span>';document.getElementById('codeFeedback').style.display='block';}
-  document.getElementById('loading').classList.remove('visible');
+  var html='<div style="margin-bottom:14px;padding:10px 14px;background:var(--bg2);border-radius:8px;font-size:.82rem;line-height:1.55;"><strong style="color:var(--accent2);display:block;margin-bottom:6px;">Model-losning (facit)</strong><pre style="font-family:var(--mono);font-size:.78rem;color:var(--text2);margin:0;white-space:pre-wrap;">'+esc(currentCodeExercise.solution)+'</pre></div>';
+  if(currentCodeExercise.explanation)html+='<div style="font-size:.82rem;color:var(--text);line-height:1.55;"><strong style="color:var(--text);display:block;margin-bottom:4px;">Forklaring</strong>'+esc(currentCodeExercise.explanation)+'</div>';
+  document.getElementById('codeFeedbackContent').innerHTML=html;
+  document.getElementById('codeFeedback').style.display='block';
+  document.getElementById('nextExerciseBtn').style.display='inline-block';
+  document.getElementById('codeFeedback').scrollIntoView({behavior:'smooth',block:'start'});
 }
 var currentInviteToken=null;
 function showLoginBox(){document.getElementById('loginBox').style.display='flex';document.getElementById('registerBox').style.display='none';}
