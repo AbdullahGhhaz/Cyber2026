@@ -80,7 +80,7 @@ export default async function handler(req, res) {
     if (!prompt && !reformulate) throw new Error('Ingen prompt modtaget');
 
     // Trim prompt til 80.000 tegn
-    if (prompt && prompt.length > 80000) prompt = prompt.slice(0, 80000) + '\n\n[Afkortet]';
+    if (prompt && prompt.length > 40000) prompt = prompt.slice(0, 40000) + '\n\n[Afkortet]';
 
     // MODE: Omformuler ét enkelt spørgsmål
     if (reformulate && questionText) {
@@ -148,15 +148,6 @@ Alle 7 felter er obligatoriske i hvert objekt.`;
       );
 
       let questions = parseQuestions(text).filter(validateQuestion).slice(0, 5);
-
-      if (questions.length < 3) {
-        const retryText = await callClaude(
-          system,
-          `${prompt}\n\nLav præcis 5 spørgsmål på dansk. Kun JSON array.`,
-          4096
-        );
-        questions = parseQuestions(retryText).filter(validateQuestion).slice(0, 5);
-      }
 
       if (questions.length === 0) {
         throw new Error('Kunne ikke generere gyldige spørgsmål. Prøv igen.');
