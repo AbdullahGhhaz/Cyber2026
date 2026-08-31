@@ -724,7 +724,7 @@ async function nextCodeExercise(){
         currentCodeExercise=ex;
         currentCodeExerciseSubject=subj;
         document.getElementById('codeTask').innerHTML='<strong style="color:var(--text);display:block;margin-bottom:6px;">Opgave</strong>'+esc(ex.task);
-    document.getElementById('hintBox').textContent=ex.hint||'';
+        document.getElementById('hintBox').textContent=ex.hint||'';
     document.getElementById('codeLangBadge').textContent=getCodeLang(subj);
     document.getElementById('nextExerciseBtn').style.display='inline-block';
     document.getElementById('codeFeedback').style.display='none';
@@ -748,7 +748,7 @@ async function generateCodeExercise(){
   try{
     var r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:parts,mode:'code-exercise',subject:currentSubject,sessionToken:sessionStorage.getItem('sessionToken')})});
     var d=await r.json();
-var text=(d.text||'').replace(/```json|```/g,'').trim();
+if(d.error)throw new Error(d.error);var ex=d.exercise;
     currentCodeExercise=ex;
     currentCodeExerciseSubject=currentSubject;
     try{
