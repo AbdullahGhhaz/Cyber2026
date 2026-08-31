@@ -21,7 +21,13 @@ export const config = {
   api: { bodyParser: { sizeLimit: '50mb' } }
 };
 
-async function callClaude(system, prompt, maxTokens = 2048) {
+// Sonnet til de aabne/kvalitetskraevende opgaver (quiz, opsummering, forklaring).
+// Haiku (ca. 1/3 af prisen) til de smaa, mekaniske opgaver (omformulering af ét
+// spoergsmaal, én kodeoevelse) hvor Sonnet-kvalitet ikke er noedvendig.
+const MODEL_SONNET = 'claude-sonnet-4-5';
+const MODEL_HAIKU = 'claude-haiku-4-5';
+
+async function callClaude(system, content, maxTokens = 2048, model = MODEL_SONNET) {
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -30,15 +36,26 @@ async function callClaude(system, prompt, maxTokens = 2048) {
       'anthropic-version': '2023-06-01'
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-5',
+      model,
       max_tokens: maxTokens,
       system,
-      messages: [{ role: 'user', content: prompt }]
+      messages: [{ role: 'user', content }]
     })
   });
   const data = await response.json();
   if (data.error) throw new Error(data.error.message);
   return data.content?.map(b => b.text || '').join('') || '';
+}
+
+// Bygger to content-blokke: det genbrugte undervisningsmateriale (markeret til
+// prompt-caching, saa gentagne kald for samme fag/fil genbruger det for ca. 1/10
+// af normal input-pris i stedet for at betale fuld pris hver gang) efterfulgt af
+// den variable instruktion, som aendrer sig fra kald til kald.
+function cachedContent(material, instruction) {
+  const blocks = [];
+  if (material) blocks.push({ type: 'text', text: material, cache_control: { type: 'ephemeral' } });
+  blocks.push({ type: 'text', text: instruction });
+  return blocks;
 }
 
 function parseQuestions(text) {
@@ -63,6 +80,15 @@ function validateQuestion(q) {
     typeof q.d === 'string' && q.d.trim() &&
     q.correct && ['a','b','c','d'].includes(String(q.correct).toLowerCase()) &&
     typeof q.explanation === 'string' && q.explanation.trim().length > 5;
+}
+
+function validateCodeExercise(ex) {
+  return ex &&
+    typeof ex.task === 'string' && ex.task.trim().length > 5 &&
+    typeof ex.language === 'string' && ex.language.trim() &&
+    typeof ex.hint === 'string' &&
+    typeof ex.solution === 'string' && ex.solution.trim().length > 0 &&
+    typeof ex.explanation === 'string';
 }
 
 // Blander svarmulighederne programmatisk, saa den korrekte placering (a/b/c/d)
@@ -101,13 +127,13 @@ export default async function handler(req, res) {
   if (!session) return res.status(401).json({ error: 'Login kraevet' });
 
   try {
-    let { prompt, mode, existingQuestions = [], reformulate = false, questionText = '' } = req.body;
+    let { prompt, mode, existingQuestions = [], reformulate = false, questionText = '', topic = '', subject = '' } = req.body;
     if (!prompt && !reformulate) throw new Error('Ingen prompt modtaget');
 
-    // Trim prompt til 80.000 tegn
+    // Trim prompt til 40.000 tegn
     if (prompt && prompt.length > 40000) prompt = prompt.slice(0, 40000) + '\n\n[Afkortet]';
 
-    // MODE: Omformuler ét enkelt spørgsmål
+    // MODE: Omformuler ét enkelt spørgsmål — lille, mekanisk opgave -> Haiku
     if (reformulate && questionText) {
       const system = `Du omformulerer et eksamensspørgsmål til at være tydeligere og mere pædagogisk.
 Svar KUN med et JSON objekt — ingen anden tekst.
@@ -127,7 +153,7 @@ Krav til kvalitet:
 - Forklaringen skal hjælpe eleven forstå HVORFOR svaret er rigtigt
 - Brug konkrete eksempler i forklaringen hvor muligt`;
 
-      const text = await callClaude(system, `Omformuler dette spørgsmål til at være klarere og mere brugervenligt:\n\n${questionText}`, 1024);
+      const text = await callClaude(system, `Omformuler dette spørgsmål til at være klarere og mere brugervenligt:\n\n${questionText}`, 1024, MODEL_HAIKU);
       const clean = text.replace(/```json|```/g, '').trim();
       try {
         const q = JSON.parse(clean);
@@ -137,8 +163,12 @@ Krav til kvalitet:
     }
 
     if (mode === 'quiz') {
-      const existingContext = existingQuestions.length > 0
-        ? `\n\nUNDGÅ disse emner — der er allerede spørgsmål om dem:\n${existingQuestions.map(q => `- ${q.question}`).join('\n')}`
+      // Kun de seneste 40 spørgsmåls-titler sendes med for at undgå gentagelser —
+      // uden loft ville denne liste vokse ubegrænset og fylde mere og mere i hvert
+      // eneste "Tilføj 5 flere"-kald efterhånden som spørgsmålsbanken vokser.
+      const recentQuestions = existingQuestions.slice(-40);
+      const existingContext = recentQuestions.length > 0
+        ? `\n\nUNDGÅ disse emner — der er allerede spørgsmål om dem:\n${recentQuestions.map(q => `- ${q.question}`).join('\n')}`
         : '';
 
       const system = `Du laver multiplechoice quiz spørgsmål til eksamenstræning på dansk.
@@ -168,7 +198,7 @@ Alle 7 felter er obligatoriske i hvert objekt.`;
 
       const text = await callClaude(
         system,
-        `${prompt}${existingContext}\n\nLav præcis 5 spørgsmål på dansk af høj kvalitet. Kun JSON array, ingen tekst udenfor.`,
+        cachedContent(prompt, `${existingContext}\n\nLav præcis 5 spørgsmål på dansk af høj kvalitet. Kun JSON array, ingen tekst udenfor.`),
         4096
       );
 
@@ -181,12 +211,56 @@ Alle 7 felter er obligatoriske i hvert objekt.`;
       return res.status(200).json({ questions });
     }
 
-    // Summary og explain
+    // MODE: Kodeøvelse — dedikeret "kun JSON"-systemprompt (tidligere genbrugte
+    // denne funktion 'explain'-tilstanden, hvis systemprompt beder om markdown og
+    // dermed modarbejdede kravet om rent JSON-svar — det gav lejlighedsvise
+    // parse-fejl). Lille, mekanisk opgave -> Haiku.
+    if (mode === 'code-exercise') {
+      const system = `Du laver praktiske kodeøvelser til eksamenstræning på dansk.
+Svar KUN med et JSON objekt — ingen anden tekst, ingen markdown, ingen forklaring udenfor JSON.
+Format:
+{
+  "task": "Opgavebeskrivelse (2-4 sætninger, konkret)",
+  "language": "bash/powershell/python/js/andet",
+  "hint": "Hjælpsomt hint uden at afsløre svaret",
+  "solution": "Korrekt model-løsning (kun kode)",
+  "explanation": "Kort forklaring af løsningen"
+}
+Krav: Opgaven løses på 5-15 linjer, praktisk og baseret på materialet.`;
+
+      const subjectLabel = typeof subject === 'string' && subject.trim() ? subject.trim() : 'faget';
+      const instruction = `\n\n---\nLav EN praktisk kodeopgave for faget "${subjectLabel}" baseret på materialet ovenfor. Kun JSON, ingen tekst udenfor.`;
+
+      const text = await callClaude(system, cachedContent(prompt, instruction), 1536, MODEL_HAIKU);
+      const clean = text.replace(/```json|```/g, '').trim();
+      try {
+        const ex = JSON.parse(clean);
+        if (validateCodeExercise(ex)) return res.status(200).json({ exercise: ex });
+      } catch (e) {}
+      throw new Error('Kunne ikke generere kodeøvelse. Prøv igen.');
+    }
+
+    // MODE: Fag-overblik — allerede en selvstændig, komplet prompt bygget af
+    // klienten (opsummerer flere gemte opsummeringer, som ændrer sig fra gang
+    // til gang), så den sendes uændret igennem uden cache eller tilføjet instruktion.
+    if (mode === 'fag-summary') {
+      const system = 'Du laver eksamensopsummeringer på dansk. Brug markdown: # overskrifter, ## underoverskrifter, **fed** for nøglebegreber, - for punktlister. Vær grundig men præcis.';
+      const text = await callClaude(system, prompt, 4096);
+      return res.status(200).json({ text });
+    }
+
+    // Summary og explain — prompt er her kun selve undervisningsmaterialet;
+    // instruktionen bygges her på serveren og holdes i sin egen (ucachede) blok,
+    // så materiale-blokken kan genbruges fra prompt-cachen på tværs af kald.
     const system = mode === 'summary'
       ? 'Du laver eksamensopsummeringer på dansk. Brug markdown: # overskrifter, ## underoverskrifter, **fed** for nøglebegreber, - for punktlister. Vær grundig men præcis.'
       : 'Du er pædagogisk underviser. Forklar grundigt med konkrete eksempler på dansk. Brug markdown: # overskrifter, **fed** for vigtige begreber, - for punktlister, ``` for kodeeksempler.';
 
-    const text = await callClaude(system, prompt, 4096);
+    const instruction = mode === 'summary'
+      ? '\n\n---\nOPGAVE: Lav en grundig struktureret eksamensopsummering på dansk.'
+      : `\n\n---\nOPGAVE: Forklar følgende emne grundigt på dansk: "${topic || 'de vigtigste begreber i emnet'}". Brug eksempler.`;
+
+    const text = await callClaude(system, cachedContent(prompt, instruction), 4096);
     return res.status(200).json({ text });
 
   } catch (err) {
