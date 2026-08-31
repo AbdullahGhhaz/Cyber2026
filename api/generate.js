@@ -65,6 +65,31 @@ function validateQuestion(q) {
     typeof q.explanation === 'string' && q.explanation.trim().length > 5;
 }
 
+// Blander svarmulighederne programmatisk, saa den korrekte placering (a/b/c/d)
+// er reelt tilfaeldig uanset hvad AI'en outputter. Bruger et index-baseret
+// Fisher-Yates shuffle, saa det haandterer eventuelle ens svartekster korrekt.
+function shuffleAnswerPosition(q) {
+  const letters = ['a', 'b', 'c', 'd'];
+  const values = letters.map(l => q[l]);
+  const correctIndex = letters.indexOf(String(q.correct).toLowerCase());
+
+  const order = [0, 1, 2, 3];
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+
+  const shuffled = { ...q };
+  let newCorrectIndex = correctIndex;
+  order.forEach((originalIndex, newIndex) => {
+    shuffled[letters[newIndex]] = values[originalIndex];
+    if (originalIndex === correctIndex) newCorrectIndex = newIndex;
+  });
+  shuffled.correct = letters[newCorrectIndex];
+
+  return shuffled;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -84,13 +109,13 @@ export default async function handler(req, res) {
 
     // MODE: Omformuler ét enkelt spørgsmål
     if (reformulate && questionText) {
-      const system = `Du omformulerer et eksamensspørgsmål til at være tydeligere og mere pædagogisk. 
+      const system = `Du omformulerer et eksamensspørgsmål til at være tydeligere og mere pædagogisk.
 Svar KUN med et JSON objekt — ingen anden tekst.
 Format:
 {
   "question": "Det nye spørgsmål?",
   "a": "Svar A",
-  "b": "Svar B", 
+  "b": "Svar B",
   "c": "Svar C",
   "d": "Svar D",
   "correct": "b",
@@ -106,7 +131,7 @@ Krav til kvalitet:
       const clean = text.replace(/```json|```/g, '').trim();
       try {
         const q = JSON.parse(clean);
-        if (validateQuestion(q)) return res.status(200).json({ question: q });
+        if (validateQuestion(q)) return res.status(200).json({ question: shuffleAnswerPosition(q) });
       } catch(e) {}
       throw new Error('Kunne ikke omformulere spørgsmålet. Prøv igen.');
     }
@@ -147,7 +172,7 @@ Alle 7 felter er obligatoriske i hvert objekt.`;
         4096
       );
 
-      let questions = parseQuestions(text).filter(validateQuestion).slice(0, 5);
+      let questions = parseQuestions(text).filter(validateQuestion).slice(0, 5).map(shuffleAnswerPosition);
 
       if (questions.length === 0) {
         throw new Error('Kunne ikke generere gyldige spørgsmål. Prøv igen.');
