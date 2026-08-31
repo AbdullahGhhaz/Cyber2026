@@ -720,8 +720,10 @@ async function nextCodeExercise(){
     var pick=pool[Math.floor(Math.random()*pool.length)];
     var ex=JSON.parse(pick.content);
     currentCodeExercise=ex;
-    currentCodeExerciseSubject=subj;
-    document.getElementById('codeTask').innerHTML='<strong style="color:var(--text);display:block;margin-bottom:6px;">Opgave</strong>'+esc(ex.task);
+    var ex=JSON.parse(pick.content);
+        currentCodeExercise=ex;
+        currentCodeExerciseSubject=subj;
+        document.getElementById('codeTask').innerHTML='<strong style="color:var(--text);display:block;margin-bottom:6px;">Opgave</strong>'+esc(ex.task);
     document.getElementById('hintBox').textContent=ex.hint||'';
     document.getElementById('codeLangBadge').textContent=getCodeLang(subj);
     document.getElementById('nextExerciseBtn').style.display='inline-block';
@@ -744,11 +746,9 @@ async function generateCodeExercise(){
   document.getElementById('loadingTxt').textContent='GENERERER KODEOPGAVE...';
   var prompt='Du er eksamenshjælper for faget "'+currentSubject+'". Baseret på dette materiale:\n'+parts+'\n\n---\nLav EN praktisk kodeopgave pa dansk. Svar KUN med JSON uden tekst udenfor:\n{"task":"Opgavebeskrivelse (2-4 saetninger, konkret)","language":"bash/powershell/python/js/andet","hint":"Hjalpsomt hint uden at afsloere svar","solution":"Korrekt model-losning (kun kode)","explanation":"Kort forklaring af losningen"}\nKrav: Opgaven loeses pa 5-15 linjer, praktisk og baseret pa materialet.';
   try{
-    var r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt,mode:'explain',sessionToken:sessionStorage.getItem('sessionToken')})});
+    var r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:parts,mode:'code-exercise',subject:currentSubject,sessionToken:sessionStorage.getItem('sessionToken')})});
     var d=await r.json();
-    if(d.error)throw new Error(d.error);
-    var text=(d.text||'').replace(/```json|```/g,'').trim();
-    var ex=JSON.parse(text);
+var text=(d.text||'').replace(/```json|```/g,'').trim();
     currentCodeExercise=ex;
     currentCodeExerciseSubject=currentSubject;
     try{
@@ -1329,7 +1329,7 @@ function buildPrompt(){
   let useDocs=currentScope==='single'&&selectedDocId?docs.filter(d=>d.id===selectedDocId):docs;
   let parts='';for(const d of useDocs)parts+=`\n\n--- ${d.filename} ---\n${d.content||''}`;
   const scopeLabel=currentScope==='single'&&selectedDocId?`filen "${useDocs[0]?.filename}"`:`alle filer i "${currentSubject}"`;
-  const mat=parts?`Undervisningsmateriale fra ${scopeLabel}:\n${parts}`:`Brug din viden om "${currentSubject}".`;
+  return parts?`Undervisningsmateriale fra ${scopeLabel}:\n${parts}`:`Brug din viden om "${currentSubject}".`;
   const topic=document.getElementById('topicInput').value||'';
   if(currentMode==='quiz')return mat;
   if(currentMode==='summary')return `${mat}\n\n---\nOPGAVE: Lav en grundig struktureret eksamensopsummering på dansk.`;
@@ -1350,7 +1350,7 @@ async function generate(){
   document.getElementById('loadingTxt').textContent=currentMode==='quiz'?'GENERERER 5 NYE SPØRGSMÅL...':currentMode==='summary'?'GENERERER OPSUMMERING...':'GENERERER FORKLARING...';
   try{
     const body={prompt:buildPrompt(),mode:currentMode,sessionToken:sessionStorage.getItem('sessionToken')};
-    if(currentMode==='quiz')body.existingQuestions=quizQuestions;
+    if(currentMode==='quiz')body.existingQuestions=quizQuestions.slice(-40);if(currentMode==='explain'){const topicInput=document.getElementById('topicInput').value||'';body.topic=topicInput||('de vigtigste begreber i '+currentSubject);}
     const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),55000);
     let r;try{r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ctrl.signal});}finally{clearTimeout(to);}
     const data=await r.json();
@@ -1388,7 +1388,7 @@ async function generateFagOpsummering(){
   try{
     const parts=summaries.map(s=>`--- ${s.type==='summary'?'Opsummering':'Forklaring'}${s.scope_filename?' ('+s.scope_filename+')':''} ---\n${(s.content||'').slice(0,3000)}`).join('\n\n');
     const prompt=`Du er eksamenshjælper. Lav ÉN kort, struktureret eksamensopsummering af HELE faget "${currentSubject}" på dansk. Fokus på de VIGTIGSTE begreber og sammenhænge. Maks 600 ord. Brug overskrifter.\n\n${parts}`;
-    const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,mode:'summary',sessionToken:sessionStorage.getItem('sessionToken')})});
+    const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,mode:'fag-summary',sessionToken:sessionStorage.getItem('sessionToken')})});
     const result=await r.json();
     const content=result.text||'';
     currentOutput=content;renderOutput(content);
