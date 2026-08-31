@@ -20,6 +20,24 @@ async function verifySessionToken(token) {
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
+// Kun disse tabeller/metoder maa tilgaas fra klienten via denne proxy.
+// 'users' og 'invite_tokens' haandteres udelukkende via api/login.js,
+// som kraever admin-adgangskode for foelsomme handlinger.
+const ALLOWED_TABLES = {
+    documents: ['GET', 'POST', 'DELETE'],
+    generated_content: ['GET', 'POST', 'DELETE'],
+    quiz_questions: ['GET', 'POST', 'PATCH', 'DELETE'],
+};
+
+function isRequestAllowed(path, method) {
+    if (typeof path !== 'string' || !path) return false;
+    const table = path.split('?')[0];
+    if (!/^[a-zA-Z_]+$/.test(table)) return false;
+    const allowedMethods = ALLOWED_TABLES[table];
+    if (!allowedMethods) return false;
+    return allowedMethods.includes(method);
+}
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).end();
 
@@ -27,6 +45,14 @@ export default async function handler(req, res) {
 
     const session = await verifySessionToken(sessionToken);
     if (!session) return res.status(401).json({ error: 'Login kraevet' });
+
+    if (!isRequestAllowed(path, method)) {
+            return res.status(403).json({ error: 'Ikke tilladt' });
+    }
+
+      // Kun 'Prefer' maa overstyres af klienten - resten af headers er faste.
+      const safeHeaders = {};
+      if (typeof extraHeaders.Prefer === 'string') safeHeaders.Prefer = extraHeaders.Prefer;
 
         try {
           const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -36,7 +62,7 @@ export default async function handler(req, res) {
                             'Authorization': `Bearer ${SUPABASE_KEY}`,
                             'Content-Type': 'application/json',
                             'Prefer': 'return=representation',
-                            ...extraHeaders
+                            ...safeHeaders
                   },
                           body: body ? JSON.stringify(body) : undefined
           });
