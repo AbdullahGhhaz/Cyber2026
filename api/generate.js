@@ -1,3 +1,6 @@
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+
 async function verifySessionToken(token) {
   if (!token || typeof token !== 'string' || !token.includes('.')) return null;
   const [payloadB64, sig] = token.split('.');
@@ -10,11 +13,21 @@ async function verifySessionToken(token) {
   let diff = 0;
   for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ sig.charCodeAt(i);
   if (diff !== 0) return null;
-  try {
-    const payload = JSON.parse(Buffer.from(payloadB64, 'base64').toString('utf8'));
-    if (!payload.exp || payload.exp < Date.now()) return null;
-    return payload;
-  } catch (e) { return null; }
+    let payload;
+      try {
+              payload = JSON.parse(Buffer.from(payloadB64, 'base64').toString('utf8'));
+              if (!payload.exp || payload.exp < Date.now()) return null;
+      } catch (e) { return null; }
+      if (payload.uid) {
+              try {
+                        const r = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${payload.uid}&select=active,token_version`, {
+                                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                        });
+                        const rows = await r.json();
+                        if (!rows.length || !rows[0].active || (rows[0].token_version || 0) !== (payload.tv || 0)) return null;
+              } catch (e) { return null; }
+      }
+      return payload;
 }
 
 export const config = {
@@ -117,10 +130,6 @@ function shuffleAnswerPosition(q) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const session = await verifySessionToken(req.body?.sessionToken);
