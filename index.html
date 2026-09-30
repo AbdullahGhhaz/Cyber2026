@@ -390,6 +390,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
       <span class="admin-badge" id="headerAdminBadge" style="display:none;">ADMIN</span>
     </div>
     <button class="hbtn" id="adminPanelBtn" onclick="openAdminPanel()" style="display:none;">👥 Brugere</button>
+    <a class="hbtn" id="perfBtn" href="/api/perf" target="_blank" style="display:none;text-decoration:none;">📊 Perf</a>
     <button class="hbtn" onclick="toggleTheme()" id="themeBtn">☀ LYS</button>
     <button class="hbtn" id="logoutBtn" onclick="doLogout()" style="display:none;border-color:var(--danger);color:var(--danger);">↩ Log ud</button>
   </div>
@@ -642,6 +643,7 @@ async function doLogin(){
       sessionStorage.setItem('authName',d.displayName||'Bruger');
       if(d.userId)sessionStorage.setItem('authUserId',d.userId);
       if(d.sessionToken)sessionStorage.setItem('sessionToken',d.sessionToken);
+      if(d.role==='admin'){sessionStorage.setItem('adminPass',document.getElementById('loginPassword').value);}
       document.getElementById('loginOverlay').classList.add('hidden');
       err.textContent='';
       afterLogin(d.role,d.displayName||'Admin');
@@ -661,6 +663,7 @@ function afterLogin(role,name){
     document.body.classList.add('admin-active');
     document.getElementById('headerAdminBadge').style.display='inline';
     document.getElementById('adminPanelBtn').style.display='inline-block';
+    document.getElementById('perfBtn').style.display='inline-block';
     document.getElementById('uploadZone').style.display='block';
     document.getElementById('sidebarSaved').style.display='block';
     document.getElementById('fagSumBtn').style.display='';
