@@ -1,265 +1,162 @@
-// api/perf.js — Performance tracking middleware og dashboard
-// Gemmer målinger i Supabase og serverer et dashboard på /_perf/
-
+const ADMIN_PASS = process.env.ADMIN_PASS;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
-const ADMIN_PASS = process.env.ADMIN_PASS;
 
-// Ratings baseret på svartid
-function rateMs(ms) {
-  if (ms < 1000) return { score: 90, label: 'God', color: '#10b981', bar: 'bg-green' };
-  if (ms < 3000) return { score: 65, label: 'Mangler', color: '#f59e0b', bar: 'bg-yellow' };
-  if (ms < 8000) return { score: 35, label: 'Dårlig', color: '#ef4444', bar: 'bg-red' };
-  return { score: 10, label: 'Kritisk', color: '#7c3aed', bar: 'bg-purple' };
+export const config = { maxDuration: 30 };
+
+function getSessionToken() {
+  return Buffer.from(ADMIN_PASS + '-perf').toString('base64').slice(0, 24);
 }
 
-// Kendte fixes per route
-const FIXES = {
-  '/api/generate': {
-    summary: 'AI-generering er langsom',
-    cause: 'Vercel Hobby-plan har 60s timeout. Store prompts tager lang tid.',
-    fix: 'Brug streaming (sendt første byte hurtigt) og hold promptCap under 24k tegn.',
-    how: 'Tjek at streaming er aktivt i generate.js og at maxDuration=300 er sat.'
-  },
-  '/api/login': {
-    summary: 'Login er langsomt',
-    cause: 'SHA-256 hashing + Supabase kald tager tid.',
-    fix: 'Tjek Supabase region — EU-Central er tættest på DK.',
-    how: 'Supabase Dashboard → Project Settings → Region'
-  },
-  '/api/db': {
-    summary: 'Database-kald er langsomt',
-    cause: 'For store SELECT forespørgsler eller manglende index.',
-    fix: 'Tilføj index på hyppigt brugte kolonner (subject, filename).',
-    how: 'Supabase → SQL Editor → CREATE INDEX idx_docs_subject ON documents(subject);'
-  }
-};
-
-function getFix(route) {
-  for (const [key, fix] of Object.entries(FIXES)) {
-    if (route.includes(key)) return fix;
-  }
-  return {
-    summary: 'Generel ydelse',
-    cause: 'Ukendt årsag — kan være netværk, Supabase eller AI-kald.',
-    fix: 'Tjek Vercel function logs for detaljer.',
-    how: 'Vercel Dashboard → Deployments → Functions → Logs'
-  };
+function isLoggedIn(req) {
+  const cookies = req.headers.cookie || '';
+  const match = cookies.match(/perf_auth=([^;]+)/);
+  return match && match[1] === getSessionToken();
 }
 
 async function saveMetric(route, ms, status) {
   try {
     await fetch(`${SUPABASE_URL}/rest/v1/perf_metrics`, {
       method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({
-        route,
-        duration_ms: ms,
-        status_code: status,
-        recorded_at: new Date().toISOString()
-      })
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ route, duration_ms: ms, status_code: status })
     });
-  } catch(e) {
-    // Ignorer fejl i tracking — må ikke påvirke appen
-  }
+  } catch(e) {}
 }
 
 async function getMetrics() {
   try {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/perf_metrics?select=route,duration_ms,status_code,recorded_at&order=recorded_at.desc&limit=500`,
-      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
-    );
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/perf_metrics?select=route,duration_ms,status_code,recorded_at&order=recorded_at.desc&limit=500`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
     return await r.json();
   } catch(e) { return []; }
 }
 
-function buildDashboard(metrics) {
-  // Aggreger per route
-  const routes = {};
-  for (const m of metrics) {
-    if (!routes[m.route]) routes[m.route] = { calls: 0, total: 0, errors: 0, worst: 0, best: Infinity };
-    routes[m.route].calls++;
-    routes[m.route].total += m.duration_ms;
-    if (m.status_code >= 400) routes[m.route].errors++;
-    if (m.duration_ms > routes[m.route].worst) routes[m.route].worst = m.duration_ms;
-    if (m.duration_ms < routes[m.route].best) routes[m.route].best = m.duration_ms;
-  }
+function rate(ms) {
+  if (ms < 1000) return { score: 90, label: 'God', color: '#10b981' };
+  if (ms < 3000) return { score: 65, label: 'Mangler', color: '#f59e0b' };
+  if (ms < 8000) return { score: 35, label: 'Dårlig', color: '#ef4444' };
+  return { score: 10, label: 'Kritisk', color: '#7c3aed' };
+}
 
-  // Sorter efter gennemsnitstid (langsomst øverst)
-  const sorted = Object.entries(routes)
-    .map(([route, d]) => ({
-      route,
-      avg: Math.round(d.total / d.calls),
-      calls: d.calls,
-      errors: d.errors,
-      worst: d.worst,
-      best: d.best === Infinity ? 0 : d.best,
-      ...rateMs(Math.round(d.total / d.calls))
-    }))
+const FIXES = {
+  '/api/generate': { cause: 'Store prompts + Vercel Hobby timeout', fix: 'Streaming er aktivt — tjek promptCap holdes under 24k tegn per fil.' },
+  '/api/login': { cause: 'SHA-256 hashing + Supabase kald', fix: 'Normalt. Brug Supabase EU-Central region for hurtigste svar.' },
+  '/api/db': { cause: 'Stor SELECT forespørgsel', fix: 'Tilføj index: CREATE INDEX ON documents(subject);' },
+};
+
+function getFix(route) {
+  for (const [k, v] of Object.entries(FIXES)) {
+    if (route.includes(k)) return v;
+  }
+  return { cause: 'Ukendt — tjek Vercel function logs', fix: 'Vercel Dashboard → Deployments → Functions → Logs' };
+}
+
+function dashboard(metrics) {
+  const byRoute = {};
+  for (const m of metrics) {
+    if (!byRoute[m.route]) byRoute[m.route] = [];
+    byRoute[m.route].push(m);
+  }
+  const rows = Object.entries(byRoute)
+    .map(([route, arr]) => {
+      const avg = Math.round(arr.reduce((s, m) => s + m.duration_ms, 0) / arr.length);
+      const worst = Math.max(...arr.map(m => m.duration_ms));
+      const errors = arr.filter(m => m.status_code >= 400).length;
+      const r = rate(avg);
+      const fix = getFix(route);
+      return { route, avg, worst, calls: arr.length, errors, ...r };
+    })
     .sort((a, b) => a.score - b.score);
 
-  const rows = sorted.map(r => {
+  const total = metrics.length;
+  const avgAll = total ? Math.round(metrics.reduce((s, m) => s + m.duration_ms, 0) / total) : 0;
+  const errTotal = metrics.filter(m => m.status_code >= 400).length;
+  const overall = rows.length ? Math.round(rows.reduce((s, r) => s + r.score, 0) / rows.length) : 100;
+  const oc = overall >= 75 ? '#10b981' : overall >= 50 ? '#f59e0b' : '#ef4444';
+
+  const routeCards = rows.map(r => {
     const fix = getFix(r.route);
-    const errorPct = r.calls > 0 ? Math.round(r.errors / r.calls * 100) : 0;
-    return `
-    <div class="route-card" style="border-left:4px solid ${r.color}">
-      <div class="route-header">
+    return `<div style="background:#1e293b;border:1px solid #334155;border-left:4px solid ${r.color};border-radius:10px;padding:16px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <div>
-          <span class="route-name">${r.route}</span>
-          <span class="badge" style="background:${r.color}20;color:${r.color};border:1px solid ${r.color}40">${r.label}</span>
+          <code style="color:#e2e8f0;font-size:.85rem;">${r.route}</code>
+          <span style="margin-left:8px;font-size:.65rem;font-weight:600;padding:2px 8px;border-radius:20px;background:${r.color}20;color:${r.color};border:1px solid ${r.color}40">${r.label}</span>
         </div>
-        <div class="score" style="color:${r.color}">${r.score}</div>
+        <div style="font-size:1.8rem;font-weight:700;color:${r.color}">${r.score}</div>
       </div>
-      <div class="route-stats">
-        <span>⌀ ${r.avg}ms</span>
-        <span>🔼 ${r.worst}ms</span>
-        <span>🔽 ${r.best}ms</span>
-        <span>📊 ${r.calls} kald</span>
-        ${r.errors > 0 ? `<span style="color:#ef4444">❌ ${errorPct}% fejl</span>` : '<span style="color:#10b981">✓ Ingen fejl</span>'}
+      <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:.75rem;color:#94a3b8;margin-bottom:${r.score < 75 ? '10px' : '0'};">
+        <span>⌀ ${r.avg}ms</span><span>🔼 ${r.worst}ms</span><span>📊 ${r.calls} kald</span>
+        <span style="color:${r.errors > 0 ? '#ef4444' : '#10b981'}">${r.errors > 0 ? '❌ ' + r.errors + ' fejl' : '✓ Ingen fejl'}</span>
       </div>
-      ${r.score < 75 ? `
-      <div class="fix-box">
-        <div class="fix-title">⚡ ${fix.summary}</div>
-        <div class="fix-cause"><strong>Årsag:</strong> ${fix.cause}</div>
-        <div class="fix-action"><strong>Fix:</strong> ${fix.fix}</div>
-        <div class="fix-how"><strong>Sådan:</strong> ${fix.how}</div>
+      ${r.score < 75 ? `<div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;font-size:.78rem;">
+        <div style="color:#f59e0b;font-weight:600;margin-bottom:4px;">⚡ Fix</div>
+        <div style="color:#94a3b8;"><strong style="color:#cbd5e1;">Årsag:</strong> ${fix.cause}</div>
+        <div style="color:#94a3b8;margin-top:4px;"><strong style="color:#cbd5e1;">Løsning:</strong> ${fix.fix}</div>
       </div>` : ''}
     </div>`;
   }).join('');
 
-  const totalCalls = metrics.length;
-  const avgAll = metrics.length ? Math.round(metrics.reduce((s, m) => s + m.duration_ms, 0) / metrics.length) : 0;
-  const errorCount = metrics.filter(m => m.status_code >= 400).length;
-  const overallScore = sorted.length ? Math.round(sorted.reduce((s, r) => s + r.score, 0) / sorted.length) : 100;
-  const overallColor = overallScore >= 75 ? '#10b981' : overallScore >= 50 ? '#f59e0b' : '#ef4444';
-
-  return `<!DOCTYPE html>
-<html lang="da">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Cyber2026 — Performance</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;}
-header{background:#1e293b;border-bottom:1px solid #334155;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;}
-.logo{font-weight:700;font-size:1.1rem;color:#60a5fa;}
-.logo span{color:#94a3b8;font-weight:400;font-size:.85rem;margin-left:8px;}
-.overall{display:flex;align-items:center;gap:8px;}
-.overall-score{font-size:2rem;font-weight:700;color:${overallColor};}
-.overall-label{font-size:.75rem;color:#94a3b8;}
-main{max-width:800px;margin:0 auto;padding:24px 16px;}
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
-.stat-card{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:16px;text-align:center;}
-.stat-num{font-size:1.6rem;font-weight:700;color:#60a5fa;}
-.stat-label{font-size:.72rem;color:#94a3b8;margin-top:4px;}
-.section-title{font-size:.7rem;font-weight:600;letter-spacing:.1em;color:#64748b;text-transform:uppercase;margin-bottom:12px;}
-.route-card{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:16px;margin-bottom:12px;}
-.route-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
-.route-name{font-family:monospace;font-size:.85rem;color:#e2e8f0;margin-right:8px;}
-.badge{font-size:.65rem;font-weight:600;padding:2px 8px;border-radius:20px;}
-.score{font-size:1.5rem;font-weight:700;}
-.route-stats{display:flex;flex-wrap:wrap;gap:12px;font-size:.75rem;color:#94a3b8;margin-bottom:8px;}
-.fix-box{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px;margin-top:10px;}
-.fix-title{font-weight:600;color:#f59e0b;margin-bottom:6px;font-size:.82rem;}
-.fix-cause,.fix-action,.fix-how{font-size:.78rem;color:#94a3b8;margin-top:4px;line-height:1.5;}
-.fix-cause strong,.fix-action strong,.fix-how strong{color:#cbd5e1;}
-.empty{text-align:center;padding:60px;color:#64748b;}
-.refresh{background:#3b82f6;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:.8rem;font-weight:600;}
-.refresh:hover{background:#2563eb;}
-footer{text-align:center;padding:24px;font-size:.72rem;color:#475569;}
-</style>
-</head>
-<body>
-<header>
-  <div>
-    <div class="logo">⚡ Cyber2026 <span>Performance Dashboard</span></div>
-    <div style="font-size:.72rem;color:#64748b;margin-top:2px;">Sidst opdateret: ${new Date().toLocaleString('da-DK')}</div>
+  return `<!DOCTYPE html><html lang="da"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cyber2026 Performance</title>
+<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,sans-serif;background:#0f172a;color:#e2e8f0;}</style>
+</head><body>
+<div style="background:#1e293b;border-bottom:1px solid #334155;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;">
+  <div><div style="font-weight:700;color:#60a5fa;font-size:1.1rem;">⚡ Cyber2026 Performance</div>
+  <div style="font-size:.72rem;color:#64748b;margin-top:2px;">${new Date().toLocaleString('da-DK')}</div></div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div style="text-align:center"><div style="font-size:2rem;font-weight:700;color:${oc}">${overall}</div><div style="font-size:.7rem;color:#64748b;">samlet score</div></div>
+    <button onclick="location.reload()" style="background:#3b82f6;color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:.8rem;font-weight:600;">↻ Opdater</button>
+    <a href="/" style="color:#64748b;font-size:.8rem;text-decoration:none;">← App</a>
   </div>
-  <div class="overall">
-    <div>
-      <div class="overall-score">${overallScore}</div>
-      <div class="overall-label">Samlet score</div>
-    </div>
-    <button class="refresh" onclick="location.reload()">↻ Opdater</button>
+</div>
+<div style="max-width:800px;margin:0 auto;padding:24px 16px;">
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;">
+    <div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:16px;text-align:center;">
+      <div style="font-size:1.6rem;font-weight:700;color:#60a5fa;">${total}</div><div style="font-size:.72rem;color:#94a3b8;margin-top:4px;">Totale kald</div></div>
+    <div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:16px;text-align:center;">
+      <div style="font-size:1.6rem;font-weight:700;color:#60a5fa;">${avgAll}ms</div><div style="font-size:.72rem;color:#94a3b8;margin-top:4px;">Gns. svartid</div></div>
+    <div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:16px;text-align:center;">
+      <div style="font-size:1.6rem;font-weight:700;color:${errTotal > 0 ? '#ef4444' : '#10b981'}">${errTotal}</div><div style="font-size:.72rem;color:#94a3b8;margin-top:4px;">Fejl (4xx/5xx)</div></div>
   </div>
-</header>
-<main>
-  <div class="stats-grid">
-    <div class="stat-card"><div class="stat-num">${totalCalls}</div><div class="stat-label">Totale kald (seneste 500)</div></div>
-    <div class="stat-card"><div class="stat-num">${avgAll}ms</div><div class="stat-label">Gennemsnitlig svartid</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:${errorCount > 0 ? '#ef4444' : '#10b981'}">${errorCount}</div><div class="stat-label">Fejl (4xx/5xx)</div></div>
-  </div>
-  <div class="section-title">Routes — langsomst øverst</div>
-  ${rows || '<div class="empty">📊 Ingen data endnu — brug appen lidt og genindlæs</div>'}
-</main>
-<footer>Cyber2026 Performance · Kun synligt for admin · <a href="/" style="color:#60a5fa">← Tilbage til appen</a></footer>
-</body>
-</html>`;
+  <div style="font-size:.7rem;font-weight:600;letter-spacing:.1em;color:#64748b;text-transform:uppercase;margin-bottom:12px;">Routes — langsomst øverst</div>
+  ${routeCards || '<div style="text-align:center;padding:60px;color:#64748b;">📊 Ingen data endnu — brug appen lidt og genindlæs</div>'}
+</div></body></html>`;
 }
 
-const LOGIN_FORM = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Performance</title>
-<style>body{background:#0f172a;color:#e2e8f0;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;}
+const LOGIN_PAGE = `<!DOCTYPE html><html lang="da"><head><meta charset="UTF-8"><title>Performance</title>
+<style>*{box-sizing:border-box;}body{background:#0f172a;color:#e2e8f0;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;margin:0;}
 .box{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:32px;width:300px;text-align:center;}
-h2{margin-bottom:16px;color:#60a5fa;}
-p{font-size:.8rem;color:#64748b;margin-bottom:16px;}
+h2{margin-bottom:8px;color:#60a5fa;}p{font-size:.8rem;color:#64748b;margin-bottom:20px;}
 input{width:100%;background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:10px;border-radius:8px;margin-bottom:12px;font-size:.9rem;outline:none;}
-input:focus{border-color:#3b82f6;}
 button{width:100%;background:#3b82f6;color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:600;}
-.err{color:#ef4444;font-size:.8rem;margin-bottom:8px;}
 </style></head>
-<body><div class="box">
-<h2>⚡ Performance</h2>
-<p>Kun for admin</p>
-\${error ? '<div class="err">Forkert adgangskode</div>' : ''}
+<body><div class="box"><h2>⚡ Performance</h2><p>Kun for admin</p>
 <form method="POST" action="/api/perf">
 <input type="password" name="pass" placeholder="Admin adgangskode" autofocus autocomplete="current-password">
-<button type="submit">Vis dashboard</button>
-</form>
-</div></body></html>`;
-
-function getSessionCookie(req) {
-  const cookies = req.headers.cookie || '';
-  const match = cookies.match(/perf_session=([^;]+)/);
-  return match ? match[1] : null;
-}
-
-function checkSession(req) {
-  const session = getSessionCookie(req);
-  // Session er HMAC af admin password med en tidsstempel — forenklet: bare hash
-  const expected = Buffer.from(ADMIN_PASS + '-perf-session').toString('base64').slice(0, 20);
-  return session === expected;
-}
+<button type="submit">Log ind</button>
+</form></div></body></html>`;
 
 export default async function handler(req, res) {
-  const sessionToken = Buffer.from(ADMIN_PASS + '-perf-session').toString('base64').slice(0, 20);
-
-  // POST login-formular
+  // POST: enten login eller gem måling
   if (req.method === 'POST') {
     const body = req.body || {};
 
-    // Hvis det er en login-formular (har 'pass' felt)
-    if (body.pass !== undefined) {
+    // Login formular
+    if ('pass' in body) {
       if (body.pass === ADMIN_PASS) {
-        // Sæt session cookie og redirect til dashboard
-        res.setHeader('Set-Cookie', `perf_session=${sessionToken}; HttpOnly; SameSite=Lax; Path=/api/perf; Max-Age=3600`);
+        res.setHeader('Set-Cookie', `perf_auth=${getSessionToken()}; HttpOnly; SameSite=Lax; Path=/api/perf; Max-Age=3600`);
         res.setHeader('Location', '/api/perf');
         return res.status(302).end();
-      } else {
-        const error = true;
-        return res.status(401).send(LOGIN_FORM.replace('\${error ? '<div class="err">Forkert adgangskode</div>' : ''}', '<div class="err">Forkert adgangskode</div>'));
       }
+      return res.status(401).send(LOGIN_PAGE);
     }
 
-    // Ellers: gem en måling (kræver session)
-    if (!checkSession(req)) return res.status(401).json({ error: 'Ikke autoriseret' });
+    // Gem måling (fra appen)
+    if (!isLoggedIn(req) && req.headers['x-internal'] !== process.env.SUPABASE_KEY?.slice(0, 10)) {
+      return res.status(401).json({ error: 'Ikke autoriseret' });
+    }
     const { route, duration_ms, status_code } = body;
     if (route && duration_ms) {
       await saveMetric(route, duration_ms, status_code || 200);
@@ -268,27 +165,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Manglende felter' });
   }
 
-  // GET: tjek session
-  if (!checkSession(req)) {
-    return res.status(401).send(LOGIN_FORM.replace('\${error ? '<div class="err">Forkert adgangskode</div>' : ''}', ''));
+  // GET: vis dashboard eller login
+  if (!isLoggedIn(req)) {
+    return res.status(200).send(LOGIN_PAGE);
   }
 
-  // Vis dashboard
-  if (req.method === 'GET') {
-    const { route, duration_ms, status_code } = req.body || {};
-    if (route && duration_ms) {
-      await saveMetric(route, duration_ms, status_code || 200);
-      return res.status(200).json({ ok: true });
-    }
-    return res.status(400).json({ error: 'Manglende felter' });
-  }
-
-  // GET: vis dashboard
   const metrics = await getMetrics();
-  const html = buildDashboard(metrics);
-  const metrics = await getMetrics();
-  const html = buildDashboard(metrics);
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  return res.send(html);
-  }
+  return res.send(dashboard(metrics));
 }
