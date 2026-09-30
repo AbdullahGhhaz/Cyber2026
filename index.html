@@ -1625,7 +1625,19 @@ async function generateAll(docName){
     renderDocs();
     const modeSteps={quiz:1,summary:2,explain:3};
     const modeNames={quiz:'Quiz',summary:'Opsummering',explain:'Forklaring'};
+    // Tjek hvad der allerede eksisterer i databasen
+    const existingQ=(quizQuestions||[]).filter(q=>q.filename===doc.filename);
+    const existingContent=savedResults||[];
+    const hasQuiz=existingQ.length>=5;
+    const hasSummary=existingContent.some(r=>r.type==='summary'&&r.scope_filename===doc.filename);
+    const hasExplain=existingContent.some(r=>r.type==='explain'&&r.scope_filename===doc.filename);
+    let didAnything=false;
     for(const mode of['quiz','summary','explain']){
+      // Spring over hvis allerede genereret
+      if(mode==='quiz'&&hasQuiz){docProgress(doc.id,1,'⏭ Quiz OK');await new Promise(r=>setTimeout(r,300));continue;}
+      if(mode==='summary'&&hasSummary){docProgress(doc.id,2,'⏭ Opsummering OK');await new Promise(r=>setTimeout(r,300));continue;}
+      if(mode==='explain'&&hasExplain){docProgress(doc.id,3,'⏭ Forklaring OK');await new Promise(r=>setTimeout(r,300));continue;}
+      didAnything=true;
       docProgress(doc.id,modeSteps[mode]);
       currentMode=mode;
       document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.textContent.includes(modeNames[mode])));
@@ -1633,8 +1645,8 @@ async function generateAll(docName){
       try{await generate();}catch(e){console.error(e);docProgress(doc.id,modeSteps[mode],'✗ Fejl: '+mode);}
       await new Promise(r=>setTimeout(r,1500));
     }
-    docProgress(doc.id,4);
-    showToast('✓ Færdig: '+docName,'success');
+    docProgress(doc.id,4,didAnything?'✓ Færdig!':'⏭ Alt fandtes allerede');
+    showToast((didAnything?'✓ Færdig: ':'⏭ Springer over: ')+docName,'success');
   });
   _runQueue();
 }
