@@ -204,30 +204,77 @@ footer{text-align:center;padding:24px;font-size:.72rem;color:#475569;}
 </html>`;
 }
 
-export default async function handler(req, res) {
-  // Tjek admin adgang
-  const adminPass = req.headers['x-admin-pass'] || req.query.pass;
-  if (!adminPass || adminPass !== ADMIN_PASS) {
-    // Vis login-form
-    return res.status(401).send(`<!DOCTYPE html>
+const LOGIN_FORM = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>Performance</title>
 <style>body{background:#0f172a;color:#e2e8f0;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;}
 .box{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:32px;width:300px;text-align:center;}
 h2{margin-bottom:16px;color:#60a5fa;}
-input{width:100%;background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:10px;border-radius:8px;margin-bottom:12px;font-size:.9rem;}
+p{font-size:.8rem;color:#64748b;margin-bottom:16px;}
+input{width:100%;background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:10px;border-radius:8px;margin-bottom:12px;font-size:.9rem;outline:none;}
+input:focus{border-color:#3b82f6;}
 button{width:100%;background:#3b82f6;color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:600;}
+.err{color:#ef4444;font-size:.8rem;margin-bottom:8px;}
 </style></head>
 <body><div class="box">
 <h2>⚡ Performance</h2>
-<form method="GET">
-<input type="password" name="pass" placeholder="Admin adgangskode" autofocus>
+<p>Kun for admin</p>
+\${error ? '<div class="err">Forkert adgangskode</div>' : ''}
+<form method="POST" action="/api/perf">
+<input type="password" name="pass" placeholder="Admin adgangskode" autofocus autocomplete="current-password">
 <button type="submit">Vis dashboard</button>
 </form>
-</div></body></html>`);
+</div></body></html>`;
+
+function getSessionCookie(req) {
+  const cookies = req.headers.cookie || '';
+  const match = cookies.match(/perf_session=([^;]+)/);
+  return match ? match[1] : null;
+}
+
+function checkSession(req) {
+  const session = getSessionCookie(req);
+  // Session er HMAC af admin password med en tidsstempel — forenklet: bare hash
+  const expected = Buffer.from(ADMIN_PASS + '-perf-session').toString('base64').slice(0, 20);
+  return session === expected;
+}
+
+export default async function handler(req, res) {
+  const sessionToken = Buffer.from(ADMIN_PASS + '-perf-session').toString('base64').slice(0, 20);
+
+  // POST login-formular
+  if (req.method === 'POST') {
+    const body = req.body || {};
+
+    // Hvis det er en login-formular (har 'pass' felt)
+    if (body.pass !== undefined) {
+      if (body.pass === ADMIN_PASS) {
+        // Sæt session cookie og redirect til dashboard
+        res.setHeader('Set-Cookie', `perf_session=${sessionToken}; HttpOnly; SameSite=Lax; Path=/api/perf; Max-Age=3600`);
+        res.setHeader('Location', '/api/perf');
+        return res.status(302).end();
+      } else {
+        const error = true;
+        return res.status(401).send(LOGIN_FORM.replace('\${error ? '<div class="err">Forkert adgangskode</div>' : ''}', '<div class="err">Forkert adgangskode</div>'));
+      }
+    }
+
+    // Ellers: gem en måling (kræver session)
+    if (!checkSession(req)) return res.status(401).json({ error: 'Ikke autoriseret' });
+    const { route, duration_ms, status_code } = body;
+    if (route && duration_ms) {
+      await saveMetric(route, duration_ms, status_code || 200);
+      return res.status(200).json({ ok: true });
+    }
+    return res.status(400).json({ error: 'Manglende felter' });
   }
 
-  // POST: gem en måling
-  if (req.method === 'POST') {
+  // GET: tjek session
+  if (!checkSession(req)) {
+    return res.status(401).send(LOGIN_FORM.replace('\${error ? '<div class="err">Forkert adgangskode</div>' : ''}', ''));
+  }
+
+  // Vis dashboard
+  if (req.method === 'GET') {
     const { route, duration_ms, status_code } = req.body || {};
     if (route && duration_ms) {
       await saveMetric(route, duration_ms, status_code || 200);
@@ -239,6 +286,9 @@ button{width:100%;background:#3b82f6;color:#fff;border:none;padding:10px;border-
   // GET: vis dashboard
   const metrics = await getMetrics();
   const html = buildDashboard(metrics);
+  const metrics = await getMetrics();
+  const html = buildDashboard(metrics);
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.send(html);
+  return res.send(html);
+  }
 }
