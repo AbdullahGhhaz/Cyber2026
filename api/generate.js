@@ -143,7 +143,7 @@ export default async function handler(req, res) {
         // quiz/code-exercise: stort input + lang genereret tekst tilsammen oeger
         // risikoen for at ramme Vercels 60-sekunders tidsgraense for funktionen
         // (bekraeftet i praksis: "Task timed out after 60 seconds" paa disse tilstande).
-        const promptCap = (mode === 'summary' || mode === 'explain' || mode === 'fag-summary') ? 12000 : 40000;
+        const promptCap = (mode === 'summary' || mode === 'explain' || mode === 'fag-summary') ? 24000 : 40000;
           if (prompt && prompt.length > promptCap) prompt = prompt.slice(0, promptCap) + '\n\n[Afkortet]';
 
         // MODE: Omformuler ét enkelt spørgsmål — lille, mekanisk opgave -> Haiku
