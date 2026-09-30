@@ -1361,27 +1361,47 @@ async function generate(){
   try{
     const body={prompt:buildPrompt(),mode:currentMode,sessionToken:sessionStorage.getItem('sessionToken')};
     if(currentMode==='quiz')body.existingQuestions=quizQuestions.slice(-40);if(currentMode==='explain'){const topicInput=document.getElementById('topicInput').value||'';body.topic=topicInput||('de vigtigste begreber i '+currentSubject);}
-    const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),55000);
-    let r;try{r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ctrl.signal});}finally{clearTimeout(to);}
-    const data=await r.json();
-    if(data.error)throw new Error(data.error);
-    if(currentMode==='quiz'&&data.questions){
-      await saveQuizQuestions(data.questions);
-      document.getElementById('quizBank').style.display='block';
-      if(quizQuestions.length<=5)startQuiz();
-    } else {
-      currentOutput=data.text;
+    const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok){const e=await r.json();throw new Error(e.error||'Serverfejl');}
+    // Streaming for summary/explain, JSON for quiz/code
+    if(currentMode==='summary'||currentMode==='explain'){
       const labels={summary:'// opsummering',explain:'// forklaring'};
       document.getElementById('outputLabel').textContent=labels[currentMode]||'// resultat';
-      renderOutput(data.text);
-      document.getElementById('outputBtns').innerHTML=`<button class="obtn" onclick="copyOutput()">📋 Kopiér</button>`;
       document.getElementById('outputWrap').classList.add('visible');
       document.getElementById('outputWrap').scrollIntoView({behavior:'smooth',block:'start'});
+      document.getElementById('outputContent').innerHTML='<div class="md-out" id="streamOut"></div>';
+      const reader=r.body.getReader();const decoder=new TextDecoder();
+      let streamed='';
+      while(true){
+        const {done,value}=await reader.read();
+        if(done)break;
+        streamed+=decoder.decode(value,{stream:true});
+        document.getElementById('streamOut').innerHTML=marked?marked.parse(streamed):streamed;
+      }
+      currentOutput=streamed;
+      renderOutput(streamed);
+      document.getElementById('outputBtns').innerHTML='<button class="obtn" onclick="copyOutput()">📋 Kopiér</button>';
       await autoSave();
+    } else {
+      const data=await r.json();
+      if(data.error)throw new Error(data.error);
+      if(currentMode==='quiz'&&data.questions){
+        await saveQuizQuestions(data.questions);
+        document.getElementById('quizBank').style.display='block';
+        if(quizQuestions.length<=5)startQuiz();
+      } else {
+        currentOutput=data.text;
+        const labels={summary:'// opsummering',explain:'// forklaring'};
+        document.getElementById('outputLabel').textContent=labels[currentMode]||'// resultat';
+        renderOutput(data.text);
+        document.getElementById('outputBtns').innerHTML='<button class="obtn" onclick="copyOutput()">📋 Kopiér</button>';
+        document.getElementById('outputWrap').classList.add('visible');
+        document.getElementById('outputWrap').scrollIntoView({behavior:'smooth',block:'start'});
+        await autoSave();
+      }
     }
   }catch(e){
-    const msg=e.name==='AbortError'?'Tidsbegrænsning overskredet (55s) — prøv igen, evt. med færre filer eller vælg én enkelt fil.':e.message;
-    document.getElementById('outputContent').innerHTML=`<div class="md-out" style="color:var(--danger)">Fejl: ${msg}</div>`;
+    document.getElementById('outputContent').innerHTML=`<div class="md-out" style="color:var(--danger)">Fejl: ${e.message}</div>`;
     document.getElementById('outputWrap').classList.add('visible');
   }
   btn.disabled=false;loading.classList.remove('visible');
