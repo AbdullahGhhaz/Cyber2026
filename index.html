@@ -1530,13 +1530,27 @@ selectDoc=function(id){
 // Generate-all knap for admin (injiceres på doc-cards)
 async function generateAll(docName){
   if(!isAdmin){showToast('Kun for admin','error');return;}
+  // Find doc id ud fra filnavn
+  const doc=(allDocs[currentSubject]||[]).find(d=>d.filename===docName);
+  if(!doc){showToast('Fil ikke fundet: '+docName,'error');return;}
+  // Skift til enkelt fil scope og vælg filen
+  const singleBtn=document.querySelector('.scope-btn[onclick*="single"]');
+  if(singleBtn&&currentScope!=='single'){
+    currentScope='single';
+    document.querySelectorAll('.scope-btn').forEach(b=>b.classList.remove('active'));
+    singleBtn.classList.add('active');
+  }
+  selectedDocId=doc.id;
+  const info=document.getElementById('scopeInfo');
+  if(info){info.textContent='📄 '+doc.filename;info.style.display='block';}
+  renderDocs();
   showToast('Genererer alt for '+docName+'...','success');
   for(const mode of['quiz','summary','explain']){
     currentMode=mode;
     document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.textContent.includes(mode==='quiz'?'Quiz':mode==='summary'?'Opsummering':'Forklaring')));
     await new Promise(r=>setTimeout(r,300));
     try{await generate();}catch(e){console.error(e);}
-    await new Promise(r=>setTimeout(r,1500));
+    await new Promise(r=>setTimeout(r,2000));
   }
   showToast('Alt genereret for '+docName,'success');
 }
