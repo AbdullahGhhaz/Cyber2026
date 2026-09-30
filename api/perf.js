@@ -11,7 +11,10 @@ function getSessionToken() {
 function isLoggedIn(req) {
   const cookies = req.headers.cookie || '';
   const match = cookies.match(/perf_auth=([^;]+)/);
-  return match && match[1] === getSessionToken();
+  if (match && match[1] === getSessionToken()) return true;
+  // Tjek også Authorization header som fallback
+  const auth = req.headers['authorization'] || '';
+  return auth === `Bearer ${getSessionToken()}`;
 }
 
 async function saveMetric(route, ms, status) {
@@ -131,12 +134,23 @@ const LOGIN_PAGE = `<!DOCTYPE html><html lang="da"><head><meta charset="UTF-8"><
 h2{margin-bottom:8px;color:#60a5fa;}p{font-size:.8rem;color:#64748b;margin-bottom:20px;}
 input{width:100%;background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:10px;border-radius:8px;margin-bottom:12px;font-size:.9rem;outline:none;}
 button{width:100%;background:#3b82f6;color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:600;}
+.err{color:#ef4444;font-size:.8rem;margin-bottom:8px;display:none;}
 </style></head>
 <body><div class="box"><h2>⚡ Performance</h2><p>Kun for admin</p>
-<form method="POST" action="/api/perf">
-<input type="password" name="pass" placeholder="Admin adgangskode" autofocus autocomplete="current-password">
-<button type="submit">Log ind</button>
-</form></div></body></html>`;
+<div class="err" id="err">Forkert adgangskode</div>
+<input type="password" id="pw" placeholder="Admin adgangskode" autofocus autocomplete="current-password">
+<button onclick="doLogin()">Log ind</button>
+<script>
+document.getElementById('pw').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+async function doLogin(){
+  const pw=document.getElementById('pw').value;
+  if(!pw)return;
+  const r=await fetch('/api/perf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pass:pw})});
+  if(r.ok){const d=await r.json();if(d.ok){document.cookie='perf_auth='+d.token+';path=/api/perf;max-age=3600';location.reload();}else{document.getElementById('err').style.display='block';document.getElementById('pw').value='';}}
+  else{document.getElementById('err').style.display='block';document.getElementById('pw').value='';}
+}
+</script>
+</div></body></html>`;
 
 export default async function handler(req, res) {
   // POST: enten login eller gem måling
@@ -146,11 +160,9 @@ export default async function handler(req, res) {
     // Login formular
     if ('pass' in body) {
       if (body.pass === ADMIN_PASS) {
-        res.setHeader('Set-Cookie', `perf_auth=${getSessionToken()}; HttpOnly; SameSite=Lax; Path=/api/perf; Max-Age=3600`);
-        res.setHeader('Location', '/api/perf');
-        return res.status(302).end();
+        return res.status(200).json({ ok: true, token: getSessionToken() });
       }
-      return res.status(401).send(LOGIN_PAGE);
+      return res.status(401).json({ ok: false, error: 'Forkert adgangskode' });
     }
 
     // Gem måling (fra appen)
