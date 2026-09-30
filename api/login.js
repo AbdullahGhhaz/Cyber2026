@@ -1,3 +1,14 @@
+async function trackPerf(route, startTime, statusCode) {
+  const ms = Date.now() - startTime;
+  try {
+    await fetch(`${process.env.SUPABASE_URL}/rest/v1/perf_metrics`, {
+      method: 'POST',
+      headers: { 'apikey': process.env.SUPABASE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ route, duration_ms: ms, status_code: statusCode })
+    });
+  } catch(e) {} // Fejl i tracking må aldrig påvirke appen
+}
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
@@ -151,6 +162,7 @@ const payloadStr = JSON.stringify({ uid: uid || null, role, tv: tokenVersion || 
 }
 
 export default async function handler(req, res) {
+  const _perfStart = Date.now();
   if (req.method !== 'POST') return res.status(405).end();
   const body = req.body || {};
   const { action, username, password } = body;
