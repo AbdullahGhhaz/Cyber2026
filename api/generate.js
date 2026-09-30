@@ -268,12 +268,12 @@ export default async function handler(req, res) {
         // instruktionen bygges her på serveren og holdes i sin egen (ucachede) blok,
         // så materiale-blokken kan genbruges fra prompt-cachen på tværs af kald.
         const system = mode === 'summary'
-            ? 'Du laver eksamensopsummeringer på dansk. Brug markdown: # overskrifter, ## underoverskrifter, **fed** for nøglebegreber, - for punktlister. Vær grundig men præcis, og hold svaret fokuseret frem for udtømmende, så det kan genereres hurtigt og pålideligt.'
-                  : 'Du er pædagogisk underviser. Forklar grundigt med konkrete eksempler på dansk. Brug markdown: # overskrifter, **fed** for vigtige begreber, - for punktlister, ``` for kodeeksempler. Prioritér de vigtigste pointer og hold forklaringen fokuseret frem for udtømmende, så den kan genereres hurtigt og pålideligt.';
+            ? 'Du laver eksamensopsummeringer på dansk. Brug markdown: # overskrifter, ## underoverskrifter, **fed** for nøglebegreber, - for punktlister. Materialet kan indeholde afsnit markeret [Visuelt indhold] — disse er tekst udtrukket fra diagrammer, figurer og slides via OCR. Integrer dette indhold naturligt i opsummeringen og beskriv hvad diagrammerne illustrerer baseret på konteksten. Vær grundig men præcis.'
+                  : 'Du er pædagogisk underviser. Forklar grundigt med konkrete eksempler på dansk. Brug markdown: # overskrifter, **fed** for vigtige begreber, - for punktlister, ``` for kodeeksempler. Materialet kan indeholde afsnit markeret [Visuelt indhold] — disse er tekst fra diagrammer og figurer via OCR. Beskriv og forklar hvad disse diagrammer viser baseret på konteksten, og integrer dem naturligt i forklaringen. Prioritér de vigtigste pointer.';
 
         const instruction = mode === 'summary'
-            ? '\n\n---\nOPGAVE: Lav en grundig struktureret eksamensopsummering på dansk.'
-                  : `\n\n---\nOPGAVE: Forklar følgende emne grundigt på dansk: "${topic || 'de vigtigste begreber i emnet'}". Brug eksempler.`;
+            ? '\n\n---\nOPGAVE: Lav en grundig struktureret eksamensopsummering på dansk. Inkludér beskrivelser af diagrammer og figurer fra [Visuelt indhold]-afsnittene.'
+                  : `\n\n---\nOPGAVE: Forklar følgende emne grundigt på dansk: "${topic || 'de vigtigste begreber i emnet'}". Brug eksempler og beskriv relevante diagrammer og figurer fra materialet.`;
 
         // maxTokens saenket fra 4096 -> 2400: reducerer risikoen for at ramme
         // Vercels 60-sekunders tidsgraense (Hobby-plan-loft) markant, uden at goere
