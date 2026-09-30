@@ -390,7 +390,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
       <span class="admin-badge" id="headerAdminBadge" style="display:none;">ADMIN</span>
     </div>
     <button class="hbtn" id="adminPanelBtn" onclick="openAdminPanel()" style="display:none;">👥 Brugere</button>
-    <a class="hbtn" id="perfBtn" href="/api/perf" target="_blank" style="display:none;text-decoration:none;">📊 Perf</a>
+    <button class="hbtn" id="perfBtn" onclick="openPerf()" style="display:none;">📊 Perf</button>
     <button class="hbtn" onclick="toggleTheme()" id="themeBtn">☀ LYS</button>
     <button class="hbtn" id="logoutBtn" onclick="doLogout()" style="display:none;border-color:var(--danger);color:var(--danger);">↩ Log ud</button>
   </div>
@@ -672,6 +672,10 @@ function afterLogin(role,name){
     document.getElementById('sidebarSaved').style.display='block';
   }
   loadData();
+}
+function openPerf(){
+  const pass=sessionStorage.getItem('adminPass')||'';
+  window.open('/api/perf?token='+encodeURIComponent(pass),'_blank');
 }
 function doLogout(){
   sessionStorage.clear();
