@@ -279,8 +279,65 @@ export default async function handler(req, res) {
         // maxTokens saenket fra 4096 -> 2400: reducerer risikoen for at ramme
         // Vercels 60-sekunders tidsgraense (Hobby-plan-loft) markant, uden at goere
         // svaret for kort til at vaere brugbart som eksamensopsummering/-forklaring.
-        const text = await callClaude(system, cachedContent(prompt, instruction), 2400);
-          return res.status(200).json({ text });
+        // Brug streaming for summary/explain for at undgå Vercel 60s timeout.
+        // Med streaming sendes første byte inden for få sekunder, og Vercel
+        // afbryder ikke forbindelsen mens data flyder.
+        const streamRes = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': process.env.ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01',
+            'anthropic-beta': 'prompt-caching-2024-07-31'
+          },
+          body: JSON.stringify({
+            model: MODEL_SONNET,
+            max_tokens: 2400,
+            stream: true,
+            system,
+            messages: [{ role: 'user', content: cachedContent(prompt, instruction) }]
+          })
+        });
+        if (!streamRes.ok) {
+          const err = await streamRes.json();
+          throw new Error(err.error?.message || 'API fejl');
+        }
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('Transfer-Encoding', 'chunked');
+        res.setHeader('X-Accel-Buffering', 'no');
+        let fullText = '';
+        const reader = streamRes.body.getReader();
+        const decoder = new TextDecoder();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          for (const line of chunk.split('\n')) {
+            if (!line.startsWith('data: ')) continue;
+            const data = line.slice(6).trim();
+            if (data === '[DONE]') continue;
+            try {
+              const evt = JSON.parse(data);
+              if (evt.type === 'content_block_delta' && evt.delta?.text) {
+                fullText += evt.delta.text;
+                res.write(evt.delta.text);
+              }
+            } catch {}
+          }
+        }
+        res.end();
+        // Gem i Supabase bagefter
+        if (fullText.length > 100) {
+          try {
+            const scopeFn = (currentScope === 'single' && selectedScopeFn) ? selectedScopeFn : null;
+            await fetch(`${SUPABASE_URL}/rest/v1/generated_content`, {
+              method: 'POST',
+              headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+              body: JSON.stringify({ subject, type: mode, content: fullText, scope_filename: filename || null })
+            });
+          } catch(e) { console.error('Supabase save error:', e); }
+        }
+        return;
 
   } catch (err) {
           console.error('Generate error:', err);
