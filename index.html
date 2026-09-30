@@ -1349,7 +1349,6 @@ async function generate(){
   const modeLabels={quiz:'Quiz',summary:'Opsummering',explain:'Forklaring'};
   const mL=modeLabels[currentMode]||currentMode;
   const sL=currentScope==='single'&&selectedDocId?(allDocs[currentSubject]||[]).find(d=>d.id===selectedDocId)?.filename||'valgt fil':'alle filer i '+currentSubject;
-  if(!confirm(`Generer ${mL} for ${sL}?`))return;
   const btn=document.getElementById('genBtn');
   const loading=document.getElementById('loading');
   btn.disabled=true;loading.classList.add('visible');
@@ -1387,7 +1386,6 @@ async function generateFagOpsummering(){
   const saved=allSaved[currentSubject]||[];
   const summaries=saved.filter(s=>s.type==='summary'||s.type==='explain');
   if(!summaries.length){showToast('Ingen gemte opsummeringer — lav opsummeringer for de enkelte filer først!','error');return;}
-  if(!confirm(`Generer fag-overblik for ${currentSubject}?\n\nBygger på ${summaries.length} gemte opsummeringer.`))return;
   const btn=document.getElementById('fagSumBtn');const loading=document.getElementById('loading');
   if(btn)btn.disabled=true;loading.classList.add('visible');
   document.getElementById('loadingTxt').textContent='GENERERER FAG-OVERBLIK...';
