@@ -1562,31 +1562,49 @@ async function reparseDocument(docId, filename){
   }catch(e){showToast('Fejl: '+e.message,'error');}
 }
 
+// ── KØ-SYSTEM: forhindrer parallelle generate-kald ──────────
+var _genQueue=[];
+var _genRunning=false;
+
+async function _runQueue(){
+  if(_genRunning)return;
+  _genRunning=true;
+  while(_genQueue.length>0){
+    const job=_genQueue.shift();
+    try{await job();}catch(e){console.error('Queue job fejl:',e);}
+  }
+  _genRunning=false;
+}
+
 async function generateAll(docName){
   if(!isAdmin){showToast('Kun for admin','error');return;}
-  // Find doc id ud fra filnavn
-  const doc=(allDocs[currentSubject]||[]).find(d=>d.filename===docName);
-  if(!doc){showToast('Fil ikke fundet: '+docName,'error');return;}
-  // Skift til enkelt fil scope og vælg filen
-  const singleBtn=document.querySelector('.scope-btn[onclick*="single"]');
-  if(singleBtn&&currentScope!=='single'){
-    currentScope='single';
-    document.querySelectorAll('.scope-btn').forEach(b=>b.classList.remove('active'));
-    singleBtn.classList.add('active');
-  }
-  selectedDocId=doc.id;
-  const info=document.getElementById('scopeInfo');
-  if(info){info.textContent='📄 '+doc.filename;info.style.display='block';}
-  renderDocs();
-  showToast('Genererer alt for '+docName+'...','success');
-  for(const mode of['quiz','summary','explain']){
-    currentMode=mode;
-    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.textContent.includes(mode==='quiz'?'Quiz':mode==='summary'?'Opsummering':'Forklaring')));
-    await new Promise(r=>setTimeout(r,300));
-    try{await generate();}catch(e){console.error(e);}
-    await new Promise(r=>setTimeout(r,2000));
-  }
-  showToast('Alt genereret for '+docName,'success');
+  const queuePos=_genQueue.length+(_genRunning?1:0);
+  if(queuePos>0)showToast('Tilføjet til kø ('+queuePos+' venter)...','success');
+  _genQueue.push(async function(){
+    const doc=(allDocs[currentSubject]||[]).find(d=>d.filename===docName);
+    if(!doc){showToast('Fil ikke fundet: '+docName,'error');return;}
+    // Skift til enkelt fil
+    const singleBtn=document.querySelector('.scope-btn[onclick*="single"]');
+    if(singleBtn&&currentScope!=='single'){
+      currentScope='single';
+      document.querySelectorAll('.scope-btn').forEach(b=>b.classList.remove('active'));
+      singleBtn.classList.add('active');
+    }
+    selectedDocId=doc.id;
+    const info=document.getElementById('scopeInfo');
+    if(info){info.textContent='📄 '+doc.filename;info.style.display='block';}
+    renderDocs();
+    showToast('Genererer: '+docName+'...','success');
+    for(const mode of['quiz','summary','explain']){
+      currentMode=mode;
+      document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.textContent.includes(mode==='quiz'?'Quiz':mode==='summary'?'Opsummering':'Forklaring')));
+      await new Promise(r=>setTimeout(r,300));
+      try{await generate();}catch(e){console.error(e);}
+      await new Promise(r=>setTimeout(r,1500));
+    }
+    showToast('✓ Færdig: '+docName,'success');
+  });
+  _runQueue();
 }
 
 function injectGenererAltBtns(){
