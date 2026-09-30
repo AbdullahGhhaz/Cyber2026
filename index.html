@@ -55,6 +55,15 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .uz-text strong{color:var(--accent2);}
 .doc-items{display:flex;flex-direction:column;gap:4px;}
 .doc-card{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:7px;transition:all .2s;cursor:pointer;}
+.doc-progress{margin-top:4px;height:3px;background:var(--border);border-radius:3px;overflow:hidden;display:none;}
+.doc-progress.visible{display:block;}
+.doc-progress-bar{height:100%;border-radius:3px;transition:width .4s ease;width:0%;}
+.doc-progress-bar.quiz{background:var(--accent);}
+.doc-progress-bar.summary{background:var(--warn);}
+.doc-progress-bar.explain{background:var(--success);}
+.doc-status{font-family:var(--mono);font-size:.58rem;color:var(--muted);margin-top:2px;display:none;}
+.doc-status.visible{display:block;}
+.doc-card-wrap{display:flex;flex-direction:column;}
 .doc-card:hover{border-color:var(--accent2);background:var(--glow);transform:translateX(2px);}
 .doc-card.selected{border-color:var(--accent);background:var(--glow);}
 .doc-icon{font-size:.85rem;flex-shrink:0;}
@@ -1426,10 +1435,14 @@ function renderDocs(){
     const date=new Date(d.created_at).toLocaleDateString('da-DK',{day:'numeric',month:'short'});
     const isSelected=selectedDocId===d.id;
     const clickable=currentScope==='single'?`onclick="selectDoc('${d.id}')"`:`onclick="selectDocAndSwitch('${d.id}')"`;
-    return `<div class="doc-card${isSelected?' selected':''}" ${clickable}>
-      <span class="doc-icon">${icons[ext]||'📁'}</span>
-      <div class="doc-info"><div class="doc-name" title="${esc(d.filename)}">${esc(d.filename)}</div><div class="doc-meta">${size} · ${date}</div></div>
-      <button class="doc-del" onclick="event.stopPropagation();deleteDoc('${d.id}')">✕</button>
+    return `<div class="doc-card-wrap">
+      <div class="doc-card${isSelected?' selected':''}" ${clickable} id="doccard-${d.id}">
+        <span class="doc-icon">${icons[ext]||'📁'}</span>
+        <div class="doc-info"><div class="doc-name" title="${esc(d.filename)}">${esc(d.filename)}</div><div class="doc-meta">${size} · ${date}</div></div>
+        <button class="doc-del" onclick="event.stopPropagation();deleteDoc('${d.id}')">✕</button>
+      </div>
+      <div class="doc-progress" id="docprog-${d.id}"><div class="doc-progress-bar" id="docprogbar-${d.id}"></div></div>
+      <div class="doc-status" id="docstatus-${d.id}"></div>
     </div>`;
   }).join('');
 }
@@ -1559,6 +1572,27 @@ async function reparseDocument(docId, filename){
 }
 
 // ── KØ-SYSTEM: forhindrer parallelle generate-kald ──────────
+// ── PROGRESSBAR HELPERS ────────────────────────────────────
+function docProgress(docId, step, statusTxt){
+  // step: 0=idle, 1=quiz(33%), 2=summary(66%), 3=explain(100%), 4=done
+  const prog=document.getElementById('docprog-'+docId);
+  const bar=document.getElementById('docprogbar-'+docId);
+  const status=document.getElementById('docstatus-'+docId);
+  const card=document.getElementById('doccard-'+docId);
+  if(!prog||!bar||!status)return;
+  const steps={0:{w:'0%',cls:'',txt:''},1:{w:'33%',cls:'quiz',txt:'🎯 Genererer quiz...'},2:{w:'66%',cls:'summary',txt:'📋 Genererer opsummering...'},3:{w:'100%',cls:'explain',txt:'💡 Genererer forklaring...'},4:{w:'100%',cls:'explain',txt:'✓ Færdig!'}};
+  const s=steps[step]||steps[0];
+  if(step===0){prog.classList.remove('visible');status.classList.remove('visible');if(card)card.style.borderColor='';}
+  else{
+    prog.classList.add('visible');status.classList.add('visible');
+    bar.className='doc-progress-bar '+(s.cls||'');
+    bar.style.width=s.w;
+    status.textContent=statusTxt||s.txt;
+    if(card)card.style.borderColor=step===4?'var(--success)':step>=1?'var(--accent)':'';
+    if(step===4)setTimeout(()=>docProgress(docId,0),3000);
+  }
+}
+
 var _genQueue=[];
 var _genRunning=false;
 
@@ -1579,7 +1613,6 @@ async function generateAll(docName){
   _genQueue.push(async function(){
     const doc=(allDocs[currentSubject]||[]).find(d=>d.filename===docName);
     if(!doc){showToast('Fil ikke fundet: '+docName,'error');return;}
-    // Skift til enkelt fil
     const singleBtn=document.querySelector('.scope-btn[onclick*="single"]');
     if(singleBtn&&currentScope!=='single'){
       currentScope='single';
@@ -1590,14 +1623,17 @@ async function generateAll(docName){
     const info=document.getElementById('scopeInfo');
     if(info){info.textContent='📄 '+doc.filename;info.style.display='block';}
     renderDocs();
-    showToast('Genererer: '+docName+'...','success');
+    const modeSteps={quiz:1,summary:2,explain:3};
+    const modeNames={quiz:'Quiz',summary:'Opsummering',explain:'Forklaring'};
     for(const mode of['quiz','summary','explain']){
+      docProgress(doc.id,modeSteps[mode]);
       currentMode=mode;
-      document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.textContent.includes(mode==='quiz'?'Quiz':mode==='summary'?'Opsummering':'Forklaring')));
+      document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.textContent.includes(modeNames[mode])));
       await new Promise(r=>setTimeout(r,300));
-      try{await generate();}catch(e){console.error(e);}
+      try{await generate();}catch(e){console.error(e);docProgress(doc.id,modeSteps[mode],'✗ Fejl: '+mode);}
       await new Promise(r=>setTimeout(r,1500));
     }
+    docProgress(doc.id,4);
     showToast('✓ Færdig: '+docName,'success');
   });
   _runQueue();
