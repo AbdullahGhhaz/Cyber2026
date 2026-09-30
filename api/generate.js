@@ -1,3 +1,14 @@
+async function trackPerf(route, startTime, statusCode) {
+  const ms = Date.now() - startTime;
+  try {
+    await fetch(`${process.env.SUPABASE_URL}/rest/v1/perf_metrics`, {
+      method: 'POST',
+      headers: { 'apikey': process.env.SUPABASE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ route, duration_ms: ms, status_code: statusCode })
+    });
+  } catch(e) {} // Fejl i tracking må aldrig påvirke appen
+}
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
@@ -130,6 +141,7 @@ function shuffleAnswerPosition(q) {
 }
 
 export default async function handler(req, res) {
+  const _perfStart = Date.now();
       if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const session = await verifySessionToken(req.body?.sessionToken);
@@ -341,6 +353,6 @@ export default async function handler(req, res) {
 
   } catch (err) {
           console.error('Generate error:', err);
-          return res.status(500).json({ error: err.message });
+          await trackPerf('/api/generate', _perfStart, 500); return res.status(500).json({ error: err.message });
   }
 }
