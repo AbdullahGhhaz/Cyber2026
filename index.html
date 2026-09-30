@@ -907,7 +907,7 @@ async function loadData(){
 
 async function loadSubject(s){
   const i=SUBJECTS.indexOf(s);
-  allDocs[s]=await sb(`documents?subject=eq.${encodeURIComponent(s)}&order=created_at.asc`);
+  allDocs[s]=await sb(`documents?subject=eq.${encodeURIComponent(s)}&order=created_at.asc&select=id,subject,filename,content,file_data,file_type,created_at`);
   allSaved[s]=await sb(`generated_content?subject=eq.${encodeURIComponent(s)}&order=created_at.desc`);
   if(i>=0)document.getElementById(`cnt-${i}`).textContent=allDocs[s].length;
 }
@@ -975,6 +975,8 @@ function selectMode(btn,mode){
 
 // ── FILE HANDLING ──────────────────────────────────────────
 function handleDrop(e){e.preventDefault();document.getElementById('uploadZone').classList.remove('dragover');handleFiles(e.dataTransfer.files);}
+async function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});}
+
 async function handleFiles(files){
   for(const file of files){
     const ext=file.name.split('.').pop().toLowerCase();
@@ -986,7 +988,10 @@ async function handleFiles(files){
       else if(['txt','md'].includes(ext))text=await readTxt(file);
       else{showToast('Ukendt type: '+file.name,'error');continue;}
       if(!text||text.length<10){showToast('Ingen tekst i '+file.name,'error');continue;}
-      const res=await sb('documents',{method:'POST',body:JSON.stringify({subject:currentSubject,filename:file.name,content:text})});
+      // Gem original fil som base64 så vi kan gen-parse den senere
+      const fileData=await fileToBase64(file);
+      const mimeTypes={pdf:'application/pdf',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',doc:'application/msword',pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation',ppt:'application/vnd.ms-powerpoint',txt:'text/plain',md:'text/markdown'};
+      const res=await sb('documents',{method:'POST',body:JSON.stringify({subject:currentSubject,filename:file.name,content:text,file_data:fileData,file_type:mimeTypes[ext]||'application/octet-stream'})});
       if(!allDocs[currentSubject])allDocs[currentSubject]=[];
       if(res?.[0])allDocs[currentSubject].push(res[0]);
       document.getElementById(`cnt-${SUBJECTS.indexOf(currentSubject)}`).textContent=allDocs[currentSubject].length;
@@ -1528,6 +1533,37 @@ selectDoc=function(id){
 };
 
 // Generate-all knap for admin (injiceres på doc-cards)
+async function reparseDocument(docId, filename){
+  if(!isAdmin){showToast('Kun for admin','error');return;}
+  // Hent fil-data fra databasen
+  const docs=await sb('documents?id=eq.'+docId+'&select=file_data,file_type,filename');
+  if(!docs||!docs.length||!docs[0].file_data){
+    showToast('Ingen gemt fil for: '+filename,'error');return;
+  }
+  showToast('Re-parser '+filename+'...','success');
+  const d=docs[0];
+  // Konverter base64 tilbage til File-objekt
+  const byteStr=atob(d.file_data);
+  const ab=new ArrayBuffer(byteStr.length);
+  const ia=new Uint8Array(ab);
+  for(let i=0;i<byteStr.length;i++)ia[i]=byteStr.charCodeAt(i);
+  const blob=new Blob([ab],{type:d.file_type||'application/pdf'});
+  const file=new File([blob],d.filename,{type:d.file_type||'application/pdf'});
+  const ext=d.filename.split('.').pop().toLowerCase();
+  let text='';
+  try{
+    if(ext==='pdf')text=await readPDF(file);
+    else if(['docx','doc'].includes(ext))text=await readDOCX(file);
+    else if(['pptx','ppt'].includes(ext))text=await readPPTX(file);
+    else if(['txt','md'].includes(ext))text=await readTxt(file);
+    if(!text||text.length<10){showToast('Ingen tekst fundet i '+filename,'error');return;}
+    await sb('documents?id=eq.'+docId,{method:'PATCH',body:JSON.stringify({content:text})});
+    showToast('✓ '+filename+' re-parset ('+text.length+' tegn)','success');
+    await loadSubject(currentSubject);
+    renderDocs();updateStats();
+  }catch(e){showToast('Fejl: '+e.message,'error');}
+}
+
 async function generateAll(docName){
   if(!isAdmin){showToast('Kun for admin','error');return;}
   // Find doc id ud fra filnavn
@@ -1566,6 +1602,15 @@ function injectGenererAltBtns(){
     btn.style.cssText='background:none;border:1px solid var(--accent);color:var(--accent);cursor:pointer;padding:2px 6px;border-radius:3px;font-size:.68rem;margin-left:2px;flex-shrink:0;';
     btn.addEventListener('click',e=>{e.stopPropagation();generateAll(docName);});
     card.appendChild(btn);
+    // Re-parse knap (kun hvis fil er gemt i DB)
+    const doc2=(allDocs[currentSubject]||[]).find(d=>d.filename===docName);
+    if(doc2&&doc2.file_data){
+      const rpBtn=document.createElement('button');
+      rpBtn.title='Re-parser fil med forbedret OCR';rpBtn.textContent='🔄';
+      rpBtn.style.cssText='background:none;border:1px solid var(--success);color:var(--success);cursor:pointer;padding:2px 6px;border-radius:3px;font-size:.68rem;margin-left:2px;flex-shrink:0;';
+      rpBtn.addEventListener('click',e=>{e.stopPropagation();reparseDocument(doc2.id,doc2.filename);});
+      card.appendChild(rpBtn);
+    }
   });
 }
 
