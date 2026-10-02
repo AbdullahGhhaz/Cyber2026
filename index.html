@@ -70,6 +70,10 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .doc-info{flex:1;min-width:0;}
 .doc-name{font-size:.72rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
 .doc-meta{font-family:var(--mono);font-size:.58rem;color:var(--muted);margin-top:1px;}
+.doc-badges{display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;}
+.doc-badge{font-size:.55rem;font-weight:600;padding:1px 5px;border-radius:3px;font-family:var(--mono);}
+.doc-badge.ok{background:rgba(16,185,129,.12);color:var(--success);border:1px solid rgba(16,185,129,.25);}
+.doc-badge.missing{background:rgba(239,68,68,.08);color:var(--danger);border:1px solid rgba(239,68,68,.2);}
 .doc-del{background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 4px;border-radius:3px;font-size:.72rem;transition:all .15s;flex-shrink:0;display:none;}
 .doc-del:hover{color:var(--danger);}
 body.admin-active .doc-del{display:inline;}
@@ -1483,10 +1487,25 @@ function renderDocs(){
     const date=new Date(d.created_at).toLocaleDateString('da-DK',{day:'numeric',month:'short'});
     const isSelected=selectedDocId===d.id;
     const clickable=currentScope==='single'?`onclick="selectDoc('${d.id}')"`:`onclick="selectDocAndSwitch('${d.id}')"`;
+    // Tjek hvad der er genereret for denne fil
+    const hasQuiz=(quizQuestions||[]).filter(q=>q.filename===d.filename).length>=5;
+    const saved=allSaved[currentSubject]||[];
+    const hasSum=saved.some(s=>s.type==='summary'&&s.scope_filename===d.filename);
+    const hasExp=saved.some(s=>s.type==='explain'&&s.scope_filename===d.filename);
+    const allDone=hasQuiz&&hasSum&&hasExp;
+    const badges=`<div class="doc-badges">
+      <span class="doc-badge ${hasQuiz?'ok':'missing'}">${hasQuiz?'✓':'✗'} Quiz</span>
+      <span class="doc-badge ${hasSum?'ok':'missing'}">${hasSum?'✓':'✗'} Opsummering</span>
+      <span class="doc-badge ${hasExp?'ok':'missing'}">${hasExp?'✓':'✗'} Forklaring</span>
+    </div>`;
     return `<div class="doc-card-wrap">
-      <div class="doc-card${isSelected?' selected':''}" ${clickable} id="doccard-${d.id}">
+      <div class="doc-card${isSelected?' selected':''}${allDone?' doc-complete':''}" ${clickable} id="doccard-${d.id}">
         <span class="doc-icon">${icons[ext]||'📁'}</span>
-        <div class="doc-info"><div class="doc-name" title="${esc(d.filename)}">${esc(d.filename)}</div><div class="doc-meta">${size} · ${date}</div></div>
+        <div class="doc-info">
+          <div class="doc-name" title="${esc(d.filename)}">${esc(d.filename)}</div>
+          <div class="doc-meta">${size} · ${date}</div>
+          ${badges}
+        </div>
         <button class="doc-del" onclick="event.stopPropagation();deleteDoc('${d.id}')">✕</button>
       </div>
       <div class="doc-progress" id="docprog-${d.id}"><div class="doc-progress-bar" id="docprogbar-${d.id}"></div></div>
