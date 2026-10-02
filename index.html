@@ -63,7 +63,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .doc-progress-bar.explain{background:var(--success);}
 .doc-status{font-family:var(--mono);font-size:.58rem;color:var(--muted);margin-top:2px;display:none;}
 .doc-status.visible{display:block;}
-.doc-card-wrap{display:flex;flex-direction:column;}
+.doc-card-wrap{display:flex;flex-direction:column;transition:opacity .15s;}.doc-card-wrap.dragging{opacity:.4;}.doc-card-wrap.drag-over{border-top:2px solid var(--accent);margin-top:-2px;}.drag-handle{cursor:grab;color:var(--muted);font-size:.85rem;padding:0 3px;user-select:none;display:none;flex-shrink:0;}.drag-handle:active{cursor:grabbing;}body.admin-active .drag-handle{display:flex;align-items:center;}
 .doc-card:hover{border-color:var(--accent2);background:var(--glow);transform:translateX(2px);}
 .doc-card.selected{border-color:var(--accent);background:var(--glow);}
 .doc-icon{font-size:.85rem;flex-shrink:0;}
@@ -715,6 +715,47 @@ async function loadPerfData(){
     el.innerHTML=html;
   }catch(e){el.innerHTML='<div class="empty-docs" style="color:var(--danger)">Fejl: '+e.message+'</div>';}
 }
+var _dragSrcId=null;
+function initDragAndDrop(){
+  if(!isAdmin)return;
+  var el=document.getElementById('docItems');if(!el)return;
+  el.addEventListener('dragstart',function(e){
+    var w=e.target.closest('[data-doc-id]');if(!w)return;
+    _dragSrcId=w.getAttribute('data-doc-id');w.classList.add('dragging');
+    e.dataTransfer.effectAllowed='move';
+  });
+  el.addEventListener('dragend',function(e){
+    var w=e.target.closest('[data-doc-id]');if(w)w.classList.remove('dragging');
+    document.querySelectorAll('.drag-over').forEach(function(x){x.classList.remove('drag-over');});
+  });
+  el.addEventListener('dragover',function(e){
+    e.preventDefault();e.dataTransfer.dropEffect='move';
+    var w=e.target.closest('[data-doc-id]');
+    document.querySelectorAll('.drag-over').forEach(function(x){x.classList.remove('drag-over');});
+    if(w&&w.getAttribute('data-doc-id')!==_dragSrcId)w.classList.add('drag-over');
+  });
+  el.addEventListener('drop',function(e){
+    e.preventDefault();
+    var w=e.target.closest('[data-doc-id]');if(!w||!_dragSrcId)return;
+    var tid=w.getAttribute('data-doc-id');if(tid===_dragSrcId)return;
+    w.classList.remove('drag-over');
+    reorderDocs(_dragSrcId,tid);
+  });
+}
+async function reorderDocs(srcId,targetId){
+  var docs=allDocs[currentSubject]||[];
+  var si=docs.findIndex(function(d){return d.id===srcId;});
+  var ti=docs.findIndex(function(d){return d.id===targetId;});
+  if(si<0||ti<0)return;
+  var nd=docs.slice();var rem=nd.splice(si,1)[0];nd.splice(ti,0,rem);
+  allDocs[currentSubject]=nd;renderDocs();
+  try{
+    await Promise.all(nd.map(function(d,i){
+      return sb('documents?id=eq.'+d.id,{method:'PATCH',body:JSON.stringify({sort_order:i+1})});
+    }));
+    showToast('✓ Rækkefølge gemt','success');
+  }catch(e){showToast('Fejl','error');}
+}
 async function renameDoc(docId, currentName){
   var newName=prompt('Nyt navn til filen:',currentName);
   if(!newName||newName===currentName||!newName.trim())return;
@@ -986,7 +1027,7 @@ async function loadData(){
 
 async function loadSubject(s){
   const i=SUBJECTS.indexOf(s);
-  allDocs[s]=await sb(`documents?subject=eq.${encodeURIComponent(s)}&order=created_at.asc&select=id,subject,filename,content,file_data,file_type,created_at`);
+  allDocs[s]=await sb(`documents?subject=eq.${encodeURIComponent(s)}&order=sort_order.asc,created_at.asc&select=id,subject,filename,content,file_data,file_type,created_at,sort_order`);
   allSaved[s]=await sb(`generated_content?subject=eq.${encodeURIComponent(s)}&order=created_at.desc`);
   const allQ=await sb(`quiz_questions?subject=eq.${encodeURIComponent(s)}&select=filename`);
   docStatus[s]={};
@@ -1550,9 +1591,9 @@ function renderDocs(){
       <span class="doc-badge ${hasSum?'ok':'missing'}">${hasSum?'✓':'✗'} Opsummering</span>
       <span class="doc-badge ${hasExp?'ok':'missing'}">${hasExp?'✓':'✗'} Forklaring</span>
     </div>`;
-    return `<div class="doc-card-wrap">
+    return `<div class="doc-card-wrap" draggable="true" data-doc-id="${d.id}">
       <div class="doc-card${isSelected?' selected':''}${allDone?' doc-complete':''}" ${clickable} id="doccard-${d.id}">
-        <span class="doc-icon">${icons[ext]||'📁'}</span>
+        <span class="drag-handle" title="Træk for at sortere">⠿</span><span class="doc-icon">${icons[ext]||'📁'}</span>
         <div class="doc-info">
           <div class="doc-name" title="${esc(d.filename)}">${esc(d.filename)}</div>
           <div class="doc-meta">${size} · ${date}</div>
@@ -1565,6 +1606,7 @@ function renderDocs(){
       <div class="doc-status" id="docstatus-${d.id}"></div>
     </div>`;
   }).join('');
+  if(isAdmin)setTimeout(initDragAndDrop,0);
 }
 
 var _savedPanelOpen=false;
