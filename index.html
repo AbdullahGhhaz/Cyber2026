@@ -343,6 +343,17 @@ body.admin-active .quiz-admin-actions{display:flex;}
 </div>
 
 <!-- ADMIN BRUGER-PANEL -->
+<!-- PERF PANEL -->
+<div class="admin-panel hidden" id="perfPanel">
+  <div class="admin-box" style="max-width:760px;width:95vw;">
+    <div class="admin-header">
+      <div class="admin-title">📊 Performance Dashboard</div>
+      <button class="admin-close" onclick="closePerfPanel()">✕</button>
+    </div>
+    <div id="perfContent" style="padding:16px;overflow-y:auto;max-height:70vh;"><div class="empty-docs">Indlæser...</div></div>
+  </div>
+</div>
+
 <div class="admin-panel hidden" id="adminPanel">
   <div class="admin-box">
     <div class="admin-box-header">
@@ -390,7 +401,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
       <span class="admin-badge" id="headerAdminBadge" style="display:none;">ADMIN</span>
     </div>
     <button class="hbtn" id="adminPanelBtn" onclick="openAdminPanel()" style="display:none;">👥 Brugere</button>
-    <button class="hbtn" id="perfBtn" onclick="openPerf()" style="display:none;">📊 Perf</button>
+    <button class="hbtn" id="perfBtn" onclick="openPerfPanel()" style="display:none;">📊 Perf</button>
     <button class="hbtn" onclick="toggleTheme()" id="themeBtn">☀ LYS</button>
     <button class="hbtn" id="logoutBtn" onclick="doLogout()" style="display:none;border-color:var(--danger);color:var(--danger);">↩ Log ud</button>
   </div>
@@ -673,9 +684,19 @@ function afterLogin(role,name){
   }
   loadData();
 }
-function openPerf(){
-  const pass=sessionStorage.getItem('adminPass')||'';
-  window.open('/api/perf?token='+encodeURIComponent(pass),'_blank');
+function openPerfPanel(){
+  document.getElementById('perfPanel').classList.remove('hidden');
+  loadPerfData();
+}
+function closePerfPanel(){document.getElementById('perfPanel').classList.add('hidden');}
+async function loadPerfData(){
+  const el=document.getElementById('perfContent');
+  el.innerHTML='<div class="empty-docs">Henter data...</div>';
+  try{
+    const r=await fetch('/api/perf',{headers:{'x-session-token':sessionStorage.getItem('adminPass')||''}});
+    const html=await r.text();
+    el.innerHTML=html;
+  }catch(e){el.innerHTML='<div class="empty-docs" style="color:var(--danger)">Fejl: '+e.message+'</div>';}
 }
 function doLogout(){
   sessionStorage.clear();
