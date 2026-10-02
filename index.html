@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EKSAMEN PREP</title>
+<title>Cyber Forberedelse</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -332,7 +332,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
 
 <!-- LOGIN -->
 <div id="loginOverlay">
-  <div class="logo"><div class="logo-dot"></div>EKSAMEN PREP</div>
+  <div class="logo"><div class="logo-dot"></div><span id="appTitle">Cyber Forberedelse</span><button id="renameTitleBtn" onclick="renameTitle()" style="display:none;background:none;border:none;cursor:pointer;color:var(--muted);font-size:.7rem;margin-left:6px;padding:2px 5px;border-radius:4px;transition:all .2s;" title="Omdøb navn">✏️</button></div>
   <div class="login-box" id="loginBox">
     <div class="login-title">Log ind</div>
     <div class="login-sub">Skriv dine loginoplysninger</div>
@@ -406,7 +406,7 @@ body.admin-active .quiz-admin-actions{display:flex;}
 
 <!-- HEADER -->
 <header>
-  <div class="logo"><div class="logo-dot"></div>EKSAMEN PREP</div>
+  <div class="logo"><div class="logo-dot"></div><span id="appTitle">Cyber Forberedelse</span><button id="renameTitleBtn" onclick="renameTitle()" style="display:none;background:none;border:none;cursor:pointer;color:var(--muted);font-size:.7rem;margin-left:6px;padding:2px 5px;border-radius:4px;transition:all .2s;" title="Omdøb navn">✏️</button></div>
   <div class="header-right">
     <div class="user-chip" id="userChip" style="display:none;">
       <span id="userDisplayName" class="uname"></span>
@@ -690,6 +690,8 @@ function afterLogin(role,name){
     document.getElementById('headerAdminBadge').style.display='inline';
     document.getElementById('adminPanelBtn').style.display='inline-block';
     document.getElementById('perfBtn').style.display='inline-block';
+    document.getElementById('renameTitleBtn').style.display='inline-block';
+    document.querySelectorAll('.doc-rename.admin-only').forEach(function(el){el.style.display='inline-block';});
     document.getElementById('uploadZone').style.display='block';
     document.getElementById('sidebarSaved').style.display='block';
     document.getElementById('fagSumBtn').style.display='';
@@ -713,6 +715,33 @@ async function loadPerfData(){
     el.innerHTML=html;
   }catch(e){el.innerHTML='<div class="empty-docs" style="color:var(--danger)">Fejl: '+e.message+'</div>';}
 }
+async function renameDoc(docId, currentName){
+  var newName=prompt('Nyt navn til filen:',currentName);
+  if(!newName||newName===currentName||!newName.trim())return;
+  newName=newName.trim();
+  try{
+    var r=await sb('documents?id=eq.'+docId,{method:'PATCH',body:JSON.stringify({filename:newName})});
+    // Opdater lokalt
+    var subj=currentSubject;
+    if(allDocs[subj]){
+      allDocs[subj]=allDocs[subj].map(function(d){return d.id===docId?Object.assign({},d,{filename:newName}):d;});
+    }
+    await loadSubject(subj);
+    renderDocs();renderSaved();
+    showToast('✓ Fil omdøbt til: '+newName,'success');
+  }catch(e){showToast('Fejl: '+e.message,'error');}
+}
+
+function renameTitle(){
+  var current=document.getElementById('appTitle').textContent;
+  var newName=prompt('Nyt navn til appen:',current);
+  if(!newName||!newName.trim()||newName===current)return;
+  document.getElementById('appTitle').textContent=newName.trim();
+  document.title=newName.trim();
+  localStorage.setItem('appTitle',newName.trim());
+  showToast('✓ Navn ændret til: '+newName.trim(),'success');
+}
+
 function doLogout(){
   sessionStorage.clear();
   document.body.classList.remove('admin-active');
@@ -831,6 +860,8 @@ function copyInviteLink(){navigator.clipboard.writeText(document.getElementById(
 function loadInviteList(){var ap=sessionStorage.getItem('adminPass');if(!ap)return;fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'listInvites',adminPassword:ap})}).then(function(r){return r.json();}).then(function(d){if(d.invites)renderInviteList(d.invites);});}
 function renderInviteList(invites){var el=document.getElementById('inviteList');if(!invites||!invites.length){el.innerHTML='<div class="empty-docs">Ingen links endnu</div>';return;}var now=new Date();el.innerHTML='';invites.forEach(function(inv){var exp=new Date(inv.expires_at),expired=exp<now,used=!!inv.used_at,row=document.createElement('div');row.className='user-row'+(used||expired?' user-inactive':'');var info=document.createElement('div');info.className='user-row-info';var nm=document.createElement('div');nm.className='user-row-name';nm.style.fontFamily='var(--mono)';nm.style.fontSize='.72rem';nm.textContent=inv.token.substring(0,16)+'...';var mt=document.createElement('div');mt.className='user-row-meta';mt.style.color=used?'var(--success)':expired?'var(--danger)':'var(--warn)';mt.textContent=(used?'Brugt af '+(inv.used_by||'?'):expired?'Udlobet':'Aktiv')+' - '+exp.toLocaleDateString('da-DK',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});info.appendChild(nm);info.appendChild(mt);row.appendChild(info);var ac=document.createElement('div');ac.className='user-row-actions';if(!used&&!expired){var cb=document.createElement('button');cb.className='admin-mini-btn';cb.textContent='Kopier';(function(t){cb.addEventListener('click',function(){navigator.clipboard.writeText(window.location.origin+window.location.pathname+'?invite='+t).then(function(){showToast('Kopieret!','success');});});})(inv.token);ac.appendChild(cb);}var db=document.createElement('button');db.className='admin-mini-btn del';db.textContent='Slet';(function(id){db.addEventListener('click',function(){var ap=sessionStorage.getItem('adminPass');if(!ap)return;fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'deleteInvite',adminPassword:ap,inviteId:id})}).then(function(){showToast('Slettet','success');loadInviteList();});});})(inv.id);ac.appendChild(db);row.appendChild(ac);el.appendChild(row);});}
 document.addEventListener('DOMContentLoaded',()=>{
+  var savedTitle=localStorage.getItem('appTitle');
+  if(savedTitle){document.getElementById('appTitle').textContent=savedTitle;document.title=savedTitle;}
   ['loginUsername','loginPassword'].forEach(id=>
     document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();})
   );
@@ -1527,6 +1558,7 @@ function renderDocs(){
           <div class="doc-meta">${size} · ${date}</div>
           ${badges}
         </div>
+        <button class="doc-rename admin-only" onclick="event.stopPropagation();renameDoc('${d.id}','${esc(d.filename)}')" style="display:none;background:none;border:1px solid var(--border);border-radius:4px;padding:1px 5px;cursor:pointer;font-size:.65rem;color:var(--muted);margin-right:2px;" title="Omdøb fil">✏️</button>
         <button class="doc-del" onclick="event.stopPropagation();deleteDoc('${d.id}')">✕</button>
       </div>
       <div class="doc-progress" id="docprog-${d.id}"><div class="doc-progress-bar" id="docprogbar-${d.id}"></div></div>
