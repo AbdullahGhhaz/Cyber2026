@@ -1377,7 +1377,13 @@ async function reformulateQuestion(questionId,cardEl){
 
 // ── RENDER QUIZ ────────────────────────────────────────────
 function renderSingleCard(q,i,total){
-  const opts=['a','b','c','d'];const letters=['A','B','C','D'];
+  // Shuffle svarmulighederne så korrekt svar ikke altid er b
+  const origLetters=['a','b','c','d'];
+  const shuffledLetters=shuffle([...origLetters]);
+  const displayLetters=['A','B','C','D'];
+  // Find hvilken display-position det korrekte svar ender på
+  const correctDisplayIdx=shuffledLetters.indexOf(q.correct);
+  const correctDisplayLetter=displayLetters[correctDisplayIdx];
   return `<div class="quiz-card" data-qid="${q.id}">
     <div class="quiz-admin-actions">
       <button class="q-admin-btn" data-reform="1" onclick="reformulateQuestion('${q.id}',this.closest('.quiz-card'))" title="Omformuler">🔄</button>
@@ -1386,9 +1392,9 @@ function renderSingleCard(q,i,total){
     <div class="quiz-num">SPØRGSMÅL ${i+1} af ${total}</div>
     <div class="quiz-q">${esc(q.question)}</div>
     <div class="quiz-opts">
-      ${opts.map((l,idx)=>`<button class="quiz-opt" data-letter="${l}" data-correct="${q.correct}" data-explanation="${esc(q.explanation)}" onclick="handleDBAnswer(this)">${letters[idx]}) ${esc(q[l])}</button>`).join('')}
+      ${shuffledLetters.map((origL,idx)=>`<button class="quiz-opt" data-letter="${displayLetters[idx]}" data-correct="${correctDisplayLetter}" data-explanation="${esc(q.explanation)}" onclick="handleDBAnswer(this)">${displayLetters[idx]}) ${esc(q[origL])}</button>`).join('')}
     </div>
-    <div class="quiz-reveal">✅ Korrekt: ${q.correct.toUpperCase()}) ${esc(q[q.correct])} — ${esc(q.explanation)}</div>
+    <div class="quiz-reveal">✅ Korrekt: ${correctDisplayLetter}) ${esc(q[q.correct])} — ${esc(q.explanation)}</div>
   </div>`;
 }
 
