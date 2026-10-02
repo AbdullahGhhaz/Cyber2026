@@ -31,7 +31,7 @@ async function verifySessionToken(token) {
 }
 
 const ALLOWED_TABLES = {
-      documents: ['GET', 'POST', 'DELETE'],
+      documents: ['GET', 'POST', 'PATCH', 'DELETE'],
       generated_content: ['GET', 'POST', 'DELETE'],
       quiz_questions: ['GET', 'POST', 'PATCH', 'DELETE'],
 };
