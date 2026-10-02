@@ -83,6 +83,14 @@ body.admin-active .doc-del{display:inline;}
 .saved-list{display:flex;flex-direction:column;gap:4px;}
 .saved-card{display:flex;align-items:center;gap:6px;padding:6px 9px;background:var(--surface);border:1px solid var(--border);border-radius:7px;cursor:pointer;transition:all .2s;}
 .saved-card:hover{border-color:var(--accent);background:var(--glow);}
+.saved-group{margin-bottom:6px;}
+.saved-group-header{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all .15s;user-select:none;}
+.saved-group-header:hover{border-color:var(--accent);}
+.saved-group-title{font-size:.68rem;font-weight:600;color:var(--text2);font-family:var(--mono);}
+.saved-group-meta{font-size:.6rem;color:var(--muted);}
+.saved-group-arrow{font-size:.6rem;color:var(--muted);transition:transform .2s;}
+.saved-group-items{display:none;padding-top:3px;}
+.saved-group-items.open{display:block;}
 .saved-card-icon{font-size:.8rem;}
 .saved-card-info{flex:1;min-width:0;}
 .saved-card-type{font-size:.7rem;font-weight:600;color:var(--text2);}
@@ -439,8 +447,11 @@ body.admin-active .quiz-admin-actions{display:flex;}
       <div class="doc-items" id="docItems"><div class="empty-docs">Ingen dokumenter endnu</div></div>
     </div>
     <div class="sidebar-saved" id="sidebarSaved" style="display:none;">
-      <div class="slabel" style="margin-bottom:6px;">Gemte resultater</div>
-      <div class="saved-list" id="savedList"></div>
+      <div class="slabel" style="margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleSavedPanel()">
+        <span>Gemte resultater</span>
+        <span id="savedToggleArrow" style="font-size:.7rem;color:var(--muted);transition:transform .2s;">▶</span>
+      </div>
+      <div class="saved-list" id="savedList" style="display:none;"></div>
     </div>
   </aside>
 
@@ -1524,21 +1535,82 @@ function renderDocs(){
   }).join('');
 }
 
+var _savedPanelOpen=false;
+var _savedGroupOpen={};
+
+function toggleSavedPanel(){
+  _savedPanelOpen=!_savedPanelOpen;
+  document.getElementById('savedList').style.display=_savedPanelOpen?'block':'none';
+  var arrow=document.getElementById('savedToggleArrow');
+  if(arrow)arrow.style.transform=_savedPanelOpen?'rotate(90deg)':'';
+}
+
+function toggleSavedGroup(key){
+  _savedGroupOpen[key]=!_savedGroupOpen[key];
+  var items=document.getElementById('sgi-'+key);
+  var arrow=document.getElementById('sga-'+key);
+  if(items)items.className='saved-group-items'+(_savedGroupOpen[key]?' open':'');
+  if(arrow)arrow.style.transform=_savedGroupOpen[key]?'rotate(90deg)':'';
+}
+
+function makeSavedCard(s){
+  var icons={quiz:'🎯',summary:'📋',explain:'💡','fag-summary':'📚','code-exercise':'💻'};
+  var labels={quiz:'Quiz',summary:'Opsummering',explain:'Forklaring','fag-summary':'Fag-overblik','code-exercise':'Øv dig'};
+  var date=new Date(s.created_at).toLocaleDateString('da-DK',{day:'numeric',month:'short'});
+  var card=document.createElement('div');card.className='saved-card';
+  card.addEventListener('click',function(){showSaved(s.id);});
+  var icon=document.createElement('span');icon.className='saved-card-icon';icon.textContent=icons[s.type]||'📄';
+  var info=document.createElement('div');info.className='saved-card-info';
+  var type=document.createElement('div');type.className='saved-card-type';type.textContent=(labels[s.type]||s.type)+' · '+date;
+  var del=document.createElement('button');del.className='saved-del';del.textContent='✕';
+  del.addEventListener('click',function(e){e.stopPropagation();deleteSaved(s.id);});
+  info.appendChild(type);card.appendChild(icon);card.appendChild(info);card.appendChild(del);
+  return card;
+}
+
 function renderSaved(){
-  const saved=allSaved[currentSubject]||[];
-  const el=document.getElementById('savedList');
+  var saved=allSaved[currentSubject]||[];
+  var el=document.getElementById('savedList');
+  el.innerHTML='';
   if(!saved.length){el.innerHTML='<div class="empty-docs" style="padding:6px 0;">Ingen gemte resultater</div>';return;}
-  const icons={quiz:'🎯',summary:'📋',explain:'💡','fag-summary':'📚'};
-  const labels={quiz:'Quiz',summary:'Opsummering',explain:'Forklaring','fag-summary':'Fag-overblik'};
-  el.innerHTML=saved.map(s=>{
-    const date=new Date(s.created_at).toLocaleDateString('da-DK',{day:'numeric',month:'short'});
-    const sub=s.scope_filename?`📄 ${esc(s.scope_filename)}`:'📚 Alle filer';
-    return `<div class="saved-card" onclick="showSaved('${s.id}')">
-      <span class="saved-card-icon">${icons[s.type]||'📄'}</span>
-      <div class="saved-card-info"><div class="saved-card-type">${esc(labels[s.type]||s.type)} · ${date}</div><div class="saved-card-sub">${sub}</div></div>
-      <button class="saved-del" onclick="event.stopPropagation();deleteSaved('${s.id}')">✕</button>
-    </div>`;
-  }).join('');
+
+  // Grupper per fil
+  var groups={};
+  saved.forEach(function(s){
+    var key=s.scope_filename||'__alle__';
+    if(!groups[key])groups[key]=[];
+    groups[key].push(s);
+  });
+
+  // Sortér filer alfabetisk, __alle__ sidst
+  var keys=Object.keys(groups).sort(function(a,b){
+    if(a==='__alle__')return 1;if(b==='__alle__')return -1;return a.localeCompare(b);
+  });
+
+  keys.forEach(function(key){
+    var items=groups[key];
+    var safeKey=key.replace(/[^a-z0-9]/gi,'').slice(0,20)||'alle';
+    var label=key==='__alle__'?'📚 Alle filer':'📄 '+key.split(/[/\\]/).pop();
+    var shortLabel=label.length>30?label.slice(0,27)+'...':label;
+    var isOpen=!!_savedGroupOpen[safeKey];
+
+    var group=document.createElement('div');group.className='saved-group';
+
+    var header=document.createElement('div');header.className='saved-group-header';
+    header.addEventListener('click',function(){toggleSavedGroup(safeKey);});
+    var titleWrap=document.createElement('div');
+    var title=document.createElement('div');title.className='saved-group-title';title.textContent=shortLabel;title.title=label;
+    var meta=document.createElement('div');meta.className='saved-group-meta';meta.textContent=items.length+' '+(items.length===1?'resultat':'resultater');
+    var arrow=document.createElement('span');arrow.className='saved-group-arrow';arrow.id='sga-'+safeKey;arrow.textContent='▶';
+    arrow.style.transition='transform .2s';
+    if(isOpen)arrow.style.transform='rotate(90deg)';
+    titleWrap.appendChild(title);titleWrap.appendChild(meta);header.appendChild(titleWrap);header.appendChild(arrow);
+
+    var itemsDiv=document.createElement('div');itemsDiv.className='saved-group-items'+(isOpen?' open':'');itemsDiv.id='sgi-'+safeKey;
+    items.forEach(function(s){itemsDiv.appendChild(makeSavedCard(s));});
+
+    group.appendChild(header);group.appendChild(itemsDiv);el.appendChild(group);
+  });
 }
 
 function showSaved(id){
