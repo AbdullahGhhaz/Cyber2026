@@ -1692,12 +1692,12 @@ async function generateAll(docName){
     renderDocs();
     const modeSteps={quiz:1,summary:2,explain:3};
     const modeNames={quiz:'Quiz',summary:'Opsummering',explain:'Forklaring'};
-    // Tjek hvad der allerede eksisterer i databasen
-    const existingQ=(quizQuestions||[]).filter(q=>q.filename===doc.filename);
-    const existingContent=savedResults||[];
-    const hasQuiz=existingQ.length>=5;
-    const hasSummary=existingContent.some(r=>r.type==='summary'&&r.scope_filename===doc.filename);
-    const hasExplain=existingContent.some(r=>r.type==='explain'&&r.scope_filename===doc.filename);
+    // Hent frisk data fra DB (undgår cache-problemer ved fagskift)
+    const freshQ=await sb(`quiz_questions?subject=eq.${encodeURIComponent(currentSubject)}&filename=eq.${encodeURIComponent(doc.filename)}&select=id`);
+    const freshS=await sb(`generated_content?subject=eq.${encodeURIComponent(currentSubject)}&scope_filename=eq.${encodeURIComponent(doc.filename)}&select=type`);
+    const hasQuiz=(freshQ||[]).length>=5;
+    const hasSummary=(freshS||[]).some(r=>r.type==='summary');
+    const hasExplain=(freshS||[]).some(r=>r.type==='explain');
     let didAnything=false;
     for(const mode of['quiz','summary','explain']){
       // Spring over hvis allerede genereret
