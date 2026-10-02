@@ -105,7 +105,7 @@ function buildDashboard(metrics) {
       <div style="font-size:.7rem;font-weight:600;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;">Routes — langsomst øverst</div>
       <div style="font-size:.75rem;color:var(--text2);">Samlet score: <strong style="color:${oc}">${overall}</strong></div>
     </div>
-    ${routeCards || '<div class="empty-docs">Ingen data endnu — brug appen lidt og klik Opdater</div>'}
+    ${rows || '<div class="empty-docs">Ingen data endnu — brug appen lidt og klik Opdater</div>'}
     <button onclick="loadPerfData()" style="margin-top:12px;width:100%;background:var(--accent);border:none;color:#fff;padding:8px;border-radius:8px;cursor:pointer;font-size:.8rem;font-weight:600;">↻ Opdater</button>
   </div>`;
 }
