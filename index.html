@@ -720,30 +720,21 @@ async function renameDoc(docId, currentName){
   if(!newName||newName===currentName||!newName.trim())return;
   newName=newName.trim();
   try{
-    var resp=await fetch(window._sbUrl+'documents?id=eq.'+docId,{
-      method:'PATCH',
-      headers:{
-        'apikey':window._sbKey,'Authorization':'Bearer '+window._sbKey,
-        'Content-Type':'application/json','Prefer':'return=representation'
-      },
-      body:JSON.stringify({filename:newName})
-    });
-    if(!resp.ok)throw new Error('HTTP '+resp.status);
-    // Opdater kun lokalt — ingen loadSubject der overskriver
+    await sb('documents?id=eq.'+docId,{method:'PATCH',body:JSON.stringify({filename:newName})});
+    // Opdater lokalt uden at genindlæse fra DB
     var subj=currentSubject;
     if(allDocs[subj]){
       allDocs[subj]=allDocs[subj].map(function(d){
         return d.id===docId?Object.assign({},d,{filename:newName}):d;
       });
-      docStatus[subj]=docStatus[subj]||{};
-      if(docStatus[subj][currentName]){
+      if(docStatus[subj]&&docStatus[subj][currentName]){
         docStatus[subj][newName]=docStatus[subj][currentName];
         delete docStatus[subj][currentName];
       }
     }
     renderDocs();
     showToast('✓ Omdøbt til: '+newName,'success');
-  }catch(e){showToast('Fejl ved omdøbning: '+e.message,'error');}
+  }catch(e){showToast('Fejl: '+e.message,'error');}
 }
 
 function renameTitle(){
