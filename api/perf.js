@@ -89,33 +89,25 @@ function buildDashboard(metrics) {
   }).reduce((s,v) => s + v, 0) / Object.keys(byRoute).length) : 100;
   const oc = overall >= 75 ? '#10b981' : overall >= 50 ? '#f59e0b' : '#ef4444';
 
-  return `<!DOCTYPE html><html lang="da"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Cyber2026 Performance</title>
-<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,sans-serif;background:#0f172a;color:#e2e8f0;}</style>
-</head><body>
-<div style="background:#1e293b;border-bottom:1px solid #334155;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;">
-  <div><div style="font-weight:700;color:#60a5fa;font-size:1.1rem;">⚡ Cyber2026 Performance</div>
-  <div style="font-size:.72rem;color:#64748b;margin-top:2px;">${new Date().toLocaleString('da-DK')}</div></div>
-  <div style="display:flex;align-items:center;gap:12px;">
-    <div style="text-align:center"><div style="font-size:2rem;font-weight:700;color:${oc}">${overall}</div>
-    <div style="font-size:.7rem;color:#64748b;">samlet score</div></div>
-    <button onclick="location.reload()" style="background:#3b82f6;color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:.8rem;font-weight:600;">↻ Opdater</button>
-    <a href="/" style="color:#64748b;font-size:.8rem;text-decoration:none;">← App</a>
-  </div>
-</div>
-<div style="max-width:800px;margin:0 auto;padding:24px 16px;">
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;">
-    <div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:16px;text-align:center;">
-      <div style="font-size:1.6rem;font-weight:700;color:#60a5fa;">${total}</div><div style="font-size:.72rem;color:#94a3b8;margin-top:4px;">Totale kald</div></div>
-    <div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:16px;text-align:center;">
-      <div style="font-size:1.6rem;font-weight:700;color:#60a5fa;">${avgAll}ms</div><div style="font-size:.72rem;color:#94a3b8;margin-top:4px;">Gns. svartid</div></div>
-    <div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:16px;text-align:center;">
-      <div style="font-size:1.6rem;font-weight:700;color:${errTotal > 0 ? '#ef4444' : '#10b981'}">${errTotal}</div>
-      <div style="font-size:.72rem;color:#94a3b8;margin-top:4px;">Fejl (4xx/5xx)</div></div>
-  </div>
-  <div style="font-size:.7rem;font-weight:600;letter-spacing:.1em;color:#64748b;text-transform:uppercase;margin-bottom:12px;">Routes — langsomst øverst</div>
-  ${rows || '<div style="text-align:center;padding:60px;color:#64748b;">📊 Ingen data endnu — brug appen lidt og genindlæs</div>'}
-</div></body></html>`;
+  return `<div style="font-family:-apple-system,sans-serif;">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:1.5rem;font-weight:700;color:var(--accent2);">${total}</div>
+        <div style="font-size:.7rem;color:var(--text2);margin-top:3px;">Totale kald</div></div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:1.5rem;font-weight:700;color:var(--accent2);">${avgAll}ms</div>
+        <div style="font-size:.7rem;color:var(--text2);margin-top:3px;">Gns. svartid</div></div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:1.5rem;font-weight:700;color:${errTotal > 0 ? 'var(--danger)' : 'var(--success)'};">${errTotal}</div>
+        <div style="font-size:.7rem;color:var(--text2);margin-top:3px;">Fejl</div></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-size:.7rem;font-weight:600;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;">Routes — langsomst øverst</div>
+      <div style="font-size:.75rem;color:var(--text2);">Samlet score: <strong style="color:${oc}">${overall}</strong></div>
+    </div>
+    ${routeCards || '<div class="empty-docs">Ingen data endnu — brug appen lidt og klik Opdater</div>'}
+    <button onclick="loadPerfData()" style="margin-top:12px;width:100%;background:var(--accent);border:none;color:#fff;padding:8px;border-radius:8px;cursor:pointer;font-size:.8rem;font-weight:600;">↻ Opdater</button>
+  </div>`;
 }
 
 export default async function handler(req, res) {
@@ -135,34 +127,15 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Manglende felter' });
   }
 
-  // GET: tjek admin session fra appen (sendt som header)
-  const sessionToken = req.headers['x-session-token'] || req.query.token || '';
+  // GET: tjek admin session
+  const sessionToken = req.headers['x-session-token'] || '';
   if (sessionToken !== ADMIN_PASS) {
-    // Vis redirect-side der henter token fra sessionStorage
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Performance</title>
-<style>body{background:#0f172a;color:#e2e8f0;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;}
-.box{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:32px;width:300px;text-align:center;}
-h2{color:#60a5fa;margin-bottom:12px;}p{color:#64748b;font-size:.85rem;margin-bottom:16px;}
-a{color:#3b82f6;text-decoration:none;font-weight:600;}
-</style></head>
-<body><div class="box"><h2>⚡ Performance</h2>
-<p>Du skal være logget ind som admin i appen for at se dette.</p>
-<a href="/">← Gå til appen og log ind</a>
-</div>
-<script>
-// Hvis admin allerede er logget ind i appen, videresend automatisk
-const role = sessionStorage.getItem('authRole');
-const pass = sessionStorage.getItem('adminPass');
-if (role === 'admin' && pass) {
-  window.location.href = '/api/perf?token=' + encodeURIComponent(pass);
-}
-</script>
-</body></html>`);
+    return res.status(401).json({ error: 'Ikke autoriseret' });
   }
 
-  // Vis dashboard
+  // Returner kun indhold-delen (til panel i appen)
   const metrics = await getMetrics();
+  const html = buildDashboard(metrics);
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  return res.send(buildDashboard(metrics));
+  return res.send(html);
 }
