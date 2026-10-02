@@ -63,7 +63,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .doc-progress-bar.explain{background:var(--success);}
 .doc-status{font-family:var(--mono);font-size:.58rem;color:var(--muted);margin-top:2px;display:none;}
 .doc-status.visible{display:block;}
-.doc-card-wrap{display:flex;flex-direction:column;transition:opacity .15s;}.doc-card-wrap.dragging{opacity:.4;}.doc-card-wrap.drag-over{border-top:2px solid var(--accent);margin-top:-2px;}.drag-handle{cursor:grab;color:var(--muted);font-size:.85rem;padding:0 3px;user-select:none;display:none;flex-shrink:0;}.drag-handle:active{cursor:grabbing;}body.admin-active .drag-handle{display:flex;align-items:center;}
+.doc-card-wrap{display:flex;flex-direction:column;transition:opacity .15s;}.doc-card-wrap.dragging{opacity:.4;}.doc-card-wrap.drag-over{border-top:2px solid var(--accent);margin-top:-2px;}.drag-handle{cursor:grab;color:var(--muted);font-size:.85rem;padding:0 3px;user-select:none;display:none;flex-shrink:0;}.drag-handle:active{cursor:grabbing;}body.admin-active .drag-handle{display:flex;align-items:center;}.doc-rename-btn{display:none;background:none;border:1px solid var(--border);border-radius:4px;padding:1px 5px;cursor:pointer;font-size:.65rem;color:var(--muted);flex-shrink:0;transition:all .15s;}body.admin-active .doc-rename-btn{display:inline-flex;align-items:center;}.doc-rename-btn:hover{border-color:var(--accent);color:var(--accent2);}
 .doc-card:hover{border-color:var(--accent2);background:var(--glow);transform:translateX(2px);}
 .doc-card.selected{border-color:var(--accent);background:var(--glow);}
 .doc-icon{font-size:.85rem;flex-shrink:0;}
@@ -691,7 +691,6 @@ function afterLogin(role,name){
     document.getElementById('adminPanelBtn').style.display='inline-block';
     document.getElementById('perfBtn').style.display='inline-block';
     document.getElementById('renameTitleBtn').style.display='inline-block';
-    document.querySelectorAll('.doc-rename.admin-only').forEach(function(el){el.style.display='inline-block';});
     document.getElementById('uploadZone').style.display='block';
     document.getElementById('sidebarSaved').style.display='block';
     document.getElementById('fagSumBtn').style.display='';
@@ -716,20 +715,24 @@ async function loadPerfData(){
   }catch(e){el.innerHTML='<div class="empty-docs" style="color:var(--danger)">Fejl: '+e.message+'</div>';}
 }
 var _dragSrcId=null;
+var _dndInit=false;
 function initDragAndDrop(){
-  if(!isAdmin)return;
+  if(!isAdmin||_dndInit)return;
+  _dndInit=true;
   var el=document.getElementById('docItems');if(!el)return;
   el.addEventListener('dragstart',function(e){
     var w=e.target.closest('[data-doc-id]');if(!w)return;
-    _dragSrcId=w.getAttribute('data-doc-id');w.classList.add('dragging');
+    _dragSrcId=w.getAttribute('data-doc-id');
+    setTimeout(function(){w.classList.add('dragging');},0);
     e.dataTransfer.effectAllowed='move';
   });
-  el.addEventListener('dragend',function(e){
-    var w=e.target.closest('[data-doc-id]');if(w)w.classList.remove('dragging');
+  el.addEventListener('dragend',function(){
+    document.querySelectorAll('.dragging').forEach(function(x){x.classList.remove('dragging');});
     document.querySelectorAll('.drag-over').forEach(function(x){x.classList.remove('drag-over');});
+    _dragSrcId=null;
   });
   el.addEventListener('dragover',function(e){
-    e.preventDefault();e.dataTransfer.dropEffect='move';
+    e.preventDefault();
     var w=e.target.closest('[data-doc-id]');
     document.querySelectorAll('.drag-over').forEach(function(x){x.classList.remove('drag-over');});
     if(w&&w.getAttribute('data-doc-id')!==_dragSrcId)w.classList.add('drag-over');
@@ -737,9 +740,10 @@ function initDragAndDrop(){
   el.addEventListener('drop',function(e){
     e.preventDefault();
     var w=e.target.closest('[data-doc-id]');if(!w||!_dragSrcId)return;
-    var tid=w.getAttribute('data-doc-id');if(tid===_dragSrcId)return;
+    var tid=w.getAttribute('data-doc-id');if(tid===_dragSrcId){_dragSrcId=null;return;}
     w.classList.remove('drag-over');
     reorderDocs(_dragSrcId,tid);
+    _dragSrcId=null;
   });
 }
 async function reorderDocs(srcId,targetId){
@@ -1599,7 +1603,7 @@ function renderDocs(){
           <div class="doc-meta">${size} · ${date}</div>
           ${badges}
         </div>
-        <button class="doc-rename admin-only" onclick="event.stopPropagation();renameDoc('${d.id}','${esc(d.filename)}')" style="display:none;background:none;border:1px solid var(--border);border-radius:4px;padding:1px 5px;cursor:pointer;font-size:.65rem;color:var(--muted);margin-right:2px;" title="Omdøb fil">✏️</button>
+        <button class="doc-rename-btn" onclick="event.stopPropagation();renameDoc('${d.id}','${esc(d.filename)}')" title="Omdøb fil">✏️</button>
         <button class="doc-del" onclick="event.stopPropagation();deleteDoc('${d.id}')">✕</button>
       </div>
       <div class="doc-progress" id="docprog-${d.id}"><div class="doc-progress-bar" id="docprogbar-${d.id}"></div></div>
