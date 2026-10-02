@@ -142,6 +142,17 @@ function shuffleAnswerPosition(q) {
 
 export default async function handler(req, res) {
   const _perfStart = Date.now();
+  const _origJson = res.json.bind(res);
+  const _origSend = res.send.bind(res);
+  const _origEnd = res.end.bind(res);
+  let _tracked = false;
+  async function _track(status) {
+    if (_tracked) return; _tracked = true;
+    await trackPerf('/api/generate', _perfStart, status);
+  }
+  res.json = function(body) { _track(res.statusCode || 200); return _origJson(body); };
+  res.send = function(body) { _track(res.statusCode || 200); return _origSend(body); };
+  res.end = function(...args) { _track(res.statusCode || 200); return _origEnd(...args); };
       if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const session = await verifySessionToken(req.body?.sessionToken);
