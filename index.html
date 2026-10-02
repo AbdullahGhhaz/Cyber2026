@@ -600,7 +600,7 @@ marked.use({breaks:true,gfm:true});
 const SUBJECTS=['Programmering','Forretningsforståelse','Computerarkitektur','Datasikkerhed','Scripting og automatisering','Netværksarkitektur','Kommunikation og rapportering'];
 let theme='dark', currentSubject='Programmering', currentMode='quiz', currentScope='all';
 let selectedDocId=null, currentOutput='', isAdmin=false, currentUserId=null;
-let allDocs={}, allSaved={}, quizQuestions=[];
+let allDocs={}, allSaved={}, quizQuestions=[], docStatus={};
 let quizScore=0, quizAnswered=0, quizTotal=0;
 let examTimer=null, examSeconds=0, examQuestions=[], examAnswers=[], examActive=false;
 
@@ -946,6 +946,17 @@ async function loadSubject(s){
   const i=SUBJECTS.indexOf(s);
   allDocs[s]=await sb(`documents?subject=eq.${encodeURIComponent(s)}&order=created_at.asc&select=id,subject,filename,content,file_data,file_type,created_at`);
   allSaved[s]=await sb(`generated_content?subject=eq.${encodeURIComponent(s)}&order=created_at.desc`);
+  const allQ=await sb(`quiz_questions?subject=eq.${encodeURIComponent(s)}&select=filename`);
+  docStatus[s]={};
+  (allDocs[s]||[]).forEach(function(d){
+    var qCount=(allQ||[]).filter(function(q){return q.filename===d.filename;}).length;
+    var saved=(allSaved[s]||[]).filter(function(r){return r.scope_filename===d.filename;});
+    docStatus[s][d.filename]={
+      quiz:qCount>=5,
+      summary:saved.some(function(r){return r.type==='summary';}),
+      explain:saved.some(function(r){return r.type==='explain';})
+    };
+  });
   if(i>=0)document.getElementById(`cnt-${i}`).textContent=allDocs[s].length;
 }
 
@@ -1487,11 +1498,10 @@ function renderDocs(){
     const date=new Date(d.created_at).toLocaleDateString('da-DK',{day:'numeric',month:'short'});
     const isSelected=selectedDocId===d.id;
     const clickable=currentScope==='single'?`onclick="selectDoc('${d.id}')"`:`onclick="selectDocAndSwitch('${d.id}')"`;
-    // Tjek hvad der er genereret for denne fil
-    const hasQuiz=(quizQuestions||[]).filter(q=>q.filename===d.filename).length>=5;
-    const saved=allSaved[currentSubject]||[];
-    const hasSum=saved.some(s=>s.type==='summary'&&s.scope_filename===d.filename);
-    const hasExp=saved.some(s=>s.type==='explain'&&s.scope_filename===d.filename);
+    const status=(docStatus[currentSubject]||{})[d.filename]||{quiz:false,summary:false,explain:false};
+    const hasQuiz=status.quiz;
+    const hasSum=status.summary;
+    const hasExp=status.explain;
     const allDone=hasQuiz&&hasSum&&hasExp;
     const badges=`<div class="doc-badges">
       <span class="doc-badge ${hasQuiz?'ok':'missing'}">${hasQuiz?'✓':'✗'} Quiz</span>
@@ -1714,6 +1724,8 @@ async function generateAll(docName){
     }
     docProgress(doc.id,4,didAnything?'✓ Færdig!':'⏭ Alt fandtes allerede');
     showToast((didAnything?'✓ Færdig: ':'⏭ Springer over: ')+docName,'success');
+    await loadSubject(currentSubject);
+    renderDocs();
   });
   _runQueue();
 }
