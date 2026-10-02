@@ -1702,12 +1702,13 @@ async function generateAll(docName){
     renderDocs();
     const modeSteps={quiz:1,summary:2,explain:3};
     const modeNames={quiz:'Quiz',summary:'Opsummering',explain:'Forklaring'};
-    // Hent frisk data fra DB (undgår cache-problemer ved fagskift)
-    const freshQ=await sb(`quiz_questions?subject=eq.${encodeURIComponent(currentSubject)}&filename=eq.${encodeURIComponent(doc.filename)}&select=id`);
-    const freshS=await sb(`generated_content?subject=eq.${encodeURIComponent(currentSubject)}&scope_filename=eq.${encodeURIComponent(doc.filename)}&select=type`);
-    const hasQuiz=(freshQ||[]).length>=5;
-    const hasSummary=(freshS||[]).some(r=>r.type==='summary');
-    const hasExplain=(freshS||[]).some(r=>r.type==='explain');
+    // Brug docStatus som loadSubject har bygget korrekt
+    // Genindlæs subject for at få frisk data
+    await loadSubject(currentSubject);
+    const freshStatus=(docStatus[currentSubject]||{})[doc.filename]||{quiz:false,summary:false,explain:false};
+    const hasQuiz=freshStatus.quiz;
+    const hasSummary=freshStatus.summary;
+    const hasExplain=freshStatus.explain;
     let didAnything=false;
     for(const mode of['quiz','summary','explain']){
       // Spring over hvis allerede genereret
@@ -1726,6 +1727,7 @@ async function generateAll(docName){
     showToast((didAnything?'✓ Færdig: ':'⏭ Springer over: ')+docName,'success');
     await loadSubject(currentSubject);
     renderDocs();
+    updateStats();
   });
   _runQueue();
 }
