@@ -1530,7 +1530,14 @@ async function autoSave(){
 
 // ── RENDER ─────────────────────────────────────────────────
 function renderDocs(){
-  const docs=allDocs[currentSubject]||[];
+  var rawDocs=allDocs[currentSubject]||[];
+  // Sorter efter tal i filnavnet (01_, 02_ osv), filer uden tal sidst alfabetisk
+  var docs=rawDocs.slice().sort(function(a,b){
+    var na=parseInt((a.filename.match(/^(\d+)/)||[])[1]||'9999');
+    var nb=parseInt((b.filename.match(/^(\d+)/)||[])[1]||'9999');
+    if(na!==nb)return na-nb;
+    return a.filename.localeCompare(b.filename);
+  });
   const el=document.getElementById('docItems');
   if(!docs.length){el.innerHTML='<div class="empty-docs">Ingen dokumenter endnu</div>';return;}
   const icons={pdf:'📄',pptx:'📊',ppt:'📊',docx:'📝',doc:'📝',txt:'📃',md:'📃'};
