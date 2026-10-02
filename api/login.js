@@ -163,6 +163,13 @@ const payloadStr = JSON.stringify({ uid: uid || null, role, tv: tokenVersion || 
 
 export default async function handler(req, res) {
   const _perfStart = Date.now();
+  let _tracked = false;
+  const _origJson = res.json.bind(res);
+  async function _track(status) {
+    if (_tracked) return; _tracked = true;
+    await trackPerf('/api/login', _perfStart, status);
+  }
+  res.json = function(body) { _track(res.statusCode || 200); return _origJson(body); };
   if (req.method !== 'POST') return res.status(405).end();
   const body = req.body || {};
   const { action, username, password } = body;
