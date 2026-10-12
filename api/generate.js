@@ -188,7 +188,7 @@ export default async function handler(req, res) {
   }
 
   try {
-          let { prompt, mode, existingQuestions = [], reformulate = false, questionText = '', topic = '', subject = '' } = req.body;
+          let { prompt, mode, existingQuestions = [], reformulate = false, questionText = '', topic = '', subject = '', filename = null } = req.body;
 
           // Tidlig validering — afvis ugyldige/for store inputs inden AI-kald
           const VALID_MODES = ['quiz', 'summary', 'explain', 'fag-summary', 'code-exercise'];
@@ -392,11 +392,11 @@ export default async function handler(req, res) {
         // Gem i Supabase bagefter
         if (fullText.length > 100) {
           try {
-            const scopeFn = (currentScope === 'single' && selectedScopeFn) ? selectedScopeFn : null;
+            const scopeFilename = (filename && typeof filename === 'string' && filename.length <= 500) ? filename : null;
             await fetch(`${SUPABASE_URL}/rest/v1/generated_content`, {
               method: 'POST',
               headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-              body: JSON.stringify({ subject, type: mode, content: fullText, scope_filename: filename || null })
+              body: JSON.stringify({ subject, type: mode, content: fullText, scope_filename: scopeFilename })
             });
           } catch(e) { console.error('Supabase save error:', e); }
         }

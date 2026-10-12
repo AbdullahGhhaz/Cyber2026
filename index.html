@@ -1455,7 +1455,8 @@ async function generate(){
   btn.disabled=true;loading.classList.add('visible');
   document.getElementById('loadingTxt').textContent=currentMode==='quiz'?'GENERERER 5 NYE SPØRGSMÅL...':currentMode==='summary'?'GENERERER OPSUMMERING...':'GENERERER FORKLARING...';
   try{
-    const body={prompt:buildPrompt(),mode:currentMode,sessionToken:sessionStorage.getItem('sessionToken')};
+    const body={prompt:buildPrompt(),mode:currentMode,subject:currentSubject,sessionToken:sessionStorage.getItem('sessionToken')};
+    if(currentScope==='single'&&selectedDocId){const docList=allDocs[currentSubject]||[];const doc=docList.find(d=>d.id===selectedDocId);if(doc)body.filename=doc.filename;}
     if(currentMode==='quiz')body.existingQuestions=quizQuestions.slice(-40);if(currentMode==='explain'){const topicInput=document.getElementById('topicInput').value||'';body.topic=topicInput||('de vigtigste begreber i '+currentSubject);}
     const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     if(!r.ok){const e=await r.json();throw new Error(e.error||'Serverfejl');}
