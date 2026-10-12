@@ -747,7 +747,15 @@ function renameTitle(){
   showToast('✓ Navn ændret til: '+newName.trim(),'success');
 }
 
-function doLogout(){
+async function doLogout(){
+  // Invalider token server-side for normale brugere (bumper token_version)
+  const userId = sessionStorage.getItem('authUserId');
+  const sessionToken = sessionStorage.getItem('sessionToken');
+  if(userId && sessionToken){
+    try{
+      await sb(`users?id=eq.${encodeURIComponent(userId)}`,{method:'PATCH',body:JSON.stringify({token_version:Date.now()})});
+    }catch(e){}
+  }
   sessionStorage.clear();
   document.body.classList.remove('admin-active');
   document.getElementById('loginOverlay').classList.remove('hidden');
