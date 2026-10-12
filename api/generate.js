@@ -44,7 +44,7 @@ async function verifySessionToken(token) {
 
 export const config = {
   maxDuration: 300,
-  api: { bodyParser: { sizeLimit: '50mb' } }
+  api: { bodyParser: { sizeLimit: '10mb' } }
 };
 
 // Sonnet til de aabne/kvalitetskraevende opgaver (quiz, opsummering, forklaring,
@@ -161,6 +161,17 @@ export default async function handler(req, res) {
 
   try {
           let { prompt, mode, existingQuestions = [], reformulate = false, questionText = '', topic = '', subject = '' } = req.body;
+
+          // Tidlig validering — afvis ugyldige/for store inputs inden AI-kald
+          const VALID_MODES = ['quiz', 'summary', 'explain', 'fag-summary', 'code-exercise'];
+          if (mode && !VALID_MODES.includes(mode)) return res.status(400).json({ error: 'Ugyldig mode' });
+          if (prompt && typeof prompt !== 'string') return res.status(400).json({ error: 'Ugyldig prompt' });
+          if (prompt && prompt.length > 500000) return res.status(400).json({ error: 'Prompt for stor' });
+          if (subject && (typeof subject !== 'string' || subject.length > 100)) return res.status(400).json({ error: 'Ugyldigt subject' });
+          if (topic && (typeof topic !== 'string' || topic.length > 200)) return res.status(400).json({ error: 'Ugyldigt topic' });
+          if (!Array.isArray(existingQuestions)) existingQuestions = [];
+          if (existingQuestions.length > 200) existingQuestions = existingQuestions.slice(-200);
+
           if (!prompt && !reformulate) throw new Error('Ingen prompt modtaget');
 
         // Trim prompt. 'summary'/'explain'/'fag-summary' faar et lavere loft end
