@@ -1,15 +1,28 @@
-const ADMIN_PASS = process.env.ADMIN_PASS;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
 export const config = { maxDuration: 30 };
 
-// Brug samme session-token som login.js genererer
-async function verifyAdminSession(req) {
-  const auth = req.headers['x-session-token'] || '';
-  if (!auth) return false;
-  // Tjek at token matcher admin-session
-  return auth === ADMIN_PASS;
+// Verificer HMAC-signed session token (samme format som login.js genererer)
+async function verifyAdminSession(token) {
+  if (!token || typeof token !== 'string' || !token.includes('.')) return false;
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) return false;
+  const [payloadB64, sig] = token.split('.');
+  try {
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const expectedBuf = await crypto.subtle.sign('HMAC', key, enc.encode(payloadB64));
+    const expected = Array.from(new Uint8Array(expectedBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    // Timing-safe comparison
+    if (expected.length !== (sig || '').length) return false;
+    let diff = 0;
+    for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ sig.charCodeAt(i);
+    if (diff !== 0) return false;
+    const payload = JSON.parse(Buffer.from(payloadB64, 'base64').toString('utf8'));
+    if (!payload.exp || payload.exp < Date.now()) return false;
+    return payload.role === 'admin';
+  } catch (e) { return false; }
 }
 
 async function getMetrics() {
@@ -116,7 +129,7 @@ export default async function handler(req, res) {
     const body = req.body || {};
     // Tjek at kaldet kommer fra appen selv (admin session)
     const sessionToken = req.headers['x-session-token'] || '';
-    if (sessionToken !== ADMIN_PASS && !body.internal) {
+    if (!body.internal && !await verifyAdminSession(sessionToken)) {
       return res.status(401).json({ error: 'Ikke autoriseret' });
     }
     const { route, duration_ms, status_code } = body;
@@ -129,7 +142,7 @@ export default async function handler(req, res) {
 
   // GET: tjek admin session
   const sessionToken = req.headers['x-session-token'] || '';
-  if (sessionToken !== ADMIN_PASS) {
+  if (!await verifyAdminSession(sessionToken)) {
     return res.status(401).json({ error: 'Ikke autoriseret' });
   }
 

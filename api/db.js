@@ -4,7 +4,8 @@ const SUPABASE_KEY = process.env.SUPABASE_KEY;
 async function verifySessionToken(token) {
     if (!token || typeof token !== 'string' || !token.includes('.')) return null;
     const [payloadB64, sig] = token.split('.');
-    const secret = process.env.SESSION_SECRET || '';
+    const secret = process.env.SESSION_SECRET;
+    if (!secret) return null;
     const enc = new TextEncoder();
     const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
     const expectedBuf = await crypto.subtle.sign('HMAC', key, enc.encode(payloadB64));
@@ -45,10 +46,30 @@ function isRequestAllowed(path, method) {
       return allowedMethods.includes(method);
 }
 
+function validateOrigin(req) {
+  const origin = req.headers['origin'] || req.headers['referer'] || '';
+  const allowed = process.env.ALLOWED_ORIGIN || '';
+  if (!allowed) return true; // Ikke konfigureret — tillad (men sæt env var!)
+  return origin.startsWith(allowed);
+}
+
+function sanitizePath(path) {
+  if (typeof path !== 'string' || path.length > 500) return false;
+  // Bloker potentielt farlige tegn i path/query params
+  if (/['";\\<>\x00-\x1f]/.test(path)) return false;
+  return true;
+}
+
 export default async function handler(req, res) {
       if (req.method !== 'POST') return res.status(405).end();
 
+      // CSRF: tjek origin
+      if (!validateOrigin(req)) return res.status(403).json({ error: 'Forbidden' });
+
     const { path, method = 'GET', body, headers: extraHeaders = {}, sessionToken } = req.body;
+
+    // Input sanitering
+    if (!sanitizePath(path)) return res.status(400).json({ error: 'Ugyldig sti' });
 
     const session = await verifySessionToken(sessionToken);
       if (!session) return res.status(401).json({ error: 'Login kraevet' });

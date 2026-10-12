@@ -15,7 +15,8 @@ const SUPABASE_KEY = process.env.SUPABASE_KEY;
 async function verifySessionToken(token) {
       if (!token || typeof token !== 'string' || !token.includes('.')) return null;
       const [payloadB64, sig] = token.split('.');
-      const secret = process.env.SESSION_SECRET || '';
+      const secret = process.env.SESSION_SECRET;
+      if (!secret) return null;
       const enc = new TextEncoder();
       const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
       const expectedBuf = await crypto.subtle.sign('HMAC', key, enc.encode(payloadB64));

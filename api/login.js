@@ -146,7 +146,8 @@ async function clearAttempts(identifier) {
 }
 
 async function hmacHex(payload) {
-  const secret = process.env.SESSION_SECRET || '';
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) throw new Error('SESSION_SECRET env var is not set');
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const sig = await crypto.subtle.sign('HMAC', key, enc.encode(payload));
