@@ -1,3 +1,26 @@
+// In-memory rate limiter — nulstilles ved redeploy, men effektivt mod burst-angreb
+const _rateLimiter = new Map();
+const RATE_LIMIT = 20;       // maks kald
+const RATE_WINDOW = 10 * 60 * 1000; // per 10 minutter
+
+function checkRateLimit(uid) {
+  const now = Date.now();
+  const key = uid || 'anon';
+  let entry = _rateLimiter.get(key);
+  if (!entry || now - entry.windowStart > RATE_WINDOW) {
+    entry = { windowStart: now, count: 0 };
+  }
+  entry.count++;
+  _rateLimiter.set(key, entry);
+  // Ryd gamle entries periodisk
+  if (_rateLimiter.size > 1000) {
+    for (const [k, v] of _rateLimiter) {
+      if (now - v.windowStart > RATE_WINDOW) _rateLimiter.delete(k);
+    }
+  }
+  return entry.count <= RATE_LIMIT;
+}
+
 async function trackPerf(route, startTime, statusCode) {
   const ms = Date.now() - startTime;
   try {
@@ -158,6 +181,11 @@ export default async function handler(req, res) {
 
   const session = await verifySessionToken(req.body?.sessionToken);
       if (!session) return res.status(401).json({ error: 'Login kraevet' });
+
+  // Rate limit: maks 20 generate-kald per bruger per 10 min
+  if (!checkRateLimit(session.uid || session.role)) {
+    return res.status(429).json({ error: 'For mange kald — vent lidt og prøv igen' });
+  }
 
   try {
           let { prompt, mode, existingQuestions = [], reformulate = false, questionText = '', topic = '', subject = '' } = req.body;
