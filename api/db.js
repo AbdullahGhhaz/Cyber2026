@@ -48,9 +48,13 @@ function isRequestAllowed(path, method) {
 
 function validateOrigin(req) {
   const origin = req.headers['origin'] || req.headers['referer'] || '';
+  if (!origin) return false; // Bloker kald uden origin (direkte curl/script-angreb)
   const allowed = process.env.ALLOWED_ORIGIN || '';
-  if (!allowed) return true; // Ikke konfigureret — tillad (men sæt env var!)
-  return origin.startsWith(allowed);
+  if (allowed) return origin.startsWith(allowed);
+  // Fallback: tillad kun vercel.app og localhost (development)
+  return /^https:\/\/[a-z0-9-]+\.vercel\.app/.test(origin) ||
+         origin.startsWith('http://localhost:') ||
+         origin.startsWith('http://127.0.0.1:');
 }
 
 function sanitizePath(path) {
